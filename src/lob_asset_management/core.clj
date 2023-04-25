@@ -5,7 +5,7 @@
             [lob-asset-management.io.file-in :as io.i]
             [lob-asset-management.controller.process-file :as c.p]))
 
-;TODO : Include log lib https://mattjquinn.com/2014/log4j2-clojure/
+;FIXME : Include log lib https://mattjquinn.com/2014/log4j2-clojure/ to avoid error
 
 (defn foo
   "I don't do a whole lot."
@@ -66,6 +66,7 @@
 
   (c.p/process-b3-release "movimentacao-20220101-20220630.xlsx")
 
+  ;
   (c.p/process-b3-folder)
 
 
