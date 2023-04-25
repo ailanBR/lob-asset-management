@@ -5,9 +5,9 @@
 
 (deftest turn-b3-xlsx-into-edn
   (testing "The total lines read from the xlsx is equal 6"
-    (is (= (-> (io.file-in/read-xlsx f.b3/b3-file) count)
+    (is (= (-> (io.file-in/read-xlsx-by-file-name f.b3/b3-file) count)
            6)))
 
   (testing "The first asset is BBAS3"
-    (is (= (-> (io.file-in/read-xlsx f.b3/b3-file) first)
+    (is (= (-> (io.file-in/read-xlsx-by-file-name f.b3/b3-file) first)
            f.b3/b3-movement))))

@@ -5,6 +5,8 @@
             [lob-asset-management.io.file-in :as io.i]
             [lob-asset-management.controller.process-file :as c.p]))
 
+;TODO : Include log lib https://mattjquinn.com/2014/log4j2-clojure/
+
 (defn foo
   "I don't do a whole lot."
   [x]
@@ -13,7 +15,7 @@
 (comment
   "Read b3 movements and write a new edn file with assets without duplicated"
   "1. Read B3 movements"
-  (def b3-mov (io.i/read-xlsx "movimentacao-20220101-20220630.xlsx"))
+  (def b3-mov (io.i/read-xlsx-by-file-name "movimentacao-20220101-20220630.xlsx"))
   "2. Transform in atoms"
   (def assets (map a.a/movement->asset b3-mov))
   "3. Remove duplicated [LONG WAY]"
@@ -40,7 +42,7 @@
 
   (io.o/upsert assets)
 
-  (def b3-mov (lob-asset-management.io.file-in/read-xlsx "movimentacao-20220101-20220630.xlsx"))
+  (def b3-mov (lob-asset-management.io.file-in/read-xlsx-by-file-name "movimentacao-20220101-20220630.xlsx"))
   (map a.a/movements->assets b3-mov)
 
   (def assets (map a.a/movement->asset b3-mov))
@@ -60,7 +62,11 @@
 
   (b3-movements->transactions b3-mov)
 
-  (c.p/process-file b3-mov)
+  (c.p/process-b3-movement b3-mov)
 
   (c.p/process-b3-release "movimentacao-20220101-20220630.xlsx")
+
+  (c.p/process-b3-folder)
+
+
   )

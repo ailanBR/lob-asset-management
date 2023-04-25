@@ -9,4 +9,4 @@
 (deftest read-b3-movements-result-new-asset-file-test
   ;Read the B3 movements and create a list of unique assets by ticket
   (is (match? f.a/assets
-              (c.p/process-file f.b3/b3-movements))))
+              (c.p/process-b3-movement f.b3/b3-movements))))
