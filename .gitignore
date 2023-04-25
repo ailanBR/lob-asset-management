@@ -12,3 +12,4 @@ pom.xml.asc
 .hg/
 /in-data/
 /out-data/
+.idea*
