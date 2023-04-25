@@ -3,6 +3,8 @@
 
 (def b3-file "test_read.xlsx")
 
+(def b3-folder "./in-data-test/")
+
 (def b3-movement
   {:type             "Credito"
    :transaction-date "30/06/2022"

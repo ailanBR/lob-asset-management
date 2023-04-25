@@ -18,13 +18,15 @@
 (def b3-release-folder "./in-data/")
 
 (defn read-xlsx-by-file-name
-  [file-name]
-  (let [file-path (str b3-release-folder file-name)]
-    (->> (xlsx/load-workbook file-path)
-         (xlsx/select-sheet b3-sheet)
-         (xlsx/select-columns b3-columns)
-         rest
-         (filter #(not (nil? %))))))
+  ([file-name]
+   (read-xlsx-by-file-name file-name b3-release-folder))
+  ([file-name file-folder]
+   (let [file-path (str file-folder file-name)]
+     (->> (xlsx/load-workbook file-path)
+          (xlsx/select-sheet b3-sheet)
+          (xlsx/select-columns b3-columns)
+          rest
+          (filter #(not (nil? %)))))))
 
 (defn read-xlsx-by-file-path
   [file-path]
