@@ -6,4 +6,5 @@
    :asset/name          s/Str
    :asset/ticket        s/Keyword
    :asset/category      [s/Keyword]
-   :asset/last-price    BigDecimal})
+   :asset/last-price    BigDecimal
+   :asset/type          s/Keyword})

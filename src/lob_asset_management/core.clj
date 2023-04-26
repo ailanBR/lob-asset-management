@@ -12,6 +12,7 @@
   [x]
   (println x "Hello, World!"))
 
+
 (comment
   "Read b3 movements and write a new edn file with assets without duplicated"
   "1. Read B3 movements"
@@ -66,8 +67,16 @@
 
   (c.p/process-b3-release "movimentacao-20220101-20220630.xlsx")
 
+  (schema.core/set-fn-validation! true)
+
   ;
+
+
+  (c.p/delete-all-files)
   (c.p/process-b3-folder)
+
+
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity] (io.i/get-file-by-entity :portfolio))
 
 
   )
