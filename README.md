@@ -58,7 +58,24 @@ Provide where asset need to be purchase and how much
 - Transaction to portfolio average price calculation
 - Concluded transaction to portfolio adepter
 
-###
+### 2023-04-25
+- Add portfolio file (read/write)
+- Add schema function validation
+- ReFactory io functions
+- Create delete file function
+
+## TODO
+
+1. Read B3 prices
+2. Turn solution on API
+
+## DRs
+
+DR 001 - Transaction adapter unique by ID and don't treat update/changes in the comparative
+  - Avoid duplicated records by ID
+  - Get the most updated data [HOW?]
+    - Don't necessary it is the same data 
+    - In case of change this flow don't treat it
 
 ## License
 
