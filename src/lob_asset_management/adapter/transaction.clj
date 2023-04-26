@@ -54,18 +54,6 @@
      :transaction/processed-at   (-> (t/local-date-time) str)}))
 
 (defn movements->transactions
-  ;Concat with the data stored
-  ;DR 001 - Unique by ID and don't treat update/changes in the comparative
-  ;TODO: Remove DR details from code
-  ; 1 - Avoid duplicated records by ID
-  ; 2 - Get the most updated data [HOW?]
-  ;   a - don't necessary ?
-  ;     [x] Yes, is the same data
-  ;   b - in case of a data change ?
-  ;     [x]b.1 - this flow don't treat that.
-  ;     [ ]b.2 - create a strong ID to avoid quantity and unit value in the ID : ASSET+DT+
-  ;
-  ;
   ([mov]
    (movements->transactions mov ()))
   ([mov db-data]
