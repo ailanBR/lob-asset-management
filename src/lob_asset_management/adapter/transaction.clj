@@ -2,17 +2,15 @@
   (:require [schema.core :as s]
             [clojure.string :as string]
             [lob-asset-management.models.transaction :as m.t]
-            [lob-asset-management.models.asset :as m.a]
             [lob-asset-management.logic.asset :as l.a]
-            [java-time.api :as t])
-  (:import (java.util UUID)))
+            [java-time.api :as t]))
 
 (s/defn b3-exchange->transaction-exchange :- m.t/Exchange
   [ex :- s/Str]
   (condp = ex
-    "NU INVEST CORRETORA DE VALORES S.A."  :NU
-    "INTER DTVM LTDA"                      :INTER
-    :else                                  :OTHER))
+    "NU INVEST CORRETORA DE VALORES S.A."  :nu
+    "INTER DTVM LTDA"                      :inter
+    :else                                  :other))
 
 (defn b3-sell? [mov]
   (and (= (:type mov) "Debito")
@@ -49,8 +47,8 @@
      ;:transaction/asset          asset
      ;:transaction/asset-id       (UUID/randomUUID)
      :transaction.asset/ticket   ticket
-     :transaction/average-price    unit-price
-     :transaction/quantity       quantity
+     :transaction/average-price  (if (number? unit-price) (bigdec unit-price) 0M)
+     :transaction/quantity       (if (number? quantity) (bigdec quantity) 0M)
      :transaction/exchange       (b3-exchange->transaction-exchange exchange)
      :transaction/operation-type operation-type
      :transaction/processed-at   (-> (t/local-date-time) str)}))

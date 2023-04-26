@@ -1,22 +1,19 @@
 (ns lob-asset-management.models.transaction
-  (:require [schema.core :as s]
-            [lob-asset-management.models.asset :as m.asset]))
+  (:require [schema.core :as s]))
 
 (s/defschema Exchange (s/enum :nu
                               :inter
                               :sprotify
-                              :binance))
+                              :binance
+                              :other))
 
 (s/defschema Transaction
-  {:transaction/id                s/Uuid
+  {:transaction/id                s/Str
    :transaction/created-at        s/Str
-   :transaction/aset              m.asset/Asset
-   :transaction/asset-id          s/Uuid
-   :transaction/asset-ticket      s/Keyword
-   :transaction/average-price       BigDecimal
+   :transaction.asset/ticket      s/Keyword
+   :transaction/average-price     BigDecimal
    :transaction/quantity          BigDecimal
    :transaction/exchange          Exchange
-   :transaction/type              s/Keyword
-   :transaction/operation-type    s/Keyword})
-
+   :transaction/operation-type    s/Keyword
+   :transaction/processed-at      s/Str})
 

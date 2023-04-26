@@ -1,20 +1,21 @@
 (ns lob-asset-management.io.file-out
   (:require [clojure.java.io :as io]
             [java-time.api :as t]
-            [lob-asset-management.aux.file :as aux.f]))
+            [lob-asset-management.aux.file :as aux.f]
+            [schema.core :as s]
+            [lob-asset-management.models.file :as m.f]))
 
 (def root-directory "./out-data/")
 
-(def asset-directory (str root-directory "asset/"))
-(def asset-file-name "asset")
+(s/defn file-full-path [file-keyword :- m.f/file-name]
+  (let [file-name (name file-keyword)]
+    (str root-directory file-name "/" file-name ".edn")))
 
-(def transaction-directory (str root-directory "transaction/"))
-(def transaction-file-name "transaction")
-
-(defn create-backup [file-path file-name]
-  (let [source-path (str file-path file-name ".edn")
+(defn create-backup [file-keyword]
+  (let [file-name (name file-keyword)
+        source-path (file-full-path file-keyword)
         source-file (io/file source-path)
-        target-path (str file-path "/bkp/" file-name  "_" (t/local-date-time)  ".edn")
+        target-path (str root-directory file-name "/bkp/" file-name  "_" (t/local-date-time)  ".edn")
         target-file (io/file target-path)]
     (when (aux.f/file-exists? source-file)
       (with-open [in (clojure.java.io/input-stream source-file)
@@ -24,26 +25,29 @@
 (defn edn->file [data file-path]
   (with-open [out (io/writer file-path)]
     (binding [*out* out]
-      ;(prn data)
-      (clojure.pprint/pprint  data)
-      )))
+      (clojure.pprint/pprint  data))))
 
 (defmulti
+  ;TODO: create a way to accept map (only one record)
   upsert
-  "TODO: create a way to accept map's"
   (fn [data]
     (if true
       (-> data first first first namespace keyword)
       (throw (AssertionError. (str "Wrong input in defmulti. Received [" (type data) "] Necessary [clojure.lang.PersistentVector]"))))))
 
 (defmethod upsert :transaction [data]
-  ;(create-backup transaction-directory transaction-file-name)
-  (let [file-path (str transaction-directory transaction-file-name ".edn")]
+  ;(create-backup :transaction)
+  (let [file-path (file-full-path :transaction)]
     (edn->file data file-path)))
 
 (defmethod upsert :asset [data]
-  ;(create-backup asset-directory asset-file-name)
-  (let [file-path (str asset-directory asset-file-name ".edn")]
+  ;(create-backup :asset)
+  (let [file-path (file-full-path :asset)]
+    (edn->file data file-path)))
+
+(defmethod upsert :portfolio [data]
+  ;(create-backup :portfolio)
+  (let [file-path (file-full-path :portfolio)]
     (edn->file data file-path)))
 
 (comment

@@ -30,16 +30,17 @@
     (- tt-t tt-c)))
 
 (defn conso
-  ;TODO: ? Create a transactions list ?
-  [{consolidate-quantity :portfolio/quantity :as consolidated}
-   {:transaction/keys [operation-type quantity]
+  [{consolidate-quantity :portfolio/quantity
+    transaction-ids :portfolio/transaction-ids :as consolidated}
+   {:transaction/keys [id operation-type quantity]
     ticket :transaction.asset/ticket :as transaction}]
   (let [updated-quantity (update-quantity consolidate-quantity quantity operation-type)
         updated-cost (updated-total-cost consolidated transaction)]
     {:portfolio/ticket         ticket
      :portfolio/average-price  (/ updated-cost updated-quantity)
      :portfolio/quantity       updated-quantity
-     :portfolio/total-cost     updated-cost}))
+     :portfolio/total-cost     updated-cost
+     :portfolio/transaction-ids (conj transaction-ids id)}))
 
 (defn consolidate
   ;v1 = ASSET NAME
@@ -71,10 +72,10 @@
        ))
 
 (comment
-  (def t (io.f-in/read-transaction))
+  (def t (io.f-in/get-file-by-entity :transaction))
 
   (def c (transactions->portfolio t))
 
-  (clojure.pprint/print-table c)
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/total-cost] c)
 
   )
