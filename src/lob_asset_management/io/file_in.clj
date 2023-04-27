@@ -21,6 +21,7 @@
 
 (defn read-xlsx-by-file-path
   [file-path]
+  (print file-path)
   (->> (xlsx/load-workbook file-path)
        (xlsx/select-sheet b3-sheet)
        (xlsx/select-columns b3-columns)
@@ -33,6 +34,7 @@
   ([file-name file-folder]
    (let [file-path (str file-folder file-name)]
      (read-xlsx-by-file-path file-path))))
+
 
 (def root-directory "./out-data/")
 
@@ -61,6 +63,16 @@
         (map read-xlsx-by-file-path)
         (apply concat))))
 
+(defn get-b3-folder-files
+  ([]
+   (get-b3-folder-files b3-release-folder))
+  ([b3-folder]
+   (->> b3-folder
+        io/file
+        file-seq
+        (filter #(.isFile %))
+        (mapv str))))
+
 (s/defn delete-file
   [entity :- m.f/file-name]
   (let [full-path (file-full-path (name entity))]
@@ -69,22 +81,6 @@
       (print "File doesn't exist or has already been deleted"))))
 
 (comment
-
-  ;(read-transaction)
-  (get-file-by-entity :transaction)
-
-  (read-xlsx-by-file-name "movimentacao-20220101-20220630.xlsx")
-  (read-xlsx-by-file-name "test_read.xlsx")
-
-  (mapv str (filter #(.isFile %) (file-seq (io/file b3-release-folder))))
-
-  (read-b3-folder)
-  (def files (read-b3-folder))
-  (type files)
-  (map println files)
-
-  (delete-file :transaction)
-
-  (get-file-by-entity :transaction)
+(get-b3-folder-files)
 
   )

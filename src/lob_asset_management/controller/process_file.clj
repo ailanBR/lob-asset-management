@@ -22,11 +22,32 @@
   (let [b3-movements (io.f-in/read-xlsx-by-file-name b3-file)]
     (process-b3-movement b3-movements)))
 
-(defn process-b3-folder
-  []
-  (let [b3-movements (io.f-in/read-b3-folder)]
+(defn process-b3-release-by-path
+  [b3-file-path]
+  (let [b3-movements (io.f-in/read-xlsx-by-file-path b3-file-path)]
     (process-b3-movement b3-movements)))
+
+(defn process-b3-folder-only-new
+  []
+  (let [already-read (or (-> :read-release (io.f-in/get-file-by-entity) :read-release) [])
+        folder-files (io.f-in/get-b3-folder-files)
+        new-files (->> folder-files
+                       (filter #(not (contains? (set already-read) %))))]
+    (when (not (empty? new-files))
+      (map #(process-b3-release-by-path %) new-files)
+
+      (io.f-out/upsert {:read-release (->>
+                                        new-files
+                                        (conj already-read)
+                                        (apply concat)
+                                        (to-array))}))))
 
 (defn delete-all-files
   []
   (map io.f-in/delete-file m.f/list-file-name))
+
+(comment
+  (process-b3-folder-only-new)
+
+  (delete-all-files)
+  )

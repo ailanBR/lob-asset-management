@@ -33,8 +33,9 @@
 (s/defn gen-transaction-id
   [{:keys [transaction-date unit-price quantity product exchange] :as b3-movement}]
   (let [operation-type (b3-type->transaction-type b3-movement)
-        ticket (l.a/b3-ticket->asset-ticket product)]
-    (-> (str ticket "-" transaction-date "-" unit-price "-" quantity "-" operation-type "-" exchange)
+        ticket (l.a/b3-ticket->asset-ticket product)
+        exchange' (b3-exchange->transaction-exchange exchange)]
+    (-> (str ticket "-" transaction-date "-" unit-price "-" quantity "-" operation-type "-" exchange')
         (string/replace "/" "")
         (string/replace ":" ""))))
 

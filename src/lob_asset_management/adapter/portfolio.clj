@@ -57,25 +57,15 @@
 
 (defn transactions->portfolio
   [t]
-  ;TODO
-  ; [x]Group by asset
-  ; [x]Accept only buy and sell operations
-  ; [x]Calculate the average price
-  ; []
-  ; []?Create a list of transaction instead the consolidation?
   (->> t
        (filter-operation)                        ;;Accept only buy and sell
        (sort-by :transaction/processed-at)
        (group-by :transaction.asset/ticket)
-       (map consolidate)
-       ;(map consolidate-transaction->portfolio)
-       ))
+       (map consolidate)))
 
 (comment
   (def t (io.f-in/get-file-by-entity :transaction))
 
   (def c (transactions->portfolio t))
 
-  (clojure.pprint/print-table [:portfolio/ticket :portfolio/total-cost] c)
-
-  )
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/total-cost] c))

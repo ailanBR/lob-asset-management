@@ -64,10 +64,16 @@ Provide where asset need to be purchase and how much
 - ReFactory io functions
 - Create delete file function
 
+### 2023-04-26
+- Read only new files function
+- Add support to upsert a simple map
+
 ## TODO
 
 1. Read B3 prices
-2. Turn solution on API
+2. Turn solution on API or CronJob
+3. Get market price
+4. Register profit by asset (Dividend, JCP...)
 
 ## DRs
 
