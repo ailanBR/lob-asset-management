@@ -64,6 +64,10 @@ Provide where asset need to be purchase and how much
 - ReFactory io functions
 - Create delete file function
 
+### 2023-04-26
+- Read only new files function
+- Add support to upsert a simple map
+
 ## TODO
 
 1. Read B3 prices
