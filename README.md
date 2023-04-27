@@ -67,7 +67,9 @@ Provide where asset need to be purchase and how much
 ## TODO
 
 1. Read B3 prices
-2. Turn solution on API
+2. Turn solution on API or CronJob
+3. Get market price
+4. Register profit by asset (Dividend, JCP...)
 
 ## DRs
 

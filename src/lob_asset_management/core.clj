@@ -12,7 +12,6 @@
   [x]
   (println x "Hello, World!"))
 
-
 (comment
   "Read b3 movements and write a new edn file with assets without duplicated"
   "1. Read B3 movements"
