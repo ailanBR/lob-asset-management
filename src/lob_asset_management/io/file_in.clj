@@ -35,7 +35,6 @@
    (let [file-path (str file-folder file-name)]
      (read-xlsx-by-file-path file-path))))
 
-
 (def root-directory "./out-data/")
 
 (defn file-full-path [file-name]
@@ -81,6 +80,10 @@
       (print "File doesn't exist or has already been deleted"))))
 
 (comment
-(get-b3-folder-files)
-
+  (get-b3-folder-files)
+  (read-secrets)
+  ;Tried set the secret in env but clojure don't read
+  (println (System/getenv "TESTE_KEY"))
+  (let [my-var (System/getenv "TESTE_KEY")]
+    (println my-var))
   )

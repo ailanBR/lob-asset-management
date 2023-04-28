@@ -68,6 +68,13 @@ Provide where asset need to be purchase and how much
 - Read only new files function
 - Add support to upsert a simple map
 
+
+### 2023-04-28
+- Started Read B3 prices
+- Create a secrets file
+- Create relevant namespace for global config and secrets
+
+
 ## TODO
 
 1. Read B3 prices

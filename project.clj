@@ -7,5 +7,7 @@
                  [clojure.java-time "1.2.0"]
                  [dk.ative/docjure "1.19.0"]
                  [prismatic/schema "1.4.1"]
-                 [nubank/matcher-combinators "3.8.4"]]
+                 [nubank/matcher-combinators "3.8.4"]
+                 [clj-http "3.12.3"]
+                 [cheshire "5.11.0"]]
   :repl-options {:init-ns lob-asset-management.core})
