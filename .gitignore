@@ -13,3 +13,4 @@ pom.xml.asc
 /in-data/
 /out-data/
 .idea*
+/resources/

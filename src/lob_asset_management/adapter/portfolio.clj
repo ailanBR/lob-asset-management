@@ -14,22 +14,22 @@
 (defmulti updated-total-cost (fn [_ {:transaction/keys [operation-type]}] (keyword operation-type)))
 
 (defmethod updated-total-cost :buy
-  [{c-qt :transaction/quantity
-    c-ap :transaction/average-price}
+  [{c-qt :portfolio/quantity
+    c-ap :portfolio/average-price}
    {:transaction/keys [quantity average-price]}]
   (let [tt-t (* average-price quantity)
         tt-c (* (or c-qt 0.0) (or c-ap 0.0))]
     (+ tt-t tt-c)))
 
 (defmethod updated-total-cost :sell
-  [{c-qt :transaction/quantity
-    c-ap :transaction/average-price}
+  [{c-qt :portfolio/quantity
+    c-ap :portfolio/average-price}
    {:transaction/keys [quantity average-price]}]
   (let [tt-t (* average-price quantity)
         tt-c (* (or c-qt 0.0) (or c-ap 0.0))]
     (- tt-t tt-c)))
 
-(defn conso
+(defn consolidate-transactions
   [{consolidate-quantity :portfolio/quantity
     transaction-ids :portfolio/transaction-ids :as consolidated}
    {:transaction/keys [id operation-type quantity]
@@ -42,11 +42,11 @@
      :portfolio/total-cost     updated-cost
      :portfolio/transaction-ids (conj transaction-ids id)}))
 
-(defn consolidate
+(defn consolidate-grouped-transactions
   ;v1 = ASSET NAME
   ;v2 = TRANSACTIONS
   [[_ v2]]
-  (reduce (fn [c t] (conso c t)) {} v2))
+  (reduce (fn [c t] (consolidate-transactions c t)) {} v2))
 
 (defn filter-operation
   [t]
@@ -61,7 +61,7 @@
        (filter-operation)                        ;;Accept only buy and sell
        (sort-by :transaction/processed-at)
        (group-by :transaction.asset/ticket)
-       (map consolidate)))
+       (map consolidate-grouped-transactions)))
 
 (comment
   (def t (io.f-in/get-file-by-entity :transaction))

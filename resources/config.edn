@@ -1,6 +1,4 @@
 {
-
  :asset {:output-file-name "asset"}
  :transaction {:output-file-name "transaction"}
-
  }
