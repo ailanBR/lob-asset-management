@@ -81,6 +81,8 @@ Provide where asset need to be purchase and how much
 2. Turn solution on API or CronJob
 3. Get market price
 4. Register profit by asset (Dividend, JCP...)
+5. Create percentage by Category/Asset
+6. Regiter new historical price in asset
 
 ## DRs
 
