@@ -74,6 +74,10 @@ Provide where asset need to be purchase and how much
 - Create a secrets file
 - Create relevant namespace for global config and secrets
 
+### 2023-04-30
+- Add percentage by asset in portfolio
+- Add category field in portfolio
+- Add percentage by category
 
 ## TODO
 
@@ -81,8 +85,8 @@ Provide where asset need to be purchase and how much
 2. Turn solution on API or CronJob
 3. Get market price
 4. Register profit by asset (Dividend, JCP...)
-5. Create percentage by Category/Asset
-6. Regiter new historical price in asset
+5. Register new historical price in asset
+6. 
 
 ## DRs
 

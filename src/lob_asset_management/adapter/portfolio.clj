@@ -1,5 +1,6 @@
 (ns lob-asset-management.adapter.portfolio
-  (:require [lob-asset-management.io.file-in :as io.f-in]))
+  (:require [lob-asset-management.io.file-in :as io.f-in]
+            [lob-asset-management.adapter.asset :as a.a]))
 
 (defmulti update-quantity (fn [_ _ op] (keyword op)))
 
@@ -36,11 +37,12 @@
     ticket :transaction.asset/ticket :as transaction}]
   (let [updated-quantity (update-quantity consolidate-quantity quantity operation-type)
         updated-cost (updated-total-cost consolidated transaction)]
-    {:portfolio/ticket         ticket
-     :portfolio/average-price  (/ updated-cost updated-quantity)
-     :portfolio/quantity       updated-quantity
-     :portfolio/total-cost     updated-cost
-     :portfolio/transaction-ids (conj transaction-ids id)}))
+    {:portfolio/ticket          ticket
+     :portfolio/average-price   (/ updated-cost updated-quantity)
+     :portfolio/quantity        updated-quantity
+     :portfolio/total-cost      updated-cost
+     :portfolio/transaction-ids (conj transaction-ids id)
+     :portfolio/category        (-> ticket (a.a/ticket->categories) first)}))
 
 (defn consolidate-grouped-transactions
   ;v1 = ASSET NAME
@@ -55,17 +57,58 @@
                 (= operation-type :sell)))
           t))
 
+(defn set-portfolio-representation
+  ;FIXME : Consider currently value
+  [p]
+  (let [total-portfolio (reduce #(+ %1 (:portfolio/total-cost %2)) 0M p)]
+    (map #(assoc % :portfolio/percentage (* 100 (/ (:portfolio/total-cost %) total-portfolio))) p)))
+
 (defn transactions->portfolio
   [t]
   (->> t
        (filter-operation)                        ;;Accept only buy and sell
        (sort-by :transaction/processed-at)
        (group-by :transaction.asset/ticket)
-       (map consolidate-grouped-transactions)))
+       (map consolidate-grouped-transactions)
+       (set-portfolio-representation)
+       (sort-by :portfolio/percentage >)))
+
+(defn consolidate-category
+  [{:category/keys [total]}
+   {:portfolio/keys [category total-cost]}]
+  {:category/name  category
+   :category/total-cost (+ (or 0M total) total-cost)})
+
+(defn consolidate-categories
+  [[_ p]]
+  (reduce consolidate-category {} p))
+
+(defn set-category-representation
+  [c]
+  (let [total-category (reduce #(+ %1 (:category/total-cost %2)) 0M c)]
+    (map #(assoc % :category/percentage (* 100
+                                           (/ (:category/total-cost %)
+                                              total-category))) c)))
+
+(defn get-category-representation
+  [p]
+  (->> p
+       (group-by :portfolio/category)
+       (map consolidate-categories)
+       (set-category-representation)))
 
 (comment
   (def t (io.f-in/get-file-by-entity :transaction))
 
   (def c (transactions->portfolio t))
 
-  (clojure.pprint/print-table [:portfolio/ticket :portfolio/total-cost] c))
+  (reduce #(+ %1 (:portfolio/percentage %2)) 0M c)
+
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/category] c)
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (get-category-representation c)
+  (def category (get-category-representation c))
+
+  (clojure.pprint/print-table category)
+  )
