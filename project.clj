@@ -10,4 +10,5 @@
                  [nubank/matcher-combinators "3.8.4"]
                  [clj-http "3.12.3"]
                  [cheshire "5.11.0"]]
-  :repl-options {:init-ns lob-asset-management.core})
+  :repl-options {:init-ns lob-asset-management.core}
+  :main ^:skip-aot lob-asset-management.core)

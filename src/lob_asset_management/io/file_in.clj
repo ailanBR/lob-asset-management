@@ -21,7 +21,6 @@
 
 (defn read-xlsx-by-file-path
   [file-path]
-  (print file-path)
   (->> (xlsx/load-workbook file-path)
        (xlsx/select-sheet b3-sheet)
        (xlsx/select-columns b3-columns)

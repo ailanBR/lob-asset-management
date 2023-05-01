@@ -27,6 +27,11 @@
   (let [b3-movements (io.f-in/read-xlsx-by-file-path b3-file-path)]
     (process-b3-movement b3-movements)))
 
+(defn process-b3-folder
+  []
+  (let [folder-files (io.f-in/get-b3-folder-files)]
+    (map #(process-b3-release-by-path %) folder-files)))
+
 (defn process-b3-folder-only-new
   []
   (let [already-read (or (-> :read-release (io.f-in/get-file-by-entity) :read-release) [])
@@ -44,6 +49,7 @@
 
 (defn delete-all-files
   []
+  (println "DELETING...")
   (map io.f-in/delete-file m.f/list-file-name))
 
 (comment
