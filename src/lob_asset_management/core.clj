@@ -12,6 +12,32 @@
   [x]
   (println x "Hello, World!"))
 
+(defn -main
+  ;FIXME : Accept string and convert to keyword in command
+  ; 1. First try don't worked, accepted number and compared with string
+  ;FIXME : Command don't executed
+  ; 1. Maybe is the root path, the function don't find the files
+  ; 2. Don't have access to read/write in command line
+  [& args]
+  (when (nil? args)
+    (println "SELECT A COMMAND")
+    (println " 1 -> Process all files in the release folder")
+    (println " 2 -> Delete all files in the release folder")
+    (println " 3 -> Process new files in the release folder"))
+  (when-let [read (or (first args) (read-line))]
+    (println read)
+    (let [command read]
+      (println command)
+      (cond
+        (= "1" command) (do (println "PROCESSING FILE FOLDERS")
+                            (c.p/process-b3-folder))
+        (= "2" command) (do (println "PROCESS ONLY NEW FILES")
+                            (c.p/delete-all-files))
+        (= "3" command) (do (println "PROCESS ONLY NEW FILES")
+                              (c.p/process-b3-folder-only-new))
+        :else (println "INVALID COMMAND"))))
+  (println "FINISH"))
+
 (comment
   "Read b3 movements and write a new edn file with assets without duplicated"
   "1. Read B3 movements"
@@ -68,14 +94,9 @@
 
   (schema.core/set-fn-validation! true)
 
-  ;
-
-
   (c.p/delete-all-files)
   (c.p/process-b3-folder)
-
+  (c.p/process-b3-folder-only-new)
 
   (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity] (io.i/get-file-by-entity :portfolio))
-
-
   )
