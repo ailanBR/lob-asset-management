@@ -13,29 +13,25 @@
   (println x "Hello, World!"))
 
 (defn -main
-  ;FIXME : Accept string and convert to keyword in command
-  ; 1. First try don't worked, accepted number and compared with string
   ;FIXME : Command don't executed
-  ; 1. Maybe is the root path, the function don't find the files
+  ; NOP :- 1. Maybe is the root path, the function don't find the files
   ; 2. Don't have access to read/write in command line
   [& args]
   (when (nil? args)
     (println "SELECT A COMMAND")
-    (println " 1 -> Process all files in the release folder")
-    (println " 2 -> Delete all files in the release folder")
-    (println " 3 -> Process new files in the release folder"))
+    (println " p -> Process all files in the release folder")
+    (println " d -> Delete all files in the release folder")
+    (println " pn -> Process new files in the release folder"))
   (when-let [read (or (first args) (read-line))]
-    (println read)
-    (let [command read]
-      (println command)
-      (cond
-        (= "1" command) (do (println "PROCESSING FILE FOLDERS")
-                            (c.p/process-b3-folder))
-        (= "2" command) (do (println "PROCESS ONLY NEW FILES")
-                            (c.p/delete-all-files))
-        (= "3" command) (do (println "PROCESS ONLY NEW FILES")
-                              (c.p/process-b3-folder-only-new))
-        :else (println "INVALID COMMAND"))))
+    (let [command (-> read clojure.string/lower-case keyword)]
+      (condp = command
+        :p (do (println "PROCESSING FILE FOLDERS")
+               (c.p/process-b3-folder))
+        :d (do (println "DELETING ALL FILES IN FOLDER")
+               (c.p/delete-all-files))
+        :pn (do (println "PROCESS ONLY NEW FILES")
+                (c.p/process-b3-folder-only-new))
+        (println "INVALID COMMAND"))))
   (println "FINISH"))
 
 (comment
