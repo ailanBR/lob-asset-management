@@ -94,5 +94,5 @@
   (c.p/process-b3-folder)
   (c.p/process-b3-folder-only-new)
 
-  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity] (io.i/get-file-by-entity :portfolio))
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/total-cost :portfolio/dividend ] (io.i/get-file-by-entity :portfolio))
   )

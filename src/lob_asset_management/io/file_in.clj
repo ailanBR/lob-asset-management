@@ -13,7 +13,7 @@
                  :E :exchange
                  :F :quantity
                  :G :unit-price
-                 :H :total-price})
+                 :H :operation-total})
 
 (def b3-sheet "Movimentação")
 

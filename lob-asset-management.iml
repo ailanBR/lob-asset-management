@@ -20,7 +20,6 @@
     <orderEntry type="library" name="Leiningen: cheshire:5.11.0" level="project" />
     <orderEntry type="library" name="Leiningen: clj-http:3.12.3" level="project" />
     <orderEntry type="library" name="Leiningen: clj-tuple:0.2.2" level="project" />
-    <orderEntry type="library" name="Leiningen: clojure-complete:0.2.5" level="project" />
     <orderEntry type="library" name="Leiningen: clojure.java-time:1.2.0" level="project" />
     <orderEntry type="library" name="Leiningen: com.fasterxml.jackson.core/jackson-core:2.13.3" level="project" />
     <orderEntry type="library" name="Leiningen: com.fasterxml.jackson.dataformat/jackson-dataformat-cbor:2.13.3" level="project" />
@@ -31,7 +30,7 @@
     <orderEntry type="library" name="Leiningen: commons-io:2.8.0" level="project" />
     <orderEntry type="library" name="Leiningen: commons-logging:1.2" level="project" />
     <orderEntry type="library" name="Leiningen: dk.ative/docjure:1.19.0" level="project" />
-    <orderEntry type="library" name="Leiningen: nrepl:0.6.0" level="project" />
+    <orderEntry type="library" name="Leiningen: nrepl:1.0.0" level="project" />
     <orderEntry type="library" name="Leiningen: nubank/matcher-combinators:3.8.4" level="project" />
     <orderEntry type="library" name="Leiningen: org.apache.commons/commons-collections4:4.4" level="project" />
     <orderEntry type="library" name="Leiningen: org.apache.commons/commons-compress:1.21" level="project" />
@@ -51,6 +50,7 @@
     <orderEntry type="library" name="Leiningen: org.clojure/core.specs.alpha:0.2.56" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/math.combinatorics:0.1.6" level="project" />
     <orderEntry type="library" name="Leiningen: org.clojure/spec.alpha:0.2.194" level="project" />
+    <orderEntry type="library" name="Leiningen: org.nrepl/incomplete:0.1.0" level="project" />
     <orderEntry type="library" name="Leiningen: potemkin:0.4.5" level="project" />
     <orderEntry type="library" name="Leiningen: prismatic/schema:1.4.1" level="project" />
     <orderEntry type="library" name="Leiningen: riddley:0.1.12" level="project" />

@@ -30,9 +30,12 @@
         tt-c (* (or c-qt 0.0) (or c-ap 0.0))]
     (- tt-t tt-c)))
 
-(defn consolidate-transactions
-  [{consolidate-quantity :portfolio/quantity
-    transaction-ids :portfolio/transaction-ids :as consolidated}
+(defmulti consolidate-transactions
+           (fn [_ {:transaction/keys [operation-type]}] (keyword operation-type)))
+
+(defmethod consolidate-transactions :buy
+  [{:portfolio/keys [transaction-ids dividend]
+    consolidate-quantity :portfolio/quantity :as consolidated}
    {:transaction/keys [id operation-type quantity]
     ticket :transaction.asset/ticket :as transaction}]
   (let [updated-quantity (update-quantity consolidate-quantity quantity operation-type)
@@ -42,7 +45,58 @@
      :portfolio/quantity        updated-quantity
      :portfolio/total-cost      updated-cost
      :portfolio/transaction-ids (conj transaction-ids id)
-     :portfolio/category        (-> ticket (a.a/ticket->categories) first)}))
+     :portfolio/category        (-> ticket (a.a/ticket->categories) first)
+     :portfolio/dividend        (or dividend 0M)}))
+
+(defmethod consolidate-transactions :sell
+  [{:portfolio/keys         [transaction-ids dividend]
+    consolidate-quantity :portfolio/quantity
+    portfolio-average-price :portfolio/average-price :as consolidated}
+   {:transaction/keys [id operation-type quantity]
+    ticket            :transaction.asset/ticket :as transaction}]
+  (let [updated-quantity (update-quantity consolidate-quantity quantity operation-type)
+        updated-cost (updated-total-cost consolidated transaction)]
+    {:portfolio/ticket          ticket
+     :portfolio/average-price   portfolio-average-price
+     :portfolio/quantity        updated-quantity
+     :portfolio/total-cost      updated-cost
+     :portfolio/transaction-ids (conj transaction-ids id)
+     :portfolio/dividend        (or dividend 0M)}))
+
+(defn get-total-operation
+  [{:transaction/keys [quantity average-price operation-total]}]
+  (let [calculated-total (* quantity average-price)]
+    (if (> 0M calculated-total)
+      calculated-total
+      operation-total)))
+
+(defn add-dividend-profit
+  [{:portfolio/keys [transaction-ids dividend total-cost quantity average-price]}
+   {:transaction/keys [id] ticket :transaction.asset/ticket :as transaction}]
+  (let [transaction-total-operation (get-total-operation transaction)]
+    {:portfolio/ticket          ticket
+     :portfolio/average-price   (or average-price 0M)
+     :portfolio/quantity        (or quantity 0.0)
+     :portfolio/total-cost      (or total-cost 0M)
+     :portfolio/transaction-ids (conj transaction-ids id)
+     :portfolio/category        (-> ticket (a.a/ticket->categories) first)
+     :portfolio/dividend        (+ (or dividend 0M) transaction-total-operation)}))
+
+(defmethod consolidate-transactions :JCP
+  [consolidated transaction]
+  (add-dividend-profit consolidated transaction))
+
+(defmethod consolidate-transactions :income
+  [consolidated transaction]
+  (add-dividend-profit consolidated transaction))
+
+(defmethod consolidate-transactions :dividend
+  [consolidated transaction]
+  (add-dividend-profit consolidated transaction))
+
+(defmethod consolidate-transactions :waste
+  [consolidated transaction]
+  (add-dividend-profit consolidated transaction))
 
 (defn consolidate-grouped-transactions
   ;v1 = ASSET NAME
@@ -53,8 +107,7 @@
 (defn filter-operation
   [t]
   (filter (fn [{:transaction/keys [operation-type]}]
-            (or (= operation-type :buy)
-                (= operation-type :sell)))
+            (contains? #{:buy :sell :JCP :income :dividend :waste} operation-type))
           t))
 
 (defn set-portfolio-representation
@@ -99,7 +152,7 @@
 
 (comment
   (def t (io.f-in/get-file-by-entity :transaction))
-
+  (transactions->portfolio t)
   (def c (transactions->portfolio t))
 
   (reduce #(+ %1 (:portfolio/percentage %2)) 0M c)
