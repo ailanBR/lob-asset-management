@@ -25,6 +25,9 @@
     (b3-sell? mov) :sell
     (b3-buy? mov) :buy
     (= movement-type "Juros Sobre Capital Próprio") :JCP
+    (= movement-type "Rendimento") :income
+    (= movement-type "Dividendo") :dividend
+    (= movement-type "Leilão de Fração") :waste
     :else (-> (:movement-type mov)
               (string/replace " " "")
               string/lower-case
@@ -39,8 +42,11 @@
         (string/replace "/" "")
         (string/replace ":" ""))))
 
+(defn safe-number->bigdec [num]
+  (if (number? num) (bigdec num) 0M))
+
 (s/defn movements->transaction :- m.t/Transaction
-  [{:keys [transaction-date unit-price quantity exchange product] :as b3-movement}]
+  [{:keys [transaction-date unit-price quantity exchange product operation-total] :as b3-movement}]
   (let [operation-type (b3-type->transaction-type b3-movement)
         ticket (l.a/b3-ticket->asset-ticket product)]
     {:transaction/id             (gen-transaction-id b3-movement)
@@ -48,11 +54,12 @@
      ;:transaction/asset          asset
      ;:transaction/asset-id       (UUID/randomUUID)
      :transaction.asset/ticket   ticket
-     :transaction/average-price  (if (number? unit-price) (bigdec unit-price) 0M)
-     :transaction/quantity       (if (number? quantity) (bigdec quantity) 0M)
+     :transaction/average-price  (safe-number->bigdec unit-price)
+     :transaction/quantity       (safe-number->bigdec quantity)
      :transaction/exchange       (b3-exchange->transaction-exchange exchange)
      :transaction/operation-type operation-type
-     :transaction/processed-at   (-> (t/local-date-time) str)}))
+     :transaction/processed-at   (-> (t/local-date-time) str)
+     :transaction/operation-total (safe-number->bigdec operation-total)}))
 
 (defn movements->transactions
   ([mov]

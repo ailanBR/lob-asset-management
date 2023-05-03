@@ -2,23 +2,69 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 
 ## [Unreleased]
-### Changed
-- Add a new arity to `make-widget-async` to provide a different widget shape.
+### 2023-03-25
+- Project created
+- Read xmlx files
+- Data transformation for
+    - Asset
+    - Transaction
+
+### 2023-03-31
+- Read and write edn files
+- Backup file before write new file
+
+### 2023-04-01
+- Read the b3 movement and write edn file for
+    - asset
+    - transaction
+- Filter asset to be unique records
+- Concat stored file data with read from b3 movement
+- Remove duplicated when concat stored with b3 movement
+- New folders
+    - controller
+    - logic
+
+### 2023-04-18
+- Validate duplicated transactions
+- DR 001 - Unique by ID and don't treat update/changes in the comparative
+
+### 2023-04-21
+- Transaction to portfolio average price calculation
+- Concluded transaction to portfolio adepter
+
+### 2023-04-25
+- Add portfolio file (read/write)
+- Add schema function validation
+- ReFactory io functions
+- Create delete file function
+
+### 2023-04-26
+- Read only new files function
+- Add support to upsert a simple map
+
+
+### 2023-04-28
+- Started Read B3 prices
+- Create a secrets file
+- Create relevant namespace for global config and secrets
+
+### 2023-04-30
+- Add percentage by asset in portfolio
+- Add category field in portfolio
+- Add percentage by category
+
+### 2023-05-02
+- Register profit by asset (Dividend, JCP...)
 
 ## [0.1.1] - 2023-03-25
 ### Changed
-- Documentation on how to make the widgets.
 
 ### Removed
-- `make-widget-sync` - we're all async, all the time.
 
 ### Fixed
-- Fixed widget maker to keep working when daylight savings switches over.
 
 ## 0.1.0 - 2023-03-25
 ### Added
-- Files from the new template.
-- Widget maker public API - `make-widget-sync`.
 
 [Unreleased]: https://github.com/your-name/lob-asset-management/compare/0.1.1...HEAD
 [0.1.1]: https://github.com/your-name/lob-asset-management/compare/0.1.0...0.1.1
