@@ -4,3 +4,14 @@
 (def secrets (file->edn "./resources/secrets.edn"))
 
 (def alpha-key (:alpha-vantage-key secrets))
+
+(comment
+  (read-secrets)
+
+
+  (println (System/getenv "ALPHA_KEY"))
+
+  (let [my-var (System/getenv "TESTE_KEY")]
+    (println my-var))
+
+  )

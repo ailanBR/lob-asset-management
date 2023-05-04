@@ -80,9 +80,4 @@
 
 (comment
   (get-b3-folder-files)
-  (read-secrets)
-  ;Tried set the secret in env but clojure don't read
-  (println (System/getenv "TESTE_KEY"))
-  (let [my-var (System/getenv "TESTE_KEY")]
-    (println my-var))
   )
