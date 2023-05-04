@@ -1,38 +1,53 @@
 (ns lob-asset-management.io.http_in
   (:require [clj-http.client :as http]
+            [lob-asset-management.relevant :refer [alpha-key]]
             [cheshire.core :as json]))
 
-(defn get-daily-adjusted-prices [symbol api-key]
-  (let [response (http/get "https://www.alphavantage.co/query"
-                           {:query-params {:function "TIME_SERIES_DAILY_ADJUSTED"
-                                           :symbol symbol
-                                           :apikey api-key}})]
-    (if (= (:status response) 200)
-      (do
-        (clojure.pprint/pprint response)
-        (-> response
-            :body
-            (json/parse-string true)))
-      (throw (ex-info "Failed to get stock price information"
-                      {:status (:status response)})))))
+(defn keyword-space->underline [m]
+  (zipmap (map #(keyword (clojure.string/replace (name %) " " "_")) (keys m))
+          (vals m)))
+
+(defn remove-close-parenthesis [m]
+  (zipmap (map #(keyword (clojure.string/replace (name %) ")" "")) (keys m))
+          (vals m)))
+
+(defn remove-open-parenthesis [m]
+  (zipmap (map #(keyword (clojure.string/replace (name %) "(" "")) (keys m))
+          (vals m)))
+
+(defn remove-keyword-parenthesis
+  [m]
+  (-> m
+      remove-close-parenthesis
+      remove-open-parenthesis))
+
+(defn get-daily-adjusted-prices
+  ([symbol]
+   (get-daily-adjusted-prices symbol alpha-key))
+  ([symbol api-key]
+   (let [response (http/get "https://www.alphavantage.co/query"
+                            {:query-params {:function "TIME_SERIES_DAILY_ADJUSTED"
+                                            :symbol   symbol
+                                            :apikey   api-key}})]
+     (if (= (:status response) 200)
+       (do
+         (clojure.pprint/pprint response)
+         (-> response
+             :body
+             (json/parse-string true)
+             ;(get ":Meta Data")
+             (keyword-space->underline)
+             (remove-keyword-parenthesis)
+             ))
+       (throw (ex-info "Failed to get stock price information"
+                       {:status (:status response)}))))))
 
 (comment
-  (def abev-result (get-daily-adjusted-prices "ABEV3.SAO" lob-asset-management.relevant/alpha-key))
+  (def abev-result (get-daily-adjusted-prices "ABEV3.SAO"))
   (clojure.pprint/pprint abev-result)
 
   (get abev-result ":Meta Data")
 
-  (defn despace [m]
-    (zipmap (map #(keyword (clojure.string/replace (name %) " " "_")) (keys m))
-            (vals m)))
-
-  (defn remove-parenteses-b [m]
-    (zipmap (map #(keyword (clojure.string/replace (name %) ")" "")) (keys m))
-            (vals m)))
-
-  (defn remove-parenteses-a [m]
-    (zipmap (map #(keyword (clojure.string/replace (name %) "(" "")) (keys m))
-            (vals m)))
 
   (def formatted-data
     (let [mains (-> abev-result despace remove-parenteses-b remove-parenteses-a)

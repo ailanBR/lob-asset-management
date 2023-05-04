@@ -31,9 +31,8 @@ Provide where asset need to be purchase and how much
 
 1. Read B3 prices
 2. Turn solution on API or CronJob
-3. Get market price
-4. Register new historical price in asset
-5. 
+3. Register new historical price in asset
+4. Register Alpha API ticket in asset
 
 ## DRs
 
