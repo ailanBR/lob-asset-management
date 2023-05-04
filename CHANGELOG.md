@@ -56,6 +56,9 @@ All notable changes to this project will be documented in this file. This change
 ### 2023-05-02
 - Register profit by asset (Dividend, JCP...)
 
+### 2023-05-03
+- Create Market controller to get asset prices
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 
