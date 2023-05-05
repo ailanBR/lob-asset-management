@@ -31,7 +31,9 @@
     (- tt-t tt-c)))
 
 (defmulti consolidate-transactions
-           (fn [_ {:transaction/keys [operation-type]}] (keyword operation-type)))
+           (fn [_ {:transaction/keys [operation-type]}]
+             (print operation-type)
+             (keyword operation-type)))
 
 (defmethod consolidate-transactions :buy
   [{:portfolio/keys [transaction-ids dividend]
@@ -114,17 +116,23 @@
   ;FIXME : Consider currently value
   [p]
   (let [total-portfolio (reduce #(+ %1 (:portfolio/total-cost %2)) 0M p)]
-    (map #(assoc % :portfolio/percentage (* 100 (/ (:portfolio/total-cost %) total-portfolio))) p)))
+    (map #(assoc %
+            :portfolio/percentage (if (and (> 0M total-portfolio) (> 0M (:portfolio/total-cost %)))
+                                    (* 100 (/ (:portfolio/total-cost %) total-portfolio))
+                                    0.0)) p)))
 
 (defn transactions->portfolio
   [t]
-  (->> t
-       (filter-operation)                        ;;Accept only buy and sell
-       (sort-by :transaction/processed-at)
-       (group-by :transaction.asset/ticket)
-       (map consolidate-grouped-transactions)
-       (set-portfolio-representation)
-       (sort-by :portfolio/percentage >)))
+  (println "Processing adapter portfolio...")
+  (let [portfolio (->> t
+                       (filter-operation)                   ;;Accept only buy and sell
+                       (sort-by :transaction/processed-at)
+                       (group-by :transaction.asset/ticket)
+                       (map consolidate-grouped-transactions)
+                       (set-portfolio-representation)
+                       (sort-by :portfolio/percentage >))]
+    (println "Concluded adapter portfolio...")
+    portfolio))
 
 (defn consolidate-category
   [{:category/keys [total]}

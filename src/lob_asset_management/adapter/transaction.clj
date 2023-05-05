@@ -65,9 +65,13 @@
   ([mov]
    (movements->transactions mov ()))
   ([mov db-data]
-   (->> mov
-        (map movements->transaction)
-        (concat db-data)
-        (group-by :transaction/id)
-        (map #(->> % val (sort-by :transaction/processed-at) last))
-        (sort-by :transaction.asset/ticket))))
+   (println "Processing adapter asset...")
+   (let [transactions (->> mov
+                           (map movements->transaction)
+                           (filter #(not (contains? % db-data)))
+                           (concat db-data)
+                           (group-by :transaction/id)
+                           (map #(->> % val (sort-by :transaction/processed-at) last))
+                           (sort-by :transaction.asset/ticket))]
+     (println "Concluded adapter asset...")
+     transactions)))
