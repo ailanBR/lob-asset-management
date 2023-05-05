@@ -30,15 +30,13 @@
                                             :symbol   symbol
                                             :apikey   api-key}})]
      (if (= (:status response) 200)
-       (do
-         (clojure.pprint/pprint response)
-         (-> response
-             :body
-             (json/parse-string true)
-             ;(get ":Meta Data")
-             (keyword-space->underline)
-             (remove-keyword-parenthesis)
-             ))
+       (-> response
+           :body
+           (json/parse-string true)
+           ;(get ":Meta Data")
+           (keyword-space->underline)
+           (remove-keyword-parenthesis)
+           )
        (throw (ex-info "Failed to get stock price information"
                        {:status (:status response)}))))))
 

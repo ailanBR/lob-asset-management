@@ -33,12 +33,17 @@
   upsert
   (fn [data]
     (cond
+      (empty? data)
+      (println "empty data")
+
       (instance? PersistentArrayMap data)
       (-> data first first (#(if (nil? (namespace %)) (keyword %) (-> % namespace keyword))))
+
       (or (instance? PersistentVector data)
           (instance? ArraySeq data)
           (instance? LazySeq data))
       (-> data first first first namespace keyword)
+
       :else
       (throw (AssertionError. (str "Wrong input in defmulti. Received [" (type data) "] Necessary [clojure.lang.PersistentVector]"))))))
 

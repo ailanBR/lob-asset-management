@@ -90,7 +90,7 @@
         ticket-number? (empty? try-ticket->number)]
     (cond
       (and (not ticket-number?)
-           (-> try-ticket->number Integer/parseInt (= 11) true?))  :fii
+           (-> try-ticket->number Integer/parseInt (= 11) true?))  :fii ;;Invalde filter Ex.: SULA11
       (and (not ticket-number?)
            (-> try-ticket->number Integer/parseInt)) :stockBR
       (contains? #{:BTC :ETH :CAKE} ticket) :crypto
@@ -103,22 +103,52 @@
      :asset/name       product
      :asset/ticket     ticket
      :asset/category   (ticket->categories ticket)
-     :asset/last-price 0.0M
      :asset/type       (ticket->asset-type ticket)}))
 
 (defn movements->assets
   ([mov]
    (movements->assets mov ()))
   ([mov db-data]
-   (->> mov
-        (map movement->asset)
-        (concat db-data)
-        (group-by :asset/ticket)
-        (map #(-> % val first))
-        (sort-by :asset/name))))
+   (println "Processing adapter asset...")
+   (let [assets (->> mov
+                     (map movement->asset)
+                     (filter #(not (contains? % db-data)))
+                     (concat db-data)
+                     (group-by :asset/ticket)
+                     (map #(-> % val first))
+                     (sort-by :asset/name))]
+     (println "Concluded adapter asset...")
+     assets)))
 
 (defn get-asset-by-name
   [assets name]
   (->> assets
        (filter #(= name (:asset/name %)))
        first))
+
+(defn disabled-ticket-get-market-price
+  [assets]
+  (filter (fn [{:asset/keys [ticket]}]
+            (not (contains? #{:INHF12} ticket))) assets))
+
+(defn allowed-type-get-market-price
+  [assets]
+  (filter (fn [{:asset/keys [type]}]
+            (contains? #{:stockBR :fii} type)) assets))
+
+(defn get-less-market-price-updated
+  [assets]
+  (->> assets
+       allowed-type-get-market-price
+       disabled-ticket-get-market-price
+       (sort-by :asset.market-price/updated-at)
+       first))
+
+
+(comment
+
+  (def assets-file (lob-asset-management.io.file-in/get-file-by-entity :asset))
+
+  (get-less-market-price-updated assets-file)
+
+  )

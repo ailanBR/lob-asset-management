@@ -11,9 +11,11 @@
   (let [db-assets (io.f-in/get-file-by-entity :asset)
         db-transactions (io.f-in/get-file-by-entity :transaction)
         assets (a.a/movements->assets b3-movements db-assets)
-        transactions  (->> b3-movements
-                           (map a.t/movements->transaction)
-                           (filter #(not (contains? % db-transactions))))
+        transactions (a.t/movements->transactions b3-movements db-transactions)
+        ;(->> b3-movements
+        ;                   (map a.t/movements->transaction)
+        ;                   (filter #(not (contains? % db-transactions))))
+        ; Validate transactions filter before delete this code
         portfolio (a.p/transactions->portfolio transactions)]
     (map io.f-out/upsert [assets transactions portfolio])))
 
@@ -37,7 +39,8 @@
   (let [already-read (or (-> :read-release (io.f-in/get-file-by-entity) :read-release) [])
         folder-files (io.f-in/get-b3-folder-files)
         new-files (->> folder-files
-                       (filter #(not (contains? (set already-read) %))))]
+                       (filter #(not (contains? (set already-read) %)))
+                       to-array)]
     (when (not (empty? new-files))
       (map #(process-b3-release-by-path %) new-files)
 
@@ -46,6 +49,7 @@
                                         (conj already-read)
                                         (apply concat)
                                         (to-array))}))))
+
 
 (defn delete-all-files
   []
@@ -56,4 +60,5 @@
   (process-b3-folder-only-new)
 
   (delete-all-files)
+
   )
