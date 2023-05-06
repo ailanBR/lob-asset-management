@@ -3,7 +3,10 @@
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.adapter.asset :as a.a]
-            [java-time.api :as t]))
+            [lob-asset-management.aux.time :as aux.t]
+            ;[clj-time.core :as t]
+            [java-time.api :as t]
+            ))
 
 (defn keyword-space->underline [m]
   (zipmap (map #(keyword (clojure.string/replace (name %) " " "_")) (keys m))
@@ -28,7 +31,7 @@
                                          bigdec)]
           {:price      latest-refreshed-price
            :date       latest-refreshed-dt
-           :updated-at (str (t/local-date-time))}))
+           :updated-at (aux.t/get-current-millis)}))
     (do
       (println "[ERROR] Something was wrong in get market data => formatted-data")
       (clojure.pprint/pprint formatted-data))))
@@ -68,16 +71,17 @@
      (update-asset-market-price assets)
      (println "[ERROR] update-asset-market-price - can't get assets")))
   ([assets]
-   (let [less-updated-asset (-> (a.a/get-less-market-price-updated assets) first)
-         less-updated-asset-ticket (less-updated-asset->out-ticket less-updated-asset)
-         market-last-price {:price      11.11M
-                            :date       :2023-05-05
-                            :updated-at (str (t/local-date-time))}
+   (if-let [less-updated-asset (-> (a.a/get-less-market-price-updated assets) first)]
+     (let [less-updated-asset-ticket (less-updated-asset->out-ticket less-updated-asset)
+           market-last-price {:price      11.11M
+                              :date       :2023-05-05
+                              :updated-at (aux.t/get-current-millis)}
 
-         ;(get-b3-market-price less-updated-asset-ticket)
-         updated-assets (update-assets assets less-updated-asset market-last-price)]
-     (clojure.pprint/pprint market-last-price)
-     (io.f-out/upsert updated-assets))))
+           ;(get-b3-market-price less-updated-asset-ticket)
+           updated-assets (update-assets assets less-updated-asset market-last-price)]
+       (println "[MARKET-UPDATING] " (:asset/ticket less-updated-asset) " price " (:price market-last-price))
+       (io.f-out/upsert updated-assets))
+     (println "[WARNING] No asset to be updated"))))
 
 (defn get-asset-market-price
   "Receive a list of assets and return the list updated without read or write data"
@@ -85,7 +89,7 @@
   (let [{:keys [price updated-at date]}
         {:price      11.11M
          :date       :2023-05-05
-         :updated-at (str (t/local-date-time))}]
+         :updated-at (aux.t/get-current-millis)}]
     (assoc asset :asset.market-price/price price
                  :asset.market-price/updated-at updated-at
                  :asset.market-price/price-date date)))

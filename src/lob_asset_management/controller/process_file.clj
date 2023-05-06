@@ -59,7 +59,7 @@
       ;                                  (to-array))})
       )))
 
-(defn delete-all-files'
+(defn delete-all-files
   []
   (println "DELETING..." )
   (map io.f-in/delete-file m.f/list-file-name))

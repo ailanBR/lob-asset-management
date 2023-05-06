@@ -5,6 +5,7 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.10.3"]
                  [clojure.java-time "1.2.0"]
+                 [clj-time "0.15.2"]
                  [dk.ative/docjure "1.19.0"]
                  [prismatic/schema "1.4.1"]
                  [nubank/matcher-combinators "3.8.4"]
