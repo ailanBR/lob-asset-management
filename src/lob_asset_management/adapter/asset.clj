@@ -137,12 +137,16 @@
             (contains? #{:stockBR :fii} type)) assets))
 
 (defn get-less-market-price-updated
-  [assets]
-  (->> assets
-       allowed-type-get-market-price
-       disabled-ticket-get-market-price
-       (sort-by :asset.market-price/updated-at)
-       first))
+  ([assets]
+   (get-less-market-price-updated assets 1))
+  ([assets quantity]
+   (->> assets
+        allowed-type-get-market-price
+        disabled-ticket-get-market-price
+        (sort-by :asset.market-price/updated-at)
+        (take quantity))))
+
+
 
 
 (comment

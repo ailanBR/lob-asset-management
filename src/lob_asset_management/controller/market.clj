@@ -63,21 +63,37 @@
     updated-assets))
 
 (defn update-asset-market-price
-  []
-  (let [assets (io.f-in/get-file-by-entity :asset)
-        less-updated-asset (a.a/get-less-market-price-updated assets)
-        less-updated-asset-ticket (less-updated-asset->out-ticket less-updated-asset)
-        market-last-price (get-b3-market-price less-updated-asset-ticket)
-        updated-assets (update-assets assets less-updated-asset market-last-price)]
-    (clojure.pprint/pprint market-last-price)
-    (io.f-out/upsert updated-assets)))
+  ([]
+   (if-let [assets (io.f-in/get-file-by-entity :asset)]
+     (update-asset-market-price assets)
+     (println "[ERROR] update-asset-market-price - can't get assets")))
+  ([assets]
+   (let [less-updated-asset (a.a/get-less-market-price-updated assets)
+         less-updated-asset-ticket (less-updated-asset->out-ticket less-updated-asset)
+         market-last-price (get-b3-market-price less-updated-asset-ticket)
+         updated-assets (update-assets assets less-updated-asset market-last-price)]
+     (clojure.pprint/pprint market-last-price)
+     (io.f-out/upsert updated-assets))))
+
+(defn get-asset-market-price
+  "Receive a list of assets and return the list updated without read or write data"
+  [asset]
+  (let [{:keys [price updated-at date]}
+        {:price      11.11M
+         :date       :2023-05-05
+         :updated-at (str (t/local-date-time))}]
+    (assoc asset :asset.market-price/price price
+                 :asset.market-price/updated-at updated-at
+                 :asset.market-price/price-date date)))
 
 (comment
+
+
   (def aux-market-info (io.http/get-daily-adjusted-prices "ABEV3.SA"))
   (def market-formated (get-b3-market-price "ABEV3.SA"))
   (clojure.pprint/pprint market-formated)
   (last-price market-formated)
-
+  ;
   ;1. Get assets
   (def assets-file (io.f-in/get-file-by-entity :asset))
   ;2. Get less updated

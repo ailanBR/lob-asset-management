@@ -3,7 +3,8 @@
             [lob-asset-management.adapter.transaction :as a.t]
             [lob-asset-management.io.file-out :as io.o]
             [lob-asset-management.io.file-in :as io.i]
-            [lob-asset-management.controller.process-file :as c.p]))
+            [lob-asset-management.controller.process-file :as c.p]
+            [lob-asset-management.controller.market :as c.m]))
 
 ;FIXME : Include log lib https://mattjquinn.com/2014/log4j2-clojure/ to avoid error
 
@@ -95,4 +96,20 @@
   (c.p/process-b3-folder-only-new)
 
   (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/total-cost :portfolio/dividend ] (io.i/get-file-by-entity :portfolio))
+
+  ;;Market Controller
+  (def assets (io.i/get-file-by-entity :asset))
+
+  (def updated-assets
+    (->> assets
+         (sort-by :asset.market-price/updated-at)
+         (#(a.a/get-less-market-price-updated % 2))
+         (map c.m/get-asset-market-price)))
+
+  (->> updated-assets
+       (sort-by :asset.market-price/updated-at)
+       (#(a.a/get-less-market-price-updated % 1))
+       (map c.m/get-asset-market-price))
+
+
   )

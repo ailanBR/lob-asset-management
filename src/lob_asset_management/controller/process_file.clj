@@ -42,16 +42,24 @@
                        (filter #(not (contains? (set already-read) %)))
                        to-array)]
     (when (not (empty? new-files))
-      (map #(process-b3-release-by-path %) new-files)
+      (->> new-files
+           (map #(process-b3-release-by-path %))
+           (#(io.f-out/upsert {:read-release (->>
+                                              %
+                                              (conj already-read)
+                                              (apply concat)
+                                              (to-array))}))
+           )
+      ;(map #(process-b3-release-by-path %) new-files)
+      ;
+      ;(io.f-out/upsert {:read-release (->>
+      ;                                  new-files
+      ;                                  (conj already-read)
+      ;                                  (apply concat)
+      ;                                  (to-array))})
+      )))
 
-      (io.f-out/upsert {:read-release (->>
-                                        new-files
-                                        (conj already-read)
-                                        (apply concat)
-                                        (to-array))}))))
-
-
-(defn delete-all-files
+(defn delete-all-files'
   []
   (println "DELETING..." )
   (map io.f-in/delete-file m.f/list-file-name))
