@@ -27,7 +27,7 @@
   ;TODO Avoid the necessity of a existent folder
   (with-open [out (io/writer file-path)]
     (binding [*out* out]
-      (clojure.pprint/pprint  data))))
+      (clojure.pprint/pprint data))))
 
 (defmulti
   upsert

@@ -32,7 +32,6 @@
 
 (defmulti consolidate-transactions
            (fn [_ {:transaction/keys [operation-type]}]
-             (print operation-type)
              (keyword operation-type)))
 
 (defmethod consolidate-transactions :buy

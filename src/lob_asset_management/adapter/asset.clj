@@ -1,8 +1,9 @@
 (ns lob-asset-management.adapter.asset
   (:require [schema.core :as s]
             [lob-asset-management.models.asset :as m.a]
-            [lob-asset-management.logic.asset :as l.a])
-  (:import (java.util UUID)))
+            [lob-asset-management.logic.asset :as l.a]
+            [java-time.api :as t])
+  (:import [java.time LocalDate ZoneId DateTimeFormatter]))
 
 (s/defn ticket->categories :- [s/Keyword]
   [ticket :- s/Keyword]
@@ -137,18 +138,25 @@
             (contains? #{:stockBR :fii} type)) assets))
 
 (defn get-less-market-price-updated
-  [assets]
-  (->> assets
-       allowed-type-get-market-price
-       disabled-ticket-get-market-price
-       (sort-by :asset.market-price/updated-at)
-       first))
-
+  ([assets]
+   (get-less-market-price-updated assets 1))
+  ([assets quantity]
+   (get-less-market-price-updated assets quantity 10))
+  ([assets quantity min-updated-hours]
+   (->> assets
+        allowed-type-get-market-price
+        disabled-ticket-get-market-price
+        (sort-by :asset.market-price/updated-at)
+        ;FIXME : Add filter to get only less updated more than some hours
+        ;(filter #(or (nil? :asset.market-price/updated-at)
+        ;             (< (t/LocalDate/parse (:asset.market-price/updated-at %))
+        ;                (str (t/minus (t/local-date-time) (t/hours min-updated-hours))))))
+        (take quantity))))
 
 (comment
 
   (def assets-file (lob-asset-management.io.file-in/get-file-by-entity :asset))
 
-  (get-less-market-price-updated assets-file)
+  (get-less-market-price-updated assets-file 1 0)
 
   )
