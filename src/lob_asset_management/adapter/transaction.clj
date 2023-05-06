@@ -3,7 +3,9 @@
             [clojure.string :as string]
             [lob-asset-management.models.transaction :as m.t]
             [lob-asset-management.logic.asset :as l.a]
-            [java-time.api :as t]))
+            [java-time.api :as t]
+            ;[clj-time.core :as t]
+            ))
 
 (s/defn b3-exchange->transaction-exchange :- m.t/Exchange
   [ex :- s/Str]

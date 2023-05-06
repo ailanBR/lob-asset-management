@@ -5,7 +5,9 @@
             [lob-asset-management.io.file-in :as io.i]
             [lob-asset-management.controller.process-file :as c.p]
             [lob-asset-management.controller.market :as c.m]
-            [java-time.api :as t]))
+            [java-time.api :as t]
+            ;[clj-time.core :as t]
+            ))
 
 ;FIXME : Include log lib https://mattjquinn.com/2014/log4j2-clojure/ to avoid error
 
@@ -127,7 +129,7 @@
   (defn my-function []
     (println "Hello, world! [" (str (t/local-date-time)) "]"))
 
-  (def get-market-price-pooler (pooler #(c.m/update-asset-market-price) 15000))
+  (def get-market-price-pooler (pooler #(c.m/update-asset-market-price) 1000))
 
   (get-market-price-pooler)
 
@@ -135,5 +137,8 @@
     (Thread/sleep 60000)
     (stop-loop))
 
+  ;INTERVAL CAN BE
+  ;30000 => 30sec
+  ;25 Min to process 50 assets
 
   )

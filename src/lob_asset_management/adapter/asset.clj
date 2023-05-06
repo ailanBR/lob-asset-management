@@ -2,8 +2,15 @@
   (:require [schema.core :as s]
             [lob-asset-management.models.asset :as m.a]
             [lob-asset-management.logic.asset :as l.a]
-            [java-time.api :as t])
-  (:import [java.time LocalDate ZoneId DateTimeFormatter]))
+            [lob-asset-management.io.file-in :as io.f-in]
+            [lob-asset-management.aux.time :as aux.t]
+            [java-time.api :as jt]
+            [clj-time.coerce :as coerce]
+            ;[clj-time.core :as t]
+            ;[clj-time.local :as local]
+            ;[clj-time.format :as t.f]
+            )
+  (:import (java.util UUID)))
 
 (s/defn ticket->categories :- [s/Keyword]
   [ticket :- s/Keyword]
@@ -141,22 +148,27 @@
   ([assets]
    (get-less-market-price-updated assets 1))
   ([assets quantity]
-   (get-less-market-price-updated assets quantity 10))
+   (get-less-market-price-updated assets quantity 1))
   ([assets quantity min-updated-hours]
    (->> assets
         allowed-type-get-market-price
         disabled-ticket-get-market-price
         (sort-by :asset.market-price/updated-at)
-        ;FIXME : Add filter to get only less updated more than some hours
-        ;(filter #(or (nil? :asset.market-price/updated-at)
-        ;             (< (t/LocalDate/parse (:asset.market-price/updated-at %))
-        ;                (str (t/minus (t/local-date-time) (t/hours min-updated-hours))))))
+        (filter #(or (nil? :asset.market-price/updated-at)
+                     (< (:asset.market-price/updated-at %)
+                        (aux.t/get-current-millis (jt/minus (jt/local-date-time) (jt/hours min-updated-hours))))))
         (take quantity))))
 
 (comment
 
-  (def assets-file (lob-asset-management.io.file-in/get-file-by-entity :asset))
+  (def assets-file (io.f-in/get-file-by-entity :asset))
 
-  (get-less-market-price-updated assets-file 1 0)
+  (def l (first (get-less-market-price-updated assets-file 1 10)))
+
+  (first (get-less-market-price-updated assets-file 1 5))
+
+  (get-less-market-price-updated assets-file 1 3)
+
+
 
   )
