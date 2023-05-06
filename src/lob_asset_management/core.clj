@@ -4,7 +4,8 @@
             [lob-asset-management.io.file-out :as io.o]
             [lob-asset-management.io.file-in :as io.i]
             [lob-asset-management.controller.process-file :as c.p]
-            [lob-asset-management.controller.market :as c.m]))
+            [lob-asset-management.controller.market :as c.m]
+            [java-time.api :as t]))
 
 ;FIXME : Include log lib https://mattjquinn.com/2014/log4j2-clojure/ to avoid error
 
@@ -34,6 +35,17 @@
                 (c.p/process-b3-folder-only-new))
         (println "INVALID COMMAND"))))
   (println "FINISH"))
+
+(defn pooler [f interval]
+  (let [run-forest-run (atom true)]
+    (future
+      (try
+        (while @run-forest-run
+          (f)
+          (Thread/sleep interval))
+        (catch Exception e
+          (println "Error in pooler:" e))))
+    (fn [] (reset! run-forest-run false))))
 
 (comment
   "Read b3 movements and write a new edn file with assets without duplicated"
@@ -99,7 +111,6 @@
 
   ;;Market Controller
   (def assets (io.i/get-file-by-entity :asset))
-
   (def updated-assets
     (->> assets
          (sort-by :asset.market-price/updated-at)
@@ -110,6 +121,19 @@
        (sort-by :asset.market-price/updated-at)
        (#(a.a/get-less-market-price-updated % 1))
        (map c.m/get-asset-market-price))
+
+  ;;Market data pooler
+
+  (defn my-function []
+    (println "Hello, world! [" (str (t/local-date-time)) "]"))
+
+  (def get-market-price-pooler (pooler #(c.m/update-asset-market-price) 15000))
+
+  (get-market-price-pooler)
+
+  (let [stop-loop (pooler my-function 15000)]
+    (Thread/sleep 60000)
+    (stop-loop))
 
 
   )

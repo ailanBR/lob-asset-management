@@ -68,9 +68,13 @@
      (update-asset-market-price assets)
      (println "[ERROR] update-asset-market-price - can't get assets")))
   ([assets]
-   (let [less-updated-asset (a.a/get-less-market-price-updated assets)
+   (let [less-updated-asset (-> (a.a/get-less-market-price-updated assets) first)
          less-updated-asset-ticket (less-updated-asset->out-ticket less-updated-asset)
-         market-last-price (get-b3-market-price less-updated-asset-ticket)
+         market-last-price {:price      11.11M
+                            :date       :2023-05-05
+                            :updated-at (str (t/local-date-time))}
+
+         ;(get-b3-market-price less-updated-asset-ticket)
          updated-assets (update-assets assets less-updated-asset market-last-price)]
      (clojure.pprint/pprint market-last-price)
      (io.f-out/upsert updated-assets))))
