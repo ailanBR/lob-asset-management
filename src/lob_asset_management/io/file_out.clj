@@ -25,7 +25,7 @@
         (clojure.java.io/copy in out)))))
 
 (defn edn->file [data file-path]
-  ;TODO Avoid the necessity of a existent folder
+  ;TODO Avoid the necessity of an existent folder
   (with-open [out (io/writer file-path)]
     (binding [*out* out]
       (clojure.pprint/pprint data))))

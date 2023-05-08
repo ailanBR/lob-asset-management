@@ -38,7 +38,7 @@
         (println "INVALID COMMAND"))))
   (println "FINISH"))
 
-(defn pooler [f interval]
+(defn poller [f interval]
   (let [run-forest-run (atom true)]
     (future
       (try
@@ -46,7 +46,7 @@
           (f)
           (Thread/sleep interval))
         (catch Exception e
-          (println "Error in pooler:" e))))
+          (println "Error in poller: " e))))
     (fn [] (reset! run-forest-run false))))
 
 (comment
@@ -107,7 +107,7 @@
 
   (c.p/delete-all-files)
   (c.p/process-b3-folder)
-  (c.p/process-b3-folder-only-new)
+  (c.p/process-b3-folder-only-new)                          ;FIXME String error (maybe abandon that way)
 
   (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/total-cost :portfolio/dividend ] (io.i/get-file-by-entity :portfolio))
 
@@ -124,20 +124,26 @@
        (#(a.a/get-less-market-price-updated % 1))
        (map c.m/get-asset-market-price))
 
-  ;;Market data pooler
+  ;;Market data poller
 
   (defn my-function []
     (println "Hello, world! [" (str (t/local-date-time)) "]"))
 
-  (def get-market-price-pooler (pooler #(c.m/update-asset-market-price) 1000))
+  (def get-market-price-poller (poller #(c.m/update-asset-market-price) 10000))
 
-  (get-market-price-pooler)
+  (let [stop-loop (poller my-function 3000)]
+    (println "Press enter to stop.")
+    (read-line)
+    (future-cancel (stop-loop))
+    @(stop-loop))
 
-  (let [stop-loop (pooler my-function 15000)]
+  (get-market-price-poller)
+
+  (let [stop-loop (poller my-function 15000)]
     (Thread/sleep 60000)
     (stop-loop))
 
-  ;INTERVAL CAN BE
+  ;INTERVAL CONFIG
   ;30000 => 30sec
   ;25 Min to process 50 assets
 

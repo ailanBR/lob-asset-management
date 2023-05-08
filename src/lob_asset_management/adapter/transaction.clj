@@ -52,7 +52,7 @@
   (let [operation-type (b3-type->transaction-type b3-movement)
         ticket (l.a/b3-ticket->asset-ticket product)]
     {:transaction/id             (gen-transaction-id b3-movement)
-     :transaction/created-at     transaction-date
+     :transaction/created-at     (str transaction-date)
      ;:transaction/asset          asset
      ;:transaction/asset-id       (UUID/randomUUID)
      :transaction.asset/ticket   ticket
@@ -70,10 +70,10 @@
    (println "Processing adapter transactions...")
    (let [transactions (->> mov
                            (map movements->transaction)
-                           (filter #(not (contains? % db-data)))
+                           (filter #(not (contains? % db-data))) ;FIXME
                            (concat db-data)
                            (group-by :transaction/id)
                            (map #(->> % val (sort-by :transaction/processed-at) last))
                            (sort-by :transaction.asset/ticket))]
-     (println "Concluded adapter transactions...")
+     (println "Concluded adapter transactions...[" (count transactions) "]")
      transactions)))

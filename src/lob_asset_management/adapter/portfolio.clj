@@ -130,7 +130,7 @@
                        (map consolidate-grouped-transactions)
                        (set-portfolio-representation)
                        (sort-by :portfolio/percentage >))]
-    (println "Concluded adapter portfolio...")
+    (println "Concluded adapter portfolio...[" (count portfolio) "]")
     portfolio))
 
 (defn consolidate-category

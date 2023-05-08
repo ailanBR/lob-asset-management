@@ -21,21 +21,19 @@
 (defn last-price
   [formatted-data]
   (if (not (empty? formatted-data))
-    (do (println formatted-data)
-        (let [latest-refreshed-dt (-> formatted-data :meta-data :3._Last_Refreshed keyword)
-              latest-refreshed-price (-> formatted-data
-                                         :time-series
-                                         latest-refreshed-dt
-                                         keyword-space->underline
-                                         :4._close
-                                         bigdec)]
-          {:price      latest-refreshed-price
-           :date       latest-refreshed-dt
-           :updated-at (aux.t/get-current-millis)}))
+    (let [latest-refreshed-dt (-> formatted-data :meta-data :3._Last_Refreshed keyword)
+          latest-refreshed-price (-> formatted-data
+                                     :time-series
+                                     latest-refreshed-dt
+                                     keyword-space->underline
+                                     :4._close
+                                     bigdec)]
+      {:price      latest-refreshed-price
+       :date       latest-refreshed-dt
+       :updated-at (aux.t/get-current-millis)})
     (do
       (println "[ERROR] Something was wrong in get market data => formatted-data")
       (clojure.pprint/pprint formatted-data))))
-
 
 (defn get-b3-market-price
   [asset]
@@ -43,15 +41,14 @@
     (let [formatted-data (formatted-data market-info)
           last-price (last-price formatted-data)]
       last-price)
-    (do
-      (println "[ERROR] Something was wrong in get market data"))))
+    (println "[ERROR] Something was wrong in get market data")))
 
-(defn less-updated-asset->out-ticket
-  [less-updated-asset]
-  (-> less-updated-asset
-      :asset/ticket
-      name
-      (str ".SA")))
+(defn in-ticket->out-ticket
+  [{:asset/keys [ticket type]}]
+  (let [asset-name (name ticket)]
+    (if (or (= type :stockBR) (= type :fii))
+      (str asset-name ".SA")
+      asset-name)))
 
 (defn update-assets
   [assets
@@ -71,16 +68,13 @@
      (update-asset-market-price assets)
      (println "[ERROR] update-asset-market-price - can't get assets")))
   ([assets]
-   (if-let [less-updated-asset (-> (a.a/get-less-market-price-updated assets) first)]
-     (let [less-updated-asset-ticket (less-updated-asset->out-ticket less-updated-asset)
-           market-last-price {:price      11.11M
-                              :date       :2023-05-05
-                              :updated-at (aux.t/get-current-millis)}
-
-           ;(get-b3-market-price less-updated-asset-ticket)
-           updated-assets (update-assets assets less-updated-asset market-last-price)]
-       (println "[MARKET-UPDATING] " (:asset/ticket less-updated-asset) " price " (:price market-last-price))
-       (io.f-out/upsert updated-assets))
+   (if-let [less-updated-asset (-> assets (a.a/get-less-market-price-updated) first)]
+     (do (println "[MARKET-UPDATING] Stating get asset price for " less-updated-asset)
+         (let [less-updated-asset-ticket (in-ticket->out-ticket less-updated-asset)
+               market-last-price (get-b3-market-price less-updated-asset-ticket)
+               updated-assets (update-assets assets less-updated-asset market-last-price)]
+           (println "[MARKET-UPDATING] Success " less-updated-asset-ticket " price " (:price market-last-price))
+           (io.f-out/upsert updated-assets)))
      (println "[WARNING] No asset to be updated"))))
 
 (defn get-asset-market-price
@@ -95,36 +89,18 @@
                  :asset.market-price/price-date date)))
 
 (comment
-
-
-  (def aux-market-info (io.http/get-daily-adjusted-prices "ABEV3.SA"))
+  (def aux-market-info (io.http/get-daily-adjusted-prices "CAN"))
   (def market-formated (get-b3-market-price "ABEV3.SA"))
   (clojure.pprint/pprint market-formated)
   (last-price market-formated)
-  ;
-  ;1. Get assets
-  (def assets-file (io.f-in/get-file-by-entity :asset))
-  ;2. Get less updated
-  (def less-updated-asset (a.a/get-less-market-price-updated assets-file))
-  ;3. Get out ticket (Ticket for alpha vantage)
-  (def less-updated-asset->out-ticket
-    (-> less-updated-asset
-        :asset/ticket
-        name
-        (str ".SA")))
-  ;4. Get market price
-  (def market-last-price (get-b3-market-price less-updated-asset->out-ticket))
-  ;5. Update asset
-  (def updated-assets
-    (map #(if (= (:asset/id %) (:asset/id less-updated-asset))
-            (assoc % :asset.market-price/price (:price market-last-price)
-                     :asset.market-price/updated-at (:updated-at market-last-price)
-                     :asset.market-price/date (:date market-last-price))
-            %)
-            assets-file))
-  ;6. update the file
 
   (update-asset-market-price)
-
-
+  ;-----------------------
+  (-> #:asset{:id #uuid "710a8d28-8a27-40b0-a067-ba437a8fc4a1",
+              :name "BBAS3 - BANCO DO BRASIL S/A",
+              :ticket :BBAS3,
+              :category [:finance],
+              :type :stockBR}
+      in-ticket->out-ticket
+      get-b3-market-price)
   )
