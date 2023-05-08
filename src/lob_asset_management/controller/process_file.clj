@@ -6,18 +6,32 @@
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.models.file :as m.f]))
 
-(defn process-b3-movement
+(defn process-assets
   [b3-movements]
   (let [db-assets (io.f-in/get-file-by-entity :asset)
-        db-transactions (io.f-in/get-file-by-entity :transaction)
-        assets (a.a/movements->assets b3-movements db-assets)
-        transactions (a.t/movements->transactions b3-movements db-transactions)
-        portfolio (a.p/transactions->portfolio transactions)
-        upsert-all (map io.f-out/upsert [assets transactions portfolio])]
-    ;(println (= db-assets assets))
-    ;(println (= db-transactions transactions))
-    (clojure.pprint/pprint assets)
-    upsert-all))
+        assets (a.a/movements->assets b3-movements db-assets)]
+    (when (not= db-assets assets)
+      (println "New assets to be registered")
+      (io.f-out/upsert assets)
+      assets)))
+
+(defn process-transactions
+  [b3-movements]
+  (let [db-transactions (io.f-in/get-file-by-entity :transaction)
+        transactions (a.t/movements->transactions b3-movements db-transactions)]
+    (when (not= db-transactions transactions)
+      (println "New transactions to be registered")
+      (io.f-out/upsert transactions)
+      transactions)))
+
+(defn process-b3-movement
+  [b3-movements]
+  (let [_ (process-assets b3-movements)
+        transactions (process-transactions b3-movements)
+        portfolio (when transactions (a.p/transactions->portfolio transactions))]
+    (when portfolio
+      (println "New portfolio records to be registered")
+      (io.f-out/upsert portfolio))))
 
 (defn process-b3-release
   [b3-file]

@@ -107,7 +107,8 @@
 
   (c.p/delete-all-files)
   (c.p/process-b3-folder)
-  (c.p/process-b3-folder-only-new)                          ;FIXME String error (maybe abandon that way)
+  (c.p/process-b3-folder-only-new) ;FIXME String error (maybe abandon that way)
+
 
   (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/total-cost :portfolio/dividend ] (io.i/get-file-by-entity :portfolio))
 

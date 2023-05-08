@@ -63,17 +63,27 @@
      :transaction/processed-at   (-> (t/local-date-time) str)
      :transaction/operation-total (safe-number->bigdec operation-total)}))
 
+(defn already-read-transaction
+  [{:transaction/keys [id]} db-data]
+  (if (empty? db-data)
+    true
+    (let [db-data-tickets (->> db-data (map :transaction/id) set)]
+      (not (contains? db-data-tickets id)))))
+
 (defn movements->transactions
   ([mov]
    (movements->transactions mov ()))
   ([mov db-data]
-   (println "Processing adapter transactions...")
-   (let [transactions (->> mov
+   (println "Processing adapter transactions...current transactions [" (count db-data) "]")
+   (let [mov-transactions (->> mov
                            (map movements->transaction)
-                           (filter #(not (contains? % db-data))) ;FIXME
-                           (concat db-data)
                            (group-by :transaction/id)
-                           (map #(->> % val (sort-by :transaction/processed-at) last))
-                           (sort-by :transaction.asset/ticket))]
-     (println "Concluded adapter transactions...[" (count transactions) "]")
-     transactions)))
+                           (map #(->> % val (sort-by :transaction/processed-at) last)))
+         new-transactions (->> mov-transactions
+                               (filter #(already-read-transaction % db-data))
+                               (concat (or db-data []))
+                               (sort-by :transaction.asset/ticket))]
+     (println "Concluded adapter transactions... "
+              "read transactions[" (count mov-transactions) "] "
+              "result [" (count new-transactions) "]")
+     new-transactions)))

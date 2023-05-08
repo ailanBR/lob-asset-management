@@ -188,7 +188,9 @@
                          (filter #(already-read-asset % db-data))
                          (concat (or db-data []))
                          (sort-by :asset/name))]
-     (println "Concluded adapter asset... read assets [" (count mov-assets) "] result [" (count new-assets) "]")
+     (println "Concluded adapter asset... "
+              "read assets [" (count mov-assets) "] "
+              "result [" (count new-assets) "]")
      new-assets)))
 
 (defn disabled-ticket-get-market-price
