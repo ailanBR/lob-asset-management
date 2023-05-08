@@ -25,23 +25,22 @@
   ([symbol]
    (get-daily-adjusted-prices symbol alpha-key))
   ([symbol api-key]
-   (let [response (http/get "https://www.alphavantage.co/query"
+   (let [{:keys [status body]} (http/get "https://www.alphavantage.co/query"
                             {:query-params {:function "TIME_SERIES_DAILY_ADJUSTED"
                                             :symbol   symbol
                                             :apikey   api-key}})]
-     (if (= (:status response) 200)
-       (-> response
-           :body
+     (if (= status 200)
+       (-> body
            (json/parse-string true)
            ;(get ":Meta Data")
            (keyword-space->underline)
-           (remove-keyword-parenthesis)
-           )
+           (remove-keyword-parenthesis))
        (throw (ex-info "Failed to get stock price information"
-                       {:status (:status response)}))))))
+                       {:status (:status status)}))))))
 
 (comment
-  (def abev-result (get-daily-adjusted-prices "ABEV3.SAO"))
+  (get-daily-adjusted-prices "CAN")
+  (def abev-result (get-daily-adjusted-prices "CAN"))
   (clojure.pprint/pprint abev-result)
 
   (get abev-result ":Meta Data")

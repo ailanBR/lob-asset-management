@@ -12,6 +12,61 @@
             )
   (:import (java.util UUID)))
 
+(def allowed-get-market-info-tickets
+  #{:BBAS3
+   :ALZR11
+   :HGBS11
+   :KNRI11
+   :RECR11
+   :DEFI11
+   :ABEV3
+   :B3SA3
+   :BIDI11
+   :BPAC3
+   :CAML3
+   :EQTL3
+   :FLRY3
+   :HAPV3
+   :LOGN3
+   :NEOE3
+   :PDTC3
+   :RAIL3
+   :RENT3
+   :ROMI3
+   :SMTO3
+   :SQIA3
+   :SULA11
+   :SULA3
+   :TOTS3
+   :AAPL
+   :ABT
+   :AMZN
+   :BLK
+   :BLOK
+   :BRK.B
+   :CAN
+   :CNBS
+   :COIN
+   :GILD
+   :GOOGL
+   :IIPR
+   :INDA
+   :ISRG
+   :ITW
+   :JPM
+   :MCHI
+   :MDT
+   :GNDI3
+   :WEGE3
+   :MSFT
+   :SE
+   :SKYY
+   :TSLA
+   :OIBR3
+   :ARE
+   :EQIX
+   :GWH})
+
 (s/defn ticket->categories :- [s/Keyword]
   [ticket :- s/Keyword]
   (condp = ticket
@@ -98,41 +153,43 @@
         ticket-number? (empty? try-ticket->number)]
     (cond
       (and (not ticket-number?)
-           (-> try-ticket->number Integer/parseInt (= 11) true?))  :fii ;;Invalde filter Ex.: SULA11
+           (contains? m.a/fii-list ticket)) :fii
       (and (not ticket-number?)
            (-> try-ticket->number Integer/parseInt)) :stockBR
-      (contains? #{:BTC :ETH :CAKE} ticket) :crypto
+      (contains? m.a/crypto-list ticket) :crypto
       :else :stockEUA)))
 
 (s/defn movement->asset :- m.a/Asset
   [{:keys [product]}]
   (let [ticket (l.a/b3-ticket->asset-ticket product)]
     {:asset/id         (UUID/randomUUID)
-     :asset/name       product
+     :asset/name       (str product)
      :asset/ticket     ticket
      :asset/category   (ticket->categories ticket)
      :asset/type       (ticket->asset-type ticket)}))
+
+(defn already-read-asset
+  [{:asset/keys [ticket]} db-data]
+  (if (empty? db-data)
+    true
+    (let [db-data-tickets (->> db-data (map :asset/ticket) set)]
+      (not (contains? db-data-tickets ticket)))))
 
 (defn movements->assets
   ([mov]
    (movements->assets mov ()))
   ([mov db-data]
-   (println "Processing adapter asset...")
-   (let [assets (->> mov
-                     (map movement->asset)
-                     (filter #(not (contains? % db-data)))
-                     (concat db-data)
-                     (group-by :asset/ticket)
-                     (map #(-> % val first))
-                     (sort-by :asset/name))]
-     (println "Concluded adapter asset...")
-     assets)))
-
-(defn get-asset-by-name
-  [assets name]
-  (->> assets
-       (filter #(= name (:asset/name %)))
-       first))
+   (println "Processing adapter asset... current assets [" (count db-data) "]")
+   (let [mov-assets (->> mov
+                         (map movement->asset)
+                         (group-by :asset/ticket)
+                         (map #(-> % val first)))
+         new-assets (->> mov-assets
+                         (filter #(already-read-asset % db-data))
+                         (concat (or db-data []))
+                         (sort-by :asset/name))]
+     (println "Concluded adapter asset... read assets [" (count mov-assets) "] result [" (count new-assets) "]")
+     new-assets)))
 
 (defn disabled-ticket-get-market-price
   [assets]
@@ -141,8 +198,15 @@
 
 (defn allowed-type-get-market-price
   [assets]
-  (filter (fn [{:asset/keys [type]}]
-            (contains? #{:stockBR :fii} type)) assets))
+  (filter (fn [{:asset/keys [type ticket]}]
+            (and (contains? #{:stockBR :fii} type)
+                 (contains? allowed-get-market-info-tickets ticket))) assets))
+
+(defn less-updated-than-target
+  [asset target-hours]
+  (< (:asset.market-price/updated-at asset)
+     (aux.t/get-current-millis
+       (jt/minus (jt/local-date-time) (jt/hours target-hours)))))
 
 (defn get-less-market-price-updated
   ([assets]
@@ -150,18 +214,25 @@
   ([assets quantity]
    (get-less-market-price-updated assets quantity 1))
   ([assets quantity min-updated-hours]
-   (->> assets
-        allowed-type-get-market-price
-        disabled-ticket-get-market-price
-        (sort-by :asset.market-price/updated-at)
-        (filter #(or (nil? :asset.market-price/updated-at)
-                     (< (:asset.market-price/updated-at %)
-                        (aux.t/get-current-millis (jt/minus (jt/local-date-time) (jt/hours min-updated-hours))))))
-        (take quantity))))
+   (let [filter-assets (->> assets
+                            allowed-type-get-market-price
+                            disabled-ticket-get-market-price
+                            (sort-by :asset.market-price/updated-at)
+                            (filter #(or (nil? (:asset.market-price/updated-at %))
+                                         (less-updated-than-target % min-updated-hours))))]
+     (or (take quantity filter-assets)
+         nil))))
 
 (comment
-
   (def assets-file (io.f-in/get-file-by-entity :asset))
+
+  (clojure.pprint/print-table assets-file)
+
+  (def b3-mov (lob-asset-management.io.file-in/read-xlsx-by-file-name "movimentacao-20220101-20220630.xlsx"))
+
+  (map :asset/ticket assets-file)
+
+  (clojure.pprint/print-table (movements->assets b3-mov assets-file))
 
   (def l (first (get-less-market-price-updated assets-file 1 10)))
 

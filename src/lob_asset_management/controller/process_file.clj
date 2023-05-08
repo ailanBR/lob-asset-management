@@ -12,12 +12,12 @@
         db-transactions (io.f-in/get-file-by-entity :transaction)
         assets (a.a/movements->assets b3-movements db-assets)
         transactions (a.t/movements->transactions b3-movements db-transactions)
-        ;(->> b3-movements
-        ;                   (map a.t/movements->transaction)
-        ;                   (filter #(not (contains? % db-transactions))))
-        ; Validate transactions filter before delete this code
-        portfolio (a.p/transactions->portfolio transactions)]
-    (map io.f-out/upsert [assets transactions portfolio])))
+        portfolio (a.p/transactions->portfolio transactions)
+        upsert-all (map io.f-out/upsert [assets transactions portfolio])]
+    ;(println (= db-assets assets))
+    ;(println (= db-transactions transactions))
+    (clojure.pprint/pprint assets)
+    upsert-all))
 
 (defn process-b3-release
   [b3-file]
@@ -31,33 +31,29 @@
 
 (defn process-b3-folder
   []
-  (let [folder-files (io.f-in/get-b3-folder-files)]
-    (map #(process-b3-release-by-path %) folder-files)))
+  (if-let [folder-files (io.f-in/get-b3-folder-files)]
+    (let [b3-movements (->> folder-files
+                            (map io.f-in/read-xlsx-by-file-path )
+                            (apply concat))]
+      (process-b3-movement b3-movements))))
 
 (defn process-b3-folder-only-new
   []
   (let [already-read (or (-> :read-release (io.f-in/get-file-by-entity) :read-release) [])
         folder-files (io.f-in/get-b3-folder-files)
         new-files (->> folder-files
-                       (filter #(not (contains? (set already-read) %)))
-                       to-array)]
+                       (filter #(not (contains? (set already-read) %))))]
     (when (not (empty? new-files))
-      (->> new-files
-           (map #(process-b3-release-by-path %))
-           (#(io.f-out/upsert {:read-release (->>
-                                              %
-                                              (conj already-read)
-                                              (apply concat)
-                                              (to-array))}))
-           )
-      ;(map #(process-b3-release-by-path %) new-files)
-      ;
-      ;(io.f-out/upsert {:read-release (->>
-      ;                                  new-files
-      ;                                  (conj already-read)
-      ;                                  (apply concat)
-      ;                                  (to-array))})
-      )))
+      (let [new-movements (->> new-files
+                               (map io.f-in/read-xlsx-by-file-path)
+                               (apply concat))
+            process-movements (process-b3-movement new-movements)]
+        (println process-movements)
+
+        (io.f-out/upsert {:read-release (->> new-files
+                                             (conj already-read)
+                                             (apply concat)
+                                             (to-array))})))))
 
 (defn delete-all-files
   []
