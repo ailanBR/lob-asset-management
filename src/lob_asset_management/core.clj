@@ -144,8 +144,23 @@
     (Thread/sleep 60000)
     (stop-loop))
 
-  ;INTERVAL CONFIG
-  ;30000 => 30sec
-  ;25 Min to process 50 assets
+  ;INTERVAL CONFIG POLLING ALPHA VANTAGE
+  ;LIMIT : 5 API requests per minute and 500 requests per day
+  ;15000 => 15sec => 4 Request per minute
+  ; 13 Min to do 50 requests
+  ;18000 => 18sec => 3 Request per minute
+  ; 15 Min to do 50 requests
+  ;20000 => 20sec => 3 Request per minute
+  ; 17 Min to do 50 requests
+  ;- Create an internal
+  ;  Only request in business hours and market is open
+  ;  seg ~ sex / 10:00	16:55
+  ; Per hours => 8 Group Requests (50) => 400 Requests
+  ; #(10 12 14 16 18) => 5 Group Requests (50) => 250 Requests
+  ; #(10 11 12 13 14 15 16 17 18) => 9 Group Requests (50) => 450 Requests
+  ;
+  ;V1 Choice /Only BR data
+  ; INTERVAL => 15seg
+  ; WHEN => #(10 11 12 13 14 15 16 17 18)
 
   )

@@ -144,6 +144,9 @@
     ;(throw (AssertionError. (str "Ticket->Categories => " ticket)))
     ))
 
+;(s/defn ticket->cnpj
+;  )
+
 (s/defn ticket->asset-type :- s/Keyword
   [ticket :- s/Keyword]
   (let [try-ticket->number (-> ticket

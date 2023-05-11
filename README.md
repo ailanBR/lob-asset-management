@@ -26,13 +26,19 @@ Provide where asset need to be purchase and how much
 - Portfolio percentage1
 - Purchase quantity media
 
-
 ## TODO
 
-1. Read B3 prices
-2. Turn solution on API or CronJob
-3. Register historical prices in asset
-4. Register Alpha API ticket in asset
+1. [IRPF Relase] UPDATE IRPF description
+2. [IRPF Relase]Get last year asset price
+   1. Register the historical price and if not exist in historic get in the API
+2. [IRPF Relase] Get last year total invested
+3. Register Alpha API ticket in asset ?
+4. Register historical prices in asset
+5. Store data on cloud
+   1. [] AWS
+   2. [] Firebase
+   3. [] Other
+6. Turn solution on API or CronJob
 
 ## DRs
 

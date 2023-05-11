@@ -4,7 +4,7 @@
             [lob-asset-management.models.transaction :as m.t]
             [lob-asset-management.logic.asset :as l.a]
             [java-time.api :as t]
-            ;[clj-time.core :as t]
+            [clj-time.core :as clj.t]
             ))
 
 (s/defn b3-exchange->transaction-exchange :- m.t/Exchange
@@ -47,20 +47,25 @@
 (defn safe-number->bigdec [num]
   (if (number? num) (bigdec num) 0M))
 
+(defn convert-date
+  [date]
+  (let [split (clojure.string/split date #"/")]
+    (Integer/parseInt (str (last split) (second split) (first split)))))
+
 (s/defn movements->transaction :- m.t/Transaction
   [{:keys [transaction-date unit-price quantity exchange product operation-total] :as b3-movement}]
   (let [operation-type (b3-type->transaction-type b3-movement)
         ticket (l.a/b3-ticket->asset-ticket product)]
-    {:transaction/id             (gen-transaction-id b3-movement)
-     :transaction/created-at     (str transaction-date)
+    {:transaction/id              (gen-transaction-id b3-movement)
+     :transaction/created-at      (convert-date (str transaction-date))
      ;:transaction/asset          asset
      ;:transaction/asset-id       (UUID/randomUUID)
-     :transaction.asset/ticket   ticket
-     :transaction/average-price  (safe-number->bigdec unit-price)
-     :transaction/quantity       (safe-number->bigdec quantity)
-     :transaction/exchange       (b3-exchange->transaction-exchange exchange)
-     :transaction/operation-type operation-type
-     :transaction/processed-at   (-> (t/local-date-time) str)
+     :transaction.asset/ticket    ticket
+     :transaction/average-price   (safe-number->bigdec unit-price)
+     :transaction/quantity        (safe-number->bigdec quantity)
+     :transaction/exchange        (b3-exchange->transaction-exchange exchange)
+     :transaction/operation-type  operation-type
+     :transaction/processed-at    (-> (t/local-date-time) str)
      :transaction/operation-total (safe-number->bigdec operation-total)}))
 
 (defn already-read-transaction
