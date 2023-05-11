@@ -38,6 +38,24 @@
        (throw (ex-info "Failed to get stock price information"
                        {:status (:status status)}))))))
 
+(defn get-company-overview
+  ([symbol]
+   (get-company-overview symbol alpha-key))
+  ([symbol api-key]
+   (let [{:keys [status body]} (http/get "https://www.alphavantage.co/query"
+                                         {:query-params {:function "OVERVIEW"
+                                                         :symbol   symbol
+                                                         :apikey   api-key}})]
+     (if (= status 200)
+       (-> body
+           ;(json/parse-string true)
+           ;;(get ":Meta Data")
+           ;(keyword-space->underline)
+           ;(remove-keyword-parenthesis)
+           )
+       (throw (ex-info "Failed to get stock price information"
+                       {:status (:status status)}))))))
+
 (comment
   (get-daily-adjusted-prices "CAN")
   (def abev-result (get-daily-adjusted-prices "CAN"))

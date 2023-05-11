@@ -91,6 +91,9 @@
 (comment
   (def aux-market-info (io.http/get-daily-adjusted-prices "CAN"))
   (def market-formated (get-b3-market-price "ABEV3.SA"))
+
+  (def company-overview (io.http/get-company-overview "ABEV3.SA"))
+
   (clojure.pprint/pprint market-formated)
   (last-price market-formated)
 

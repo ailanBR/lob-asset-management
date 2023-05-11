@@ -144,6 +144,9 @@
     ;(throw (AssertionError. (str "Ticket->Categories => " ticket)))
     ))
 
+;(s/defn ticket->cnpj
+;  )
+
 (s/defn ticket->asset-type :- s/Keyword
   [ticket :- s/Keyword]
   (let [try-ticket->number (-> ticket
@@ -188,7 +191,9 @@
                          (filter #(already-read-asset % db-data))
                          (concat (or db-data []))
                          (sort-by :asset/name))]
-     (println "Concluded adapter asset... read assets [" (count mov-assets) "] result [" (count new-assets) "]")
+     (println "Concluded adapter asset... "
+              "read assets [" (count mov-assets) "] "
+              "result [" (count new-assets) "]")
      new-assets)))
 
 (defn disabled-ticket-get-market-price

@@ -64,6 +64,18 @@ All notable changes to this project will be documented in this file. This change
 - Update file with last market price
 - Fix get only new releases process
 
+### 2023-05-06
+### 2023-05-07
+### 2023-05-08
+- Fix process file flow
+- Fix filter for assets and transactions
+- Create Polling function
+
+### 2023-05-10
+- Create a file with fixed asset information
+- Started creation of irpf release
+- Add get asset overview endpoint [don't have b3 asset info]
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 

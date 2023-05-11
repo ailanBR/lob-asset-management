@@ -100,8 +100,6 @@
   (add-dividend-profit consolidated transaction))
 
 (defn consolidate-grouped-transactions
-  ;v1 = ASSET NAME
-  ;v2 = TRANSACTIONS
   [[_ v2]]
   (reduce (fn [c t] (consolidate-transactions c t)) {} v2))
 
@@ -125,7 +123,7 @@
   (println "Processing adapter portfolio...")
   (let [portfolio (->> t
                        (filter-operation)                   ;;Accept only buy and sell
-                       (sort-by :transaction/processed-at)
+                       (sort-by :transaction/created-at)
                        (group-by :transaction.asset/ticket)
                        (map consolidate-grouped-transactions)
                        (set-portfolio-representation)
@@ -156,6 +154,23 @@
        (group-by :portfolio/category)
        (map consolidate-categories)
        (set-category-representation)))
+
+;{:portfolio/ticket          ticket
+; :portfolio/average-price   (or average-price 0M)
+; :portfolio/quantity        (or quantity 0.0)
+; :portfolio/total-cost      (or total-cost 0M)
+; :portfolio/transaction-ids (conj transaction-ids id)
+; :portfolio/category        (-> ticket (a.a/ticket->categories) first)
+; :portfolio/dividend        (+ (or dividend 0M) transaction-total-operation)}
+(defn portfolio-list->irpf-release
+  [{:portfolio/keys [ticket average-price quantity]}]
+  {:ticket  ticket
+   :average-price average-price
+   :quantity quantity})
+
+(defn portfolio-list->irpf-release
+  [portfolio-list]
+  (map portfolio-list->irpf-release portfolio-list))
 
 (comment
   (def t (io.f-in/get-file-by-entity :transaction))

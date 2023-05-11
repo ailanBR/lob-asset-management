@@ -8,7 +8,6 @@
 (comment
   (read-secrets)
 
-
   (println (System/getenv "ALPHA_KEY"))
 
   (let [my-var (System/getenv "TESTE_KEY")]
