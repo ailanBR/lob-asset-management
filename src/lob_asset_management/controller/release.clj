@@ -10,6 +10,14 @@
   [quantity ticket average-price]
   (str (str quantity) " ações de " (name ticket) " a um preço médio de R$ " (str average-price)))
 
+(defn generate-release
+  [{:keys [ticket average-price quantity]} assets]
+  (let [{:asset/keys [tax-number]} (first (filter #(= (:asset/ticket %) ticket) assets))]
+    {:tax-number           tax-number
+     :description          (asset->irpf-description quantity ticket average-price)
+     :last-year-price      1.0M
+     :year-last-date-price 1.0M}))
+
 (defn irpf-release
   "Create a portfolio with transaction end/limite date based to IRPF with information :
   - ticket
@@ -26,37 +34,21 @@
                                  (+ 1)
                                  (str "01" "01")
                                  Integer/parseInt)
-        filtered-transactions (-> transactions
+        filtered-transactions (->> transactions
                                   (sort-by :transaction/created-at)
                                   (filter #(< (:transaction/created-at %) next-year-first-date)))
         portfolio-release (-> filtered-transactions
-                      (a.p/transactions->portfolio)
-                      (a.p/portfolio-list->irpf-release))
+                              (a.p/transactions->portfolio)
+                              (a.p/portfolio-list->irpf-release))
         assets (io.f-in/get-file-by-entity :asset)
         ]
-    (map (fn [{:keys [ticket average-price quantity]} assets]
-           (let [{:asset/keys [cnpj]}  (filter #(= ticket (:asset/ticket %)) assets)]
-             {:cnpj                 cnpj
-              :description          (asset->irpf-description quantity ticket average-price)
-              :last-year-price      1.0M
-              :year-last-date-price 1.0M})))
-    {:cnpj
-     :description
-     :last-year-price
-     :year-last-date-price }
-
+    (map #(generate-release % assets) portfolio-release)
     ))
 
 (comment
-  ;1. get transactions
-  (def transactions (io.f-in/get-file-by-entity :transaction))
-  ;2. filter year transaction
-  (->> transactions
-      (sort-by :transaction/created-at)
-      clojure.pprint/print-table)
-  ;3. create portfolio
+  (clojure.pprint/print-table (irpf-release 2022))
+  (->> (io.f-in/get-file-by-entity :transaction)
+      (sort-by :transaction/created-at))
 
-  ;4. get market price in the last day of the year
-  ;
 
   )

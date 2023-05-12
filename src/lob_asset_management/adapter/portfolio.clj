@@ -162,7 +162,7 @@
 ; :portfolio/transaction-ids (conj transaction-ids id)
 ; :portfolio/category        (-> ticket (a.a/ticket->categories) first)
 ; :portfolio/dividend        (+ (or dividend 0M) transaction-total-operation)}
-(defn portfolio-list->irpf-release
+(defn portfolio-row->irpf-release
   [{:portfolio/keys [ticket average-price quantity]}]
   {:ticket  ticket
    :average-price average-price
@@ -170,7 +170,7 @@
 
 (defn portfolio-list->irpf-release
   [portfolio-list]
-  (map portfolio-list->irpf-release portfolio-list))
+  (map portfolio-row->irpf-release portfolio-list))
 
 (comment
   (def t (io.f-in/get-file-by-entity :transaction))

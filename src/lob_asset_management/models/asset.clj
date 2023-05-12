@@ -11,4 +11,5 @@
    :asset/ticket        s/Keyword
    :asset/category      [s/Keyword]
    :asset/last-price    BigDecimal
-   :asset/type          s/Keyword})
+   :asset/type          s/Keyword
+   :asset/tax-number    s/Str})
