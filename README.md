@@ -28,8 +28,7 @@ Provide where asset need to be purchase and how much
 
 ## TODO
 
-1. [IRPF Relase] UPDATE IRPF description
-2. [IRPF Relase]Get last year asset price
+1. [IRPF Relase]Get last year asset price
    1. Register the historical price and if not exist in historic get in the API
 2. [IRPF Relase] Get last year total invested
 3. Register Alpha API ticket in asset ?
@@ -39,6 +38,14 @@ Provide where asset need to be purchase and how much
    2. [] Firebase
    3. [] Other
 6. Turn solution on API or CronJob
+7. Read EUA equities information
+8. Read crypto information
+
+## FIXME
+1. Consider incorporations in the portfolio process (BIDI11 / HAPV3 / LINX3)
+2. Consider desdobramento in the portfolio process (OIBR3)
+3. Adjust category for governm bounds and private bounds
+4. Portfolio percentage with zero
 
 ## DRs
 

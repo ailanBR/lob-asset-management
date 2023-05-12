@@ -110,7 +110,7 @@
   (c.p/process-b3-folder-only-new) ;FIXME String error (maybe abandon that way)
 
 
-  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/total-cost :portfolio/dividend ] (io.i/get-file-by-entity :portfolio))
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity] (io.i/get-file-by-entity :portfolio))
 
   ;;Market Controller
   (def assets (io.i/get-file-by-entity :asset))

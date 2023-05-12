@@ -120,7 +120,7 @@
 
 (defn transactions->portfolio
   [t]
-  (println "Processing adapter portfolio...")
+  (println "[PORTFOLIO] Processing adapter...")
   (let [portfolio (->> t
                        (filter-operation)                   ;;Accept only buy and sell
                        (sort-by :transaction/created-at)
@@ -128,7 +128,7 @@
                        (map consolidate-grouped-transactions)
                        (set-portfolio-representation)
                        (sort-by :portfolio/percentage >))]
-    (println "Concluded adapter portfolio...[" (count portfolio) "]")
+    (println "[PORTFOLIO] Concluded adapter...[" (count portfolio) "]")
     portfolio))
 
 (defn consolidate-category
@@ -163,10 +163,11 @@
 ; :portfolio/category        (-> ticket (a.a/ticket->categories) first)
 ; :portfolio/dividend        (+ (or dividend 0M) transaction-total-operation)}
 (defn portfolio-row->irpf-release
-  [{:portfolio/keys [ticket average-price quantity]}]
+  [{:portfolio/keys [ticket average-price quantity total-cost]}]
   {:ticket  ticket
    :average-price average-price
-   :quantity quantity})
+   :quantity quantity
+   :total-cost total-cost})
 
 (defn portfolio-list->irpf-release
   [portfolio-list]
