@@ -10,9 +10,10 @@
 (s/defn b3-exchange->transaction-exchange :- m.t/Exchange
   [ex :- s/Str]
   (condp = ex
-    "NU INVEST CORRETORA DE VALORES S.A."  :nu
-    "INTER DTVM LTDA"                      :inter
-    :else                                  :other))
+    "NU INVEST CORRETORA DE VALORES S.A."                       :nu
+    "INTER DTVM LTDA"                                           :inter
+    "INTER DISTRIBUIDORA DE TITULOS E VALORES MOBILIARIOS LTDA" :inter
+    :else                                                       :other))
 
 (defn b3-sell? [mov]
   (and (= (:type mov) "Debito")
@@ -79,7 +80,7 @@
   ([mov]
    (movements->transactions mov ()))
   ([mov db-data]
-   (println "Processing adapter transactions...current transactions [" (count db-data) "]")
+   (println "[TRANSACTION] Processing adapter...current transactions [" (count db-data) "]")
    (let [mov-transactions (->> mov
                            (map movements->transaction)
                            (group-by :transaction/id)
@@ -88,7 +89,7 @@
                                (filter #(already-read-transaction % db-data))
                                (concat (or db-data []))
                                (sort-by :transaction.asset/ticket))]
-     (println "Concluded adapter transactions... "
+     (println "[TRANSACTION] Concluded adapter... "
               "read transactions[" (count mov-transactions) "] "
               "result [" (count new-transactions) "]")
      new-transactions)))

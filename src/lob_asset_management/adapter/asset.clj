@@ -21,11 +21,12 @@
 (s/defn ticket->asset-type :- s/Keyword
   [ticket :- s/Keyword]
   (let [try-ticket->number (-> ticket
-                               str
-                               (clojure.string/replace #"([A-Z])" "")
-                               (clojure.string/replace ":" ""))
+                               name
+                               (clojure.string/replace #"([A-Z])" ""))
         ticket-number? (empty? try-ticket->number)]
     (cond
+      (or (clojure.string/includes? (name ticket) "TESOURO")
+          (clojure.string/includes? (name ticket) "CDB")) :fixed-income
       (and (not ticket-number?)
            (contains? m.a/fii-list ticket)) :fii
       (and (not ticket-number?)
@@ -60,6 +61,7 @@
 
 (s/defn movement->asset :- m.a/Asset
   [{:keys [product]}]
+  ;(println "[ASSET] ROW " (str product))
   (let [ticket (l.a/b3-ticket->asset-ticket product)
         {:keys [name tax-number category]} (get asset-more-info ticket)]
     {:asset/id         (UUID/randomUUID)
@@ -80,7 +82,7 @@
   ([mov]
    (movements->assets mov ()))
   ([mov db-data]
-   (println "Processing adapter asset... current assets [" (count db-data) "]")
+   (println "[ASSET] Processing adapter... current assets [" (count db-data) "]")
    (let [mov-assets (->> mov
                          (map movement->asset)
                          (group-by :asset/ticket)
@@ -89,7 +91,7 @@
                          (filter #(already-read-asset % db-data))
                          (concat (or db-data []))
                          (sort-by :asset/name))]
-     (println "Concluded adapter asset... "
+     (println "[ASSET] Concluded adapter... "
               "read assets [" (count mov-assets) "] "
               "result [" (count new-assets) "]")
      new-assets)))

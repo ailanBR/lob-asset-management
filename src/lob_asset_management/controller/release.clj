@@ -7,16 +7,20 @@
             [lob-asset-management.models.file :as m.f]))
 
 (defn asset->irpf-description
-  [quantity ticket average-price]
-  (str (str quantity) " ações de " (name ticket) " a um preço médio de R$ " (str average-price)))
+  [quantity asset-name average-price]
+  (str (str quantity) " ações de " asset-name " adquirida ao preço médio de R$ " (format "%.2f" average-price)))
 
 (defn generate-release
   [{:keys [ticket average-price quantity]} assets]
-  (let [{:asset/keys [tax-number]} (first (filter #(= (:asset/ticket %) ticket) assets))]
-    {:tax-number           tax-number
-     :description          (asset->irpf-description quantity ticket average-price)
-     :last-year-price      1.0M
-     :year-last-date-price 1.0M}))
+  (let [{:asset/keys [tax-number]
+         asset-name :asset/name} (first (filter #(= (:asset/ticket %) ticket) assets))
+        year-last-date-price 1.0M
+        last-year-price      1.0M]
+    {:ticket               (name ticket)
+     :tax-number           tax-number
+     :description          (asset->irpf-description quantity asset-name average-price)
+     :last-year-price      last-year-price
+     :year-last-date-price year-last-date-price}))
 
 (defn irpf-release
   "Create a portfolio with transaction end/limite date based to IRPF with information :

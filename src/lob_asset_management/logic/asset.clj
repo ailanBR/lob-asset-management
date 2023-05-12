@@ -13,7 +13,8 @@
   (-> xlsx-ticket
       (clojure.string/split #"-")
       first
-      clojure.string/trim
+      clojure.string/trimr
+      (clojure.string/replace #" " "-")
       clojure.string/lower-case
       clojure.string/upper-case
       keyword))
