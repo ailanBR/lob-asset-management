@@ -82,6 +82,10 @@ All notable changes to this project will be documented in this file. This change
 - Change way to get asset category to fixed asset info
 - Create function to format br tax document
 
+### 2023-05-12
+- Fix release description
+- Read all data from B3 with success with some fixes in asset and transaction adapters
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 

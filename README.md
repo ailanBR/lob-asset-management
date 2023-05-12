@@ -28,16 +28,18 @@ Provide where asset need to be purchase and how much
 
 ## TODO
 
-2. [IRPF Relase]Get last year asset price
+1. [IRPF Relase]Get last year asset price
    1. Register the historical price and if not exist in historic get in the API
-3. [IRPF Relase] Get last year total invested
-5. Register Alpha API ticket in asset ?
-6. Register historical prices in asset
-7. Store data on cloud
+2. [IRPF Relase] Get last year total invested
+3. Register Alpha API ticket in asset ?
+4. Register historical prices in asset
+5. Store data on cloud
    1. [] AWS
    2. [] Firebase
    3. [] Other
-8. Turn solution on API or CronJob
+6. Turn solution on API or CronJob
+7. Read EUA equities information
+8. Read crypto information
 
 ## FIXME
 1. Consider incorporations in the portfolio process (BIDI11 / HAPV3 / LINX3)
