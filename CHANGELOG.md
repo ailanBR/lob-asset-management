@@ -76,6 +76,12 @@ All notable changes to this project will be documented in this file. This change
 - Started creation of irpf release
 - Add get asset overview endpoint [don't have b3 asset info]
 
+### 2023-05-11
+- Add fixed asset info in asset
+- Add allow alpha api asset in fixed info file
+- Change way to get asset category to fixed asset info
+- Create function to format br tax document
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 
