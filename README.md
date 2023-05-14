@@ -35,17 +35,16 @@ Provide where asset need to be purchase and how much
 
 ## TODO
 
-1. [IRPF Relase] Get last year asset price
-   1. Get from the historic or in another endpoint
-2. [IRPF Relase] Get last year total invested
-4. Read EUA equities information
-5. Read crypto information
-6. Turn solution on API or CronJob
-7. Store data on cloud
+1. Read EUA equities information
+2. Read crypto information
+3. Turn solution on API or CronJob
+4. Store data on cloud
    1. [] AWS
    2. [] Firebase
    3. [] Other
-8. Register Alpha API ticket in asset ?
+5. Register Alpha API ticket in asset ?
+6. Update portfolio last price
+7. Calculate current profit/loss market price based
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)

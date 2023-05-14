@@ -26,24 +26,24 @@
 
 (defn last-price
   [formatted-data]
-  (if (not (empty? formatted-data))
-    (let [latest-refreshed-dt (-> formatted-data :meta-data :3._Last_Refreshed keyword)
-          latest-refreshed-price (-> formatted-data
-                                     :time-series
-                                     latest-refreshed-dt
-                                     keyword-space->underline
-                                     :4._close
-                                     bigdec)
-          price-historic (-> formatted-data
-                             :time-series
-                             format-historic-price)]
+  (if (or (not (nil? formatted-data))
+          (not (empty? formatted-data)))
+    (if-let [latest-refreshed-dt (-> formatted-data :meta-data :3._Last_Refreshed keyword)]
+      (let [latest-refreshed-price (-> formatted-data
+                                       :time-series
+                                       latest-refreshed-dt
+                                       keyword-space->underline
+                                       :4._close
+                                       bigdec)
+            price-historic (-> formatted-data
+                               :time-series
+                               format-historic-price)]
       {:price      latest-refreshed-price
        :date       latest-refreshed-dt
        :updated-at (aux.t/get-current-millis)
        :historic   price-historic})
-    (do
-      (println "[ERROR] Something was wrong in get market data => formatted-data")
-      (clojure.pprint/pprint formatted-data))))
+      (throw (ex-info "[ERROR] (2) Something was wrong in get market data => formatted-data" formatted-data)))
+    (throw (ex-info "[ERROR] (2) Something was wrong in get market data => formatted-data" formatted-data))))
 
 (defn get-b3-market-price
   [asset]
@@ -87,7 +87,7 @@
      (update-asset-market-price assets)
      (println "[ERROR] update-asset-market-price - can't get assets")))
   ([assets]
-   (if-let [less-updated-asset (-> assets (a.a/get-less-market-price-updated) first)]
+   (if-let [less-updated-asset (-> assets (a.a/get-less-market-price-updated 1 1) first)]
      (do (println "[MARKET-UPDATING] Stating get asset price for " less-updated-asset)
          (let [less-updated-asset-ticket (in-ticket->out-ticket less-updated-asset)
                market-last-price (get-b3-market-price less-updated-asset-ticket)

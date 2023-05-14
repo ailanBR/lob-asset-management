@@ -11,16 +11,23 @@
   (str (str quantity) " ações de " asset-name " adquirida ao preço médio de R$ " (format "%.2f" average-price)))
 
 (defn generate-release
-  [{:keys [ticket average-price quantity]} assets]
+  ;FIXME : Adjust last-year-price to
+  ; 1. get from API if necessary
+  ; 2. get the last year price (Ex. for 2023)
+  [{:keys [ticket average-price quantity]} assets year]
   (let [{:asset/keys [tax-number]
-         asset-name :asset/name} (first (filter #(= (:asset/ticket %) ticket) assets))
-        year-last-date-price 1.0M
-        last-year-price      1.0M]
+         asset-name :asset/name
+         historic :asset.market-price/historic} (first (filter #(= (:asset/ticket %) ticket) assets))
+        last-year-price (or ((-> year (str "-12-31") keyword) historic)
+                            ((-> year (str "-12-30") keyword) historic)
+                            ((-> year (str "-12-29") keyword) historic)
+                            ((-> year (str "-12-28") keyword) historic)
+                            0M)
+        year-total-invested (* quantity last-year-price)]
     {:ticket               (name ticket)
      :tax-number           tax-number
      :description          (asset->irpf-description quantity asset-name average-price)
-     :last-year-price      last-year-price
-     :year-last-date-price year-last-date-price}))
+     :year-total-invested  (format "%.2f" year-total-invested)}))
 
 (defn irpf-release
   "Create a portfolio with transaction end/limite date based to IRPF with information :
@@ -46,7 +53,7 @@
                               (a.p/portfolio-list->irpf-release))
         assets (io.f-in/get-file-by-entity :asset)
         ]
-    (map #(generate-release % assets) portfolio-release)
+    (map #(generate-release % assets year) portfolio-release)
     ))
 
 (comment
