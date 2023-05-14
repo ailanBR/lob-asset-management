@@ -18,6 +18,12 @@
     {:meta-data   meta-data
      :time-series time-series}))
 
+(defn format-historic-price
+  [price-historic]
+  (reduce #(assoc %1 (key %2) (-> %2 val keyword-space->underline :4._close bigdec))
+          {}
+          price-historic))
+
 (defn last-price
   [formatted-data]
   (if (not (empty? formatted-data))
@@ -27,10 +33,14 @@
                                      latest-refreshed-dt
                                      keyword-space->underline
                                      :4._close
-                                     bigdec)]
+                                     bigdec)
+          price-historic (-> formatted-data
+                             :time-series
+                             format-historic-price)]
       {:price      latest-refreshed-price
        :date       latest-refreshed-dt
-       :updated-at (aux.t/get-current-millis)})
+       :updated-at (aux.t/get-current-millis)
+       :historic   price-historic})
     (do
       (println "[ERROR] Something was wrong in get market data => formatted-data")
       (clojure.pprint/pprint formatted-data))))
@@ -50,15 +60,24 @@
       (str asset-name ".SA")
       asset-name)))
 
+(defn update-asset
+  [{:asset/keys [id] :as asset}
+   asset-id
+   {:keys [price updated-at date historic]}]
+  (if (= id asset-id)
+    (let [updated-historic (first (conj (:asset.market-price/historic asset)
+                                        historic))]
+      (assoc asset :asset.market-price/price price
+                   :asset.market-price/updated-at updated-at
+                   :asset.market-price/price-date date
+                   :asset.market-price/historic updated-historic))
+    asset))
+
 (defn update-assets
   [assets
    {less-updated-asset-id :asset/id}
-   {:keys [price updated-at date]}]
-  (let [updated-assets (map #(if (= (:asset/id %) less-updated-asset-id)
-                               (assoc % :asset.market-price/price price
-                                        :asset.market-price/updated-at updated-at
-                                        :asset.market-price/price-date date)
-                               %)
+   market-last-price]
+  (let [updated-assets (map #(update-asset % less-updated-asset-id market-last-price)
                             assets)]
     updated-assets))
 
@@ -79,14 +98,15 @@
 
 (defn get-asset-market-price
   "Receive a list of assets and return the list updated without read or write data"
-  [asset]
-  (let [{:keys [price updated-at date]}
-        {:price      11.11M
-         :date       :2023-05-05
-         :updated-at (aux.t/get-current-millis)}]
-    (assoc asset :asset.market-price/price price
-                 :asset.market-price/updated-at updated-at
-                 :asset.market-price/price-date date)))
+  [assets]
+  (if-let [less-updated-asset (-> assets (a.a/get-less-market-price-updated) first)]
+    (do (println "[MARKET-PRICE] Stating get asset price for " less-updated-asset)
+        (let [less-updated-asset-ticket (in-ticket->out-ticket less-updated-asset)
+              market-last-price (get-b3-market-price less-updated-asset-ticket)
+              updated-assets (update-assets assets less-updated-asset market-last-price)]
+          (println "[MARKET-UPDATING] Success " less-updated-asset-ticket " price " (:price market-last-price))
+          updated-assets))
+    (println "[WARNING] No asset to be updated")))
 
 (comment
   (def aux-market-info (io.http/get-daily-adjusted-prices "CAN"))
@@ -98,12 +118,8 @@
   (last-price market-formated)
 
   (update-asset-market-price)
-  ;-----------------------
-  (-> #:asset{:id #uuid "710a8d28-8a27-40b0-a067-ba437a8fc4a1",
-              :name "BBAS3 - BANCO DO BRASIL S/A",
-              :ticket :BBAS3,
-              :category [:finance],
-              :type :stockBR}
-      in-ticket->out-ticket
-      get-b3-market-price)
+
+  (def as (io.f-in/get-file-by-entity :asset))
+
+  (def ap (get-asset-market-price as))
   )

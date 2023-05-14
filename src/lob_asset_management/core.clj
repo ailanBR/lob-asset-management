@@ -110,7 +110,7 @@
   (c.p/process-b3-folder-only-new) ;FIXME String error (maybe abandon that way)
 
 
-  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity] (io.i/get-file-by-entity :portfolio))
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/average-price] (io.i/get-file-by-entity :portfolio))
 
   ;;Market Controller
   (def assets (io.i/get-file-by-entity :asset))
@@ -130,7 +130,7 @@
   (defn my-function []
     (println "Hello, world! [" (str (t/local-date-time)) "]"))
 
-  (def get-market-price-poller (poller #(c.m/update-asset-market-price) 10000))
+  (def get-market-price-poller (poller #(c.m/update-asset-market-price) 15000))
 
   (let [stop-loop (poller my-function 3000)]
     (println "Press enter to stop.")
