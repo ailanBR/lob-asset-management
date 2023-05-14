@@ -36,10 +36,8 @@ Provide where asset need to be purchase and how much
 ## TODO
 
 1. [IRPF Relase] Get last year asset price
-   1. Register the historical price 
-   2. Get from the historic or in another endpoint
+   1. Get from the historic or in another endpoint
 2. [IRPF Relase] Get last year total invested
-3. Register historical prices in asset
 4. Read EUA equities information
 5. Read crypto information
 6. Turn solution on API or CronJob
