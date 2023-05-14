@@ -5,9 +5,7 @@
             [lob-asset-management.controller.market :as c.m]
             [java-time.api :as t]
             ;[clj-time.core :as t]
-            ))
-
-;FIXME : Include log lib https://mattjquinn.com/2014/log4j2-clojure/ to avoid error
+            [clojure.tools.logging :as log]))
 
 (defn foo
   "I don't do a whole lot."
@@ -27,8 +25,8 @@
           (if (contains? window-hours
                          (.getHour (t/local-date-time)))
             (f)
-            (println "[Poller " (str (t/local-date-time)) "] Out of the configured window hour " window-hours))
-          (println "[Poller next " (str (t/plus (t/local-date-time)
+            (log/info "[Poller " (str (t/local-date-time)) "] Out of the configured window hour " window-hours))
+          (log/info "[Poller next " (str (t/plus (t/local-date-time)
                                                 (t/millis interval))) "]")
           (Thread/sleep interval))
         (catch Exception e
