@@ -155,13 +155,6 @@
        (map consolidate-categories)
        (set-category-representation)))
 
-;{:portfolio/ticket          ticket
-; :portfolio/average-price   (or average-price 0M)
-; :portfolio/quantity        (or quantity 0.0)
-; :portfolio/total-cost      (or total-cost 0M)
-; :portfolio/transaction-ids (conj transaction-ids id)
-; :portfolio/category        (-> ticket (a.a/ticket->categories) first)
-; :portfolio/dividend        (+ (or dividend 0M) transaction-total-operation)}
 (defn portfolio-row->irpf-release
   [{:portfolio/keys [ticket average-price quantity total-cost]}]
   {:ticket  ticket
