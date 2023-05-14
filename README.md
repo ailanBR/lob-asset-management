@@ -45,6 +45,9 @@ Provide where asset need to be purchase and how much
 5. Register Alpha API ticket in asset ?
 6. Update portfolio last price
 7. Calculate current profit/loss market price based
+8. Add a way to manual insert information (Front-end proj?)
+9. Add last price to portfolio
+10. Update portfolio after get market last price
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)

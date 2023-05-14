@@ -10,6 +10,8 @@
                  [prismatic/schema "1.4.1"]
                  [nubank/matcher-combinators "3.8.4"]
                  [clj-http "3.12.3"]
-                 [cheshire "5.11.0"]]
+                 [cheshire "5.11.0"]
+                 [org.clojure/tools.logging "1.2.4"]]
   :repl-options {:init-ns lob-asset-management.core}
+  :jvm-opts ["-Dclojure.tools.logging.factory=clojure.tools.logging.impl/jul-factory"]
   :main ^:skip-aot lob-asset-management.core)

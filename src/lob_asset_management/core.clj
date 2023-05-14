@@ -5,9 +5,7 @@
             [lob-asset-management.controller.market :as c.m]
             [java-time.api :as t]
             ;[clj-time.core :as t]
-            ))
-
-;FIXME : Include log lib https://mattjquinn.com/2014/log4j2-clojure/ to avoid error
+            [clojure.tools.logging :as log]))
 
 (defn foo
   "I don't do a whole lot."
@@ -19,7 +17,7 @@
 
 (defn poller [f interval]
   (let [run-forest-run (atom true)
-        window-hours #{10 12 14 16 18 19}]
+        window-hours #{10 12 14 16 18}]
     (future
       (try
         (while @run-forest-run
@@ -27,8 +25,8 @@
           (if (contains? window-hours
                          (.getHour (t/local-date-time)))
             (f)
-            (println "[Poller " (str (t/local-date-time)) "] Out of the configured window hour " window-hours))
-          (println "[Poller next " (str (t/plus (t/local-date-time)
+            (log/info "[Poller " (str (t/local-date-time)) "] Out of the configured window hour " window-hours))
+          (log/info "[Poller next " (str (t/plus (t/local-date-time)
                                                 (t/millis interval))) "]")
           (Thread/sleep interval))
         (catch Exception e
@@ -56,7 +54,6 @@
         :pn (do (println "PROCESS ONLY NEW FILES")
                 (c.p/process-b3-folder-only-new))
         :s (do (println "STATING POOLER")
-               ;TODO Set a hour to work WHEN => #(10 11 12 13 14 15 16 17 18)
                (let [stop-loop (poller #(c.m/update-asset-market-price) 15000)]
                  (println "Press enter to stop...")
                  (read-line)
@@ -64,7 +61,6 @@
                  @(stop-loop)))
         (println "INVALID COMMAND"))))
   (println "FINISH"))
-
 
 (comment
   (schema.core/set-fn-validation! true)
