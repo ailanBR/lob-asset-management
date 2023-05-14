@@ -15,11 +15,18 @@ Read a XLSX document and turn in EDN fallowing the movement type:
 
 (OBS: In the first version only BR stocks)
 
+### Portfolio informations
+
+- Average price
+- Total cost
+- Profit from dividend's
+- Allocation percentage
+
 ### Portfolio balance
 
 Provide where asset need to be purchase and how much
 
-## Asset information
+### Asset information
 
 - Price
 - Profit/Loss
@@ -28,32 +35,25 @@ Provide where asset need to be purchase and how much
 
 ## TODO
 
-1. [IRPF Relase]Get last year asset price
-   1. Register the historical price and if not exist in historic get in the API
+1. [IRPF Relase] Get last year asset price
+   1. Register the historical price 
+   2. Get from the historic or in another endpoint
 2. [IRPF Relase] Get last year total invested
-3. Register Alpha API ticket in asset ?
-4. Register historical prices in asset
-5. Store data on cloud
+3. Register historical prices in asset
+4. Read EUA equities information
+5. Read crypto information
+6. Turn solution on API or CronJob
+7. Store data on cloud
    1. [] AWS
    2. [] Firebase
    3. [] Other
-6. Turn solution on API or CronJob
-7. Read EUA equities information
-8. Read crypto information
+8. Register Alpha API ticket in asset ?
 
 ## FIXME
-1. Consider incorporations in the portfolio process (BIDI11 / HAPV3 / LINX3)
+1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
 2. Consider desdobramento in the portfolio process (OIBR3)
-3. Adjust category for governm bounds and private bounds
+3. Adjust category for govern bounds and private bounds
 4. Portfolio percentage with zero
-
-## DRs
-
-DR 001 - Transaction adapter unique by ID and don't treat update/changes in the comparative
-  - Avoid duplicated records by ID
-  - Get the most updated data [HOW?]
-    - Don't necessary it is the same data 
-    - In case of change this flow don't treat it
 
 ## License
 
