@@ -19,7 +19,7 @@
 
 (defn poller [f interval]
   (let [run-forest-run (atom true)
-        window-hours #{10 12 14 16 18 19}]
+        window-hours #{10 12 14 16 18}]
     (future
       (try
         (while @run-forest-run
@@ -56,7 +56,6 @@
         :pn (do (println "PROCESS ONLY NEW FILES")
                 (c.p/process-b3-folder-only-new))
         :s (do (println "STATING POOLER")
-               ;TODO Set a hour to work WHEN => #(10 11 12 13 14 15 16 17 18)
                (let [stop-loop (poller #(c.m/update-asset-market-price) 15000)]
                  (println "Press enter to stop...")
                  (read-line)
@@ -64,7 +63,6 @@
                  @(stop-loop)))
         (println "INVALID COMMAND"))))
   (println "FINISH"))
-
 
 (comment
   (schema.core/set-fn-validation! true)
