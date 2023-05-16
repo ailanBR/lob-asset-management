@@ -1,48 +1,42 @@
 (ns lob-asset-management.io.file-in
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
             [dk.ative.docjure.spreadsheet :as xlsx]
             [lob-asset-management.aux.file :as aux.f]
             [lob-asset-management.models.file :as m.f]
             [schema.core :as s]))
 
-(def b3-columns {:A :type                       ;;(Credito Debito)
-                 :B :transaction-date
-                 :C :movement-type              ;;(Juros Sobre Capital Próprio Rendimento Atualização Incorporação VENCIMENTO Dividendo Transferência - Liquidação Direitos de Subscrição - Não Exercido Leilão de Fração Direito de Subscrição Resgate Fração em Ativos)
-                 :D :product
-                 :E :exchange
-                 :F :quantity
-                 :G :unit-price
-                 :H :operation-total})
+(defn file->edn [file-path]
+  (when (aux.f/file-exists? file-path)
+    (with-open [in (io/reader file-path)]
+      (edn/read-string (slurp in)))))
 
-(def b3-sheet "Movimentação")
-
-(def b3-release-folder "./in-data/")
+(def configurations (file->edn "./resources/config.edn"))
 
 (defn read-xlsx-by-file-path
-  [file-path]
-  (->> (xlsx/load-workbook file-path)
-       (xlsx/select-sheet b3-sheet)
-       (xlsx/select-columns b3-columns)
-       rest
-       (filter #(not (nil? %)))))
+  ([file-path]
+   (read-xlsx-by-file-path file-path (-> configurations :releases first :b3-release)))
+  ([file-path {:keys [sheet columns]}]
+   (->> (xlsx/load-workbook file-path)
+        (xlsx/select-sheet sheet)
+        (xlsx/select-columns columns)
+        rest
+        (filter #(not (nil? %))))))
 
 (defn read-xlsx-by-file-name
   ([file-name]
-   (read-xlsx-by-file-name file-name b3-release-folder))
-  ([file-name file-folder]
+   (let [{:keys [release-folder] :as xlsx-config} (-> configurations :releases first :b3-release)]
+     (read-xlsx-by-file-name file-name release-folder xlsx-config)))
+  ([file-name file-folder xlsx-config]
    (let [file-path (str file-folder file-name)]
-     (read-xlsx-by-file-path file-path))))
+     (read-xlsx-by-file-path file-path xlsx-config))))
 
 (def root-directory "./out-data/")
 
 (defn file-full-path [file-name]
   (str root-directory file-name "/" file-name ".edn"))
 
-(defn file->edn [file-path]
-  (when (aux.f/file-exists? file-path)
-    (with-open [in (io/reader file-path)]
-      (edn/read-string (slurp in)))))
 
 (s/defn get-file-by-entity
   [entity :- m.f/file-name]
@@ -51,7 +45,7 @@
 
 (defn read-b3-folder
   ([]
-   (read-b3-folder b3-release-folder))
+   (read-b3-folder (-> configurations :releases first :b3-release :release-folder )))
   ([b3-folder]
    (->> b3-folder
         io/file
@@ -63,7 +57,7 @@
 
 (defn get-b3-folder-files
   ([]
-   (get-b3-folder-files b3-release-folder))
+   (get-b3-folder-files (-> configurations :releases first :b3-release :release-folder )))
   ([b3-folder]
    (->> b3-folder
         io/file
@@ -77,6 +71,7 @@
     (if (aux.f/file-exists? full-path)
       (io/delete-file full-path)
       (print "File doesn't exist or has already been deleted"))))
+
 
 (comment
   (get-b3-folder-files)

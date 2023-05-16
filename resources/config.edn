@@ -1,4 +1,13 @@
 {
- :asset {:output-file-name "asset"}
- :transaction {:output-file-name "transaction"}
+ :releases       [{:b3-release {:columns        {:A :type    ;;(Credito Debito)
+                                                 :B :transaction-date
+                                                 :C :movement-type ;;(Juros Sobre Capital Próprio Rendimento Atualização Incorporação VENCIMENTO Dividendo Transferência - Liquidação Direitos de Subscrição - Não Exercido Leilão de Fração Direito de Subscrição Resgate Fração em Ativos)
+                                                 :D :product
+                                                 :E :exchange
+                                                 :F :quantity
+                                                 :G :unit-price
+                                                 :H :operation-total}
+                                :sheet          "Movimentação"
+                                :release-folder "./in-data/b3"}}]
+ :out-data-path "./out-data/"
  }
