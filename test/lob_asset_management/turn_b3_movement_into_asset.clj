@@ -8,4 +8,4 @@
 (deftest turn-b3-movement-into-asset-test
   ;"Adapt the B3 movement into a transaction model"
   (is (match? f.a/asset
-              (a.a/movement->asset f.b3/b3-movement))))
+              (a.a/b3-movement->asset f.b3/b3-movement))))

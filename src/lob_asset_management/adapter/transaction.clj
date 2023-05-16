@@ -4,7 +4,6 @@
             [lob-asset-management.models.transaction :as m.t]
             [lob-asset-management.logic.asset :as l.a]
             [java-time.api :as t]
-            [clj-time.core :as clj.t]
             ))
 
 (s/defn b3-exchange->transaction-exchange :- m.t/Exchange

@@ -15,7 +15,7 @@ Read a XLSX document and turn in EDN fallowing the movement type:
 
 (OBS: In the first version only BR stocks)
 
-### Portfolio informations
+### Portfolio information
 
 - Average price
 - Total cost
@@ -35,6 +35,7 @@ Provide where asset need to be purchase and how much
 
 ## TODO
 
+1. [IRPF Release] Add Group, Code and Location
 1. Read EUA equities information
 2. Read crypto information
 3. Turn solution on API or CronJob
@@ -42,18 +43,18 @@ Provide where asset need to be purchase and how much
    1. [] AWS
    2. [] Firebase
    3. [] Other
-5. Register Alpha API ticket in asset ?
-6. Update portfolio last price
+5. Register Alpha API ticket in asset/fixed-info ?
+6. Add last price to portfolio
 7. Calculate current profit/loss market price based
 8. Add a way to manual insert information (Front-end proj?)
-9. Add last price to portfolio
-10. Update portfolio after get market last price
+9. Update portfolio after get market last price
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
 2. Consider desdobramento in the portfolio process (OIBR3)
 3. Adjust category for govern bounds and private bounds
 4. Portfolio percentage with zero
+5. CDB transaction are with operation-type = compra/venda
 
 ## License
 

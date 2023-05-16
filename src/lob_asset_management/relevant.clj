@@ -7,6 +7,7 @@
 
 (def asset-more-info (file->edn "./resources/asset_fixed_info.edn"))
 
+
 (comment
   (read-secrets)
 

@@ -5,12 +5,7 @@
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.relevant :refer [asset-more-info]]
-            [java-time.api :as jt]
-            [clj-time.coerce :as coerce]
-            ;[clj-time.core :as t]
-            ;[clj-time.local :as local]
-            ;[clj-time.format :as t.f]
-            )
+            [java-time.api :as jt])
   (:import (java.util UUID)))
 
 (defn allowed-get-market-info-tickets?
@@ -27,11 +22,10 @@
     (cond
       (or (clojure.string/includes? (name ticket) "TESOURO")
           (clojure.string/includes? (name ticket) "CDB")) :fixed-income
-      (and (not ticket-number?)
-           (contains? m.a/fii-list ticket)) :fii
+      (contains? m.a/fii-list ticket) :fii
+      (contains? m.a/crypto-list ticket) :crypto
       (and (not ticket-number?)
            (-> try-ticket->number Integer/parseInt)) :stockBR
-      (contains? m.a/crypto-list ticket) :crypto
       :else :stockEUA)))
 
 (defn ticket->categories
@@ -59,17 +53,19 @@
          (get-part-string digits 8 12) "-"
          (get-part-string digits 12 14))))
 
-(s/defn movement->asset :- m.a/Asset
+(s/defn b3-movement->asset :- m.a/Asset
   [{:keys [product]}]
   ;(println "[ASSET] ROW " (str product))
   (let [ticket (l.a/b3-ticket->asset-ticket product)
-        {:keys [name tax-number category]} (get asset-more-info ticket)]
+        {:keys [name tax-number category]} (get asset-more-info ticket)
+        asset-type (ticket->asset-type ticket)]
     {:asset/id         (UUID/randomUUID)
      :asset/name       (or name (str product))
      :asset/ticket     ticket
      :asset/category   (or category [:unknown])
      :asset/type       (ticket->asset-type ticket)
-     :asset/tax-number (when (not (empty? tax-number)) (format-br-tax tax-number))}))
+     :asset/tax-number (when (and (not (empty? tax-number))
+                                  (contains? #{:fii :stockBR} asset-type)) (format-br-tax tax-number))}))
 
 (defn already-read-asset
   [{:asset/keys [ticket]} db-data]
@@ -84,7 +80,7 @@
   ([mov db-data]
    (println "[ASSET] Processing adapter... current assets [" (count db-data) "]")
    (let [mov-assets (->> mov
-                         (map movement->asset)
+                         (map b3-movement->asset)
                          (group-by :asset/ticket)
                          (map #(-> % val first)))
          new-assets (->> mov-assets
