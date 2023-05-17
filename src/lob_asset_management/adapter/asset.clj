@@ -17,7 +17,8 @@
   [ticket :- s/Keyword]
   (let [try-ticket->number (-> ticket
                                name
-                               (clojure.string/replace #"([A-Z])" ""))
+                               (clojure.string/replace #"([A-Z])" "")
+                               (clojure.string/replace #"." ""))
         ticket-number? (empty? try-ticket->number)]
     (cond
       (or (clojure.string/includes? (name ticket) "TESOURO")
