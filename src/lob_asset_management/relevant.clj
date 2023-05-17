@@ -7,7 +7,6 @@
 
 (def asset-more-info (file->edn "./resources/asset_fixed_info.edn"))
 
-
 (def configurations (file->edn "./resources/config.edn"))
 
 (comment

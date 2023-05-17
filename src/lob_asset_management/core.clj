@@ -51,8 +51,6 @@
                (c.p/process-b3-folder))
         :d (do (println "DELETING ALL FILES IN FOLDER")
                (c.p/delete-all-files))
-        :pn (do (println "PROCESS ONLY NEW FILES")
-                (c.p/process-b3-folder-only-new))
         :s (do (println "STATING POOLER")
                (let [stop-loop (poller #(c.m/update-asset-market-price) 15000)]
                  (println "Press enter to stop...")

@@ -12,7 +12,8 @@
     "NU INVEST CORRETORA DE VALORES S.A."                       :nu
     "INTER DTVM LTDA"                                           :inter
     "INTER DISTRIBUIDORA DE TITULOS E VALORES MOBILIARIOS LTDA" :inter
-    :else                                                       :other))
+    "Sproutfy"                                                  :sproutfy
+    (-> ex string/lower-case keyword)))
 
 (defn b3-sell? [mov]
   (and (= (:type mov) "Debito")
@@ -45,11 +46,21 @@
         (string/replace ":" ""))))
 
 (defn safe-number->bigdec [num]
-  (if (number? num) (bigdec num) 0M))
+  (if (number? num)
+    (bigdec num)
+    (let [number-without-decimal-cases (-> num
+                                           str
+                                           (string/replace #"\$|R|,|\." "")
+                                           (string/replace " " "")
+                                           bigdec)
+          number-with-decimal-cases (if (>= number-without-decimal-cases 100M)
+                                      (/ number-without-decimal-cases 100)
+                                      number-without-decimal-cases)]
+      number-with-decimal-cases)))
 
 (defn convert-date
   [date]
-  (let [split (clojure.string/split date #"/")]
+  (let [split (string/split date #"/")]
     (Integer/parseInt (str (last split) (second split) (first split)))))
 
 (s/defn movements->transaction :- m.t/Transaction

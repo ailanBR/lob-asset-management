@@ -13,11 +13,14 @@
   ([file-path]
    (read-xlsx-by-file-path file-path (-> configurations :releases first :b3-release)))
   ([file-path {:keys [sheet columns]}]
+   (println "file-path=>" file-path)
    (->> (xlsx/load-workbook file-path)
         (xlsx/select-sheet sheet)
         (xlsx/select-columns columns)
         rest
-        (filter #(not (nil? %))))))
+        (filter #(and (not (nil? %))
+                      (not (nil? (get % (-> columns first val))))
+                      (not (nil? (get % (-> columns second val)))))))))
 
 (defn read-xlsx-by-file-name
   ([file-name]
@@ -27,11 +30,10 @@
    (let [file-path (str file-folder file-name)]
      (read-xlsx-by-file-path file-path xlsx-config))))
 
-(def root-directory "./out-data/")
 
 (defn file-full-path [file-name]
-  (str root-directory file-name "/" file-name ".edn"))
-
+  (let [root-directory (:out-data-path configurations)]
+    (str root-directory file-name "/" file-name ".edn")))
 
 (s/defn get-file-by-entity
   [entity :- m.f/file-name]

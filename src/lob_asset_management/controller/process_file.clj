@@ -7,19 +7,46 @@
             [lob-asset-management.models.file :as m.f]
             [lob-asset-management.relevant :refer [configurations]]))
 
-(defn process-assets-new
-  [b3-movements]
-  (let [db-assets (io.f-in/get-file-by-entity :asset)
-        assets (a.a/movements->assets b3-movements db-assets)]
-    (when (not= db-assets assets)
-      (println "New assets to be registered")
-      (io.f-out/upsert assets)
-      assets)))
+(defn process-assets-2
+  [movements]
+  (let [assets (a.a/movements->assets movements)]
+    ;(clojure.pprint/print-table assets)
+    ))
 
-(defn process-folders-new
+(defn process-transactions-2
+  [movements]
+  (let [transactions (a.t/movements->transactions movements)]
+    (clojure.pprint/print-table transactions)
+    ))
+
+(defn process-movement
+  [movements]
+  (let [_ (process-assets-2 movements)
+        transactions (process-transactions-2 movements)]))
+
+(defn process-folder
+  [{:keys [release-folder] :as config-folder}]
+  (let [files (io.f-in/get-b3-folder-files release-folder)]
+    (->> files
+         (map #(io.f-in/read-xlsx-by-file-path % config-folder))
+         (apply concat))))
+
+(defn process-folders
   []
-  (let [folders (:releases  configurations)
-        folder-files (io.f-in/get-b3-folder-files )]))
+  (when-let [folder-config (-> configurations
+                              :releases
+                              second
+                              first
+                              val)
+           ;(map #(-> %
+           ;                       first
+           ;                       val
+           ;                       :release-folder
+           ;                       io.f-in/get-b3-folder-files) releases)
+           ]
+    (let [movements (process-folder folder-config)]
+      (process-movement movements)
+      )))
 
 (defn process-assets
   [b3-movements]
@@ -48,42 +75,43 @@
       (println "New portfolio records to be registered")
       (io.f-out/upsert portfolio))))
 
-(defn process-b3-release
-  [b3-file]
-  (let [b3-movements (io.f-in/read-xlsx-by-file-name b3-file)]
-    (process-b3-movement b3-movements)))
-
-(defn process-b3-release-by-path
-  [b3-file-path]
-  (let [b3-movements (io.f-in/read-xlsx-by-file-path b3-file-path)]
-    (process-b3-movement b3-movements)))
-
 (defn process-b3-folder
   []
-  (if-let [folder-files (io.f-in/get-b3-folder-files)]
+  (when-let [folder-files (io.f-in/get-b3-folder-files)]
     (let [b3-movements (->> folder-files
                             (map io.f-in/read-xlsx-by-file-path )
                             (apply concat))]
       (process-b3-movement b3-movements))))
 
+;(defn process-b3-release
+;  [b3-file]
+;  (let [b3-movements (io.f-in/read-xlsx-by-file-name b3-file)]
+;    (process-b3-movement b3-movements)))
+;
+;(defn process-b3-release-by-path
+;  [b3-file-path]
+;  (let [b3-movements (io.f-in/read-xlsx-by-file-path b3-file-path)]
+;    (process-b3-movement b3-movements)))
 
-(defn process-b3-folder-only-new
-  []
-  (let [already-read (or (-> :read-release (io.f-in/get-file-by-entity) :read-release) [])
-        folder-files (io.f-in/get-b3-folder-files)
-        new-files (->> folder-files
-                       (filter #(not (contains? (set already-read) %))))]
-    (when (not (empty? new-files))
-      (let [new-movements (->> new-files
-                               (map io.f-in/read-xlsx-by-file-path)
-                               (apply concat))
-            process-movements (process-b3-movement new-movements)]
-        (println process-movements)
-
-        (io.f-out/upsert {:read-release (->> new-files
-                                             (conj already-read)
-                                             (apply concat)
-                                             (to-array))})))))
+;(defn process-b3-folder-only-new
+;  ;DEPRECATED
+;  ;Use process-b3-folder the processing is idempotent
+;  []
+;  (let [already-read (or (-> :read-release (io.f-in/get-file-by-entity) :read-release) [])
+;        folder-files (io.f-in/get-b3-folder-files)
+;        new-files (->> folder-files
+;                       (filter #(not (contains? (set already-read) %))))]
+;    (when (not (empty? new-files))
+;      (let [new-movements (->> new-files
+;                               (map io.f-in/read-xlsx-by-file-path)
+;                               (apply concat))
+;            process-movements (process-b3-movement new-movements)]
+;        (println process-movements)
+;
+;        (io.f-out/upsert {:read-release (->> new-files
+;                                             (conj already-read)
+;                                             (apply concat)
+;                                             (to-array))})))))
 
 (defn delete-all-files
   []
@@ -91,7 +119,6 @@
   (map io.f-in/delete-file m.f/list-file-name))
 
 (comment
-  (process-b3-folder-only-new)
 
   (delete-all-files)
 
