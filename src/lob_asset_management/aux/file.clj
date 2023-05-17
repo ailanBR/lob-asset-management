@@ -9,3 +9,9 @@
   (when (file-exists? file-path)
     (with-open [in (io/reader file-path)]
       (edn/read-string (slurp in)))))
+
+(defn edn->file [data file-path]
+  ;TODO Avoid the necessity of an existent folder
+  (with-open [out (io/writer file-path)]
+    (binding [*out* out]
+      (clojure.pprint/pprint data))))
