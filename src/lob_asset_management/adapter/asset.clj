@@ -24,6 +24,8 @@
           (clojure.string/includes? (name ticket) "CDB")) :fixed-income
       (contains? m.a/fii-list ticket) :fii
       (contains? m.a/crypto-list ticket) :crypto
+      (contains? m.a/etf-list ticket) :etf
+      (contains? m.a/bdr-list ticket) :bdr
       (and (not ticket-number?)
            (-> try-ticket->number Integer/parseInt)) :stockBR
       :else :stockEUA)))
@@ -140,33 +142,4 @@
   (first (get-less-market-price-updated assets-file 1 5))
 
   (get-less-market-price-updated assets-file 1 3)
-
-  ;format cnpj
-  (def step1 (-> "42278291000124"
-                 str
-                 (clojure.string/replace "." "")
-                 (clojure.string/replace "/" "")
-                 (clojure.string/replace "-" "")))
-
-  (defn get-part-string
-    [c start end]
-    (-> c
-        (clojure.string/split #"")
-        (subvec start end)
-        (clojure.string/join)))
-  (defn format-br-tax
-    [br-tax]
-    (let [digits (-> br-tax
-                     str
-                     (clojure.string/replace "." "")
-                     (clojure.string/replace "/" "")
-                     (clojure.string/replace "-" ""))]
-      (str (get-part-string digits 0 2) "."
-           (get-part-string digits 2 5) "."
-           (get-part-string digits 5 8) "/"
-           (get-part-string digits 8 12) "-"
-           (get-part-string digits 12 14))))
-
-  (map add-character step1)
-
   )
