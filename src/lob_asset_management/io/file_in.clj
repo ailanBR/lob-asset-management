@@ -3,16 +3,11 @@
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [dk.ative.docjure.spreadsheet :as xlsx]
-            [lob-asset-management.aux.file :as aux.f]
+            [lob-asset-management.aux.file :as aux.f :refer [file->edn]]
             [lob-asset-management.models.file :as m.f]
+            [lob-asset-management.relevant :refer [configurations]]
             [schema.core :as s]))
 
-(defn file->edn [file-path]
-  (when (aux.f/file-exists? file-path)
-    (with-open [in (io/reader file-path)]
-      (edn/read-string (slurp in)))))
-
-(def configurations (file->edn "./resources/config.edn"))
 
 (defn read-xlsx-by-file-path
   ([file-path]

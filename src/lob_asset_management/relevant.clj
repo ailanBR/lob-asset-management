@@ -1,5 +1,5 @@
 (ns lob-asset-management.relevant
-  (:require [lob-asset-management.io.file-in :refer [file->edn]]))
+  (:require [lob-asset-management.aux.file :refer [file->edn]]))
 
 (def secrets (file->edn "./resources/secrets.edn"))
 
@@ -7,6 +7,8 @@
 
 (def asset-more-info (file->edn "./resources/asset_fixed_info.edn"))
 
+
+(def configurations (file->edn "./resources/config.edn"))
 
 (comment
   (read-secrets)

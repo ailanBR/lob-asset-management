@@ -4,7 +4,22 @@
             [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.io.file-in :as io.f-in]
-            [lob-asset-management.models.file :as m.f]))
+            [lob-asset-management.models.file :as m.f]
+            [lob-asset-management.relevant :refer [configurations]]))
+
+(defn process-assets-new
+  [b3-movements]
+  (let [db-assets (io.f-in/get-file-by-entity :asset)
+        assets (a.a/movements->assets b3-movements db-assets)]
+    (when (not= db-assets assets)
+      (println "New assets to be registered")
+      (io.f-out/upsert assets)
+      assets)))
+
+(defn process-folders-new
+  []
+  (let [folders (:releases  configurations)
+        folder-files (io.f-in/get-b3-folder-files )]))
 
 (defn process-assets
   [b3-movements]
@@ -50,6 +65,7 @@
                             (map io.f-in/read-xlsx-by-file-path )
                             (apply concat))]
       (process-b3-movement b3-movements))))
+
 
 (defn process-b3-folder-only-new
   []
