@@ -2,33 +2,28 @@
   (:require [clojure.java.io :as io]
             [java-time.api :as t]
             ;[clj-time.core :as t]
-            [lob-asset-management.aux.file :as aux.f]
+            [lob-asset-management.aux.file :refer [edn->file] :as aux.f]
             [schema.core :as s]
-            [lob-asset-management.models.file :as m.f])
+            [lob-asset-management.models.file :as m.f]
+            [lob-asset-management.relevant :refer [configurations]])
   (:import (clojure.lang PersistentArrayMap PersistentVector ArraySeq LazySeq)))
 
-(def root-directory "./out-data/")
-
 (s/defn file-full-path [file-keyword :- m.f/file-name]
-  (let [file-name (name file-keyword)]
+  (let [file-name (name file-keyword)
+        root-directory (:out-data-path configurations)]
     (str root-directory file-name "/" file-name ".edn")))
 
 (defn create-backup [file-keyword]
   (let [file-name (name file-keyword)
         source-path (file-full-path file-keyword)
         source-file (io/file source-path)
+        root-directory (:out-data-path configurations)
         target-path (str root-directory file-name "/bkp/" file-name  "_" (t/local-date-time)  ".edn")
         target-file (io/file target-path)]
     (when (aux.f/file-exists? source-file)
       (with-open [in (clojure.java.io/input-stream source-file)
                   out (clojure.java.io/output-stream target-file)]
         (clojure.java.io/copy in out)))))
-
-(defn edn->file [data file-path]
-  ;TODO Avoid the necessity of an existent folder
-  (with-open [out (io/writer file-path)]
-    (binding [*out* out]
-      (clojure.pprint/pprint data))))
 
 (defmulti
   upsert
