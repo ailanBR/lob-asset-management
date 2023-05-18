@@ -16,13 +16,17 @@
 (defn process-transactions-2
   [movements]
   (let [transactions (a.t/movements->transactions movements)]
-    (clojure.pprint/print-table transactions)
+    ;(clojure.pprint/print-table transactions)
+    transactions
     ))
 
 (defn process-movement
   [movements]
+  (println (count movements))
   (let [_ (process-assets-2 movements)
-        transactions (process-transactions-2 movements)]))
+        transactions (process-transactions-2 movements)
+        portfolio (when transactions (a.p/transactions->portfolio transactions))]
+    (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/total-cost :portfolio/average-price] portfolio)))
 
 (defn process-folder
   [{:keys [release-folder] :as config-folder}]
@@ -33,20 +37,25 @@
 
 (defn process-folders
   []
-  (when-let [folder-config (-> configurations
-                              :releases
-                              second
-                              first
-                              val)
-           ;(map #(-> %
-           ;                       first
-           ;                       val
-           ;                       :release-folder
-           ;                       io.f-in/get-b3-folder-files) releases)
-           ]
-    (let [movements (process-folder folder-config)]
+  (when-let [
+             ;folder-config (-> configurations
+             ;                 :releases
+             ;                 second
+             ;                 first
+             ;                 val)
+           movements (->> (:releases configurations)
+                          (map #(-> % first val process-folder))
+                          (apply concat))
+             ]
+    ;(let [movements (process-folder folder-config)]
+    ;(clojure.pprint/pprint movements)
       (process-movement movements)
-      )))
+      ;)
+  ))
+
+(comment
+  (process-folders)
+  )
 
 (defn process-assets
   [b3-movements]

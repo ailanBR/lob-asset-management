@@ -12,8 +12,9 @@
 (defn read-xlsx-by-file-path
   ([file-path]
    (read-xlsx-by-file-path file-path (-> configurations :releases first :b3-release)))
-  ([file-path {:keys [sheet columns]}]
-   (println "file-path=>" file-path)
+  ([file-path {:keys [sheet columns] :as file-config}]
+   ;(println "file-path=>" file-path)
+   ;(println "config=>" file-config)
    (->> (xlsx/load-workbook file-path)
         (xlsx/select-sheet sheet)
         (xlsx/select-columns columns)

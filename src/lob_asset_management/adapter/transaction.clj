@@ -48,15 +48,19 @@
 (defn safe-number->bigdec [num]
   (if (number? num)
     (bigdec num)
-    (let [number-without-decimal-cases (-> num
-                                           str
-                                           (string/replace #"\$|R|,|\." "")
-                                           (string/replace " " "")
-                                           bigdec)
-          number-with-decimal-cases (if (>= number-without-decimal-cases 100M)
-                                      (/ number-without-decimal-cases 100)
-                                      number-without-decimal-cases)]
-      number-with-decimal-cases)))
+    (let [formatted-input (-> num
+                              str
+                              (string/replace #"\$|R|,|\." "")
+                              (string/replace " " "")
+                              (string/replace "-" ""))
+          ]
+      (if (empty? formatted-input)
+        0M
+        (let [formatted-input-bigdec (bigdec formatted-input)
+              number-with-decimal-cases (if (>= formatted-input-bigdec 100M)
+                                          (/ formatted-input-bigdec 100)
+                                          formatted-input-bigdec)]
+          number-with-decimal-cases)))))
 
 (defn convert-date
   [date]
@@ -67,6 +71,7 @@
   [{:keys [transaction-date unit-price quantity exchange product operation-total] :as b3-movement}]
   (let [operation-type (b3-type->transaction-type b3-movement)
         ticket (l.a/b3-ticket->asset-ticket product)]
+    (println "[TRANSACTION] Row => " b3-movement)
     {:transaction/id              (gen-transaction-id b3-movement)
      :transaction/created-at      (convert-date (str transaction-date))
      ;:transaction/asset          asset
