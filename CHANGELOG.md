@@ -86,6 +86,13 @@ All notable changes to this project will be documented in this file. This change
 - Fix release description
 - Read all data from B3 with success with some fixes in asset and transaction adapters
 
+### 2023-05-18
+- Read/Process stock info
+- Created config file for xlsx info
+- Add log library
+- Add price historic in asset
+- Set poller configuration
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 
