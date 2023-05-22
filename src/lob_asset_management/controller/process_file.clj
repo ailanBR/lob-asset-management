@@ -1,5 +1,6 @@
 (ns lob-asset-management.controller.process-file
-  (:require [lob-asset-management.adapter.asset :as a.a]
+  (:require [clojure.tools.logging :as log]
+            [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.adapter.transaction :as a.t]
             [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.io.file-out :as io.f-out]
@@ -7,25 +8,34 @@
             [lob-asset-management.models.file :as m.f]
             [lob-asset-management.relevant :refer [configurations]]))
 
-(defn process-assets-2
+(defn process-assets
   [movements]
-  (let [assets (a.a/movements->assets movements)]
-    ;(clojure.pprint/print-table assets)
-    ))
+  (log/info "[PROCESS ASSETS] Started")
+  (let [db-assets (io.f-in/get-file-by-entity :asset)
+        assets (a.a/movements->assets movements db-assets)]
+    (when (not= db-assets assets)
+      (log/info "[PROCESS ASSETS] New assets to be registered")
+      (io.f-out/upsert assets)
+      assets)))
 
-(defn process-transactions-2
+(defn process-transactions
   [movements]
-  (let [transactions (a.t/movements->transactions movements)]
-    ;(clojure.pprint/print-table transactions)
-    transactions
-    ))
+  (log/info "[PROCESS TRANSACTIONS] Started")
+  (let [db-transactions (io.f-in/get-file-by-entity :transaction)
+        transactions (a.t/movements->transactions movements db-transactions)]
+    (when (not= db-transactions transactions)
+      (log/info "[PROCESS TRANSACTIONS] New transactions to be registered")
+      (io.f-out/upsert transactions)
+      transactions)))
 
 (defn process-movement
   [movements]
-  (println (count movements))
-  (let [_ (process-assets-2 movements)
-        transactions (process-transactions-2 movements)
+  (let [_ (process-assets movements)
+        transactions (process-transactions movements)
         portfolio (when transactions (a.p/transactions->portfolio transactions))]
+    (when portfolio
+      (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")
+      (io.f-out/upsert portfolio))
     (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/total-cost :portfolio/average-price] portfolio)))
 
 (defn process-folder
@@ -37,43 +47,16 @@
 
 (defn process-folders
   []
-  (when-let [
-             ;folder-config (-> configurations
-             ;                 :releases
-             ;                 second
-             ;                 first
-             ;                 val)
-           movements (->> (:releases configurations)
+  (when-let [movements (->> (:releases configurations)
                           (map #(-> % first val process-folder))
-                          (apply concat))
-             ]
-    ;(let [movements (process-folder folder-config)]
-    ;(clojure.pprint/pprint movements)
-      (process-movement movements)
-      ;)
-  ))
+                          (apply concat))]
+    (process-movement movements)))
 
 (comment
   (process-folders)
+
+  (def cm (process-folders))
   )
-
-(defn process-assets
-  [b3-movements]
-  (let [db-assets (io.f-in/get-file-by-entity :asset)
-        assets (a.a/movements->assets b3-movements db-assets)]
-    (when (not= db-assets assets)
-      (println "New assets to be registered")
-      (io.f-out/upsert assets)
-      assets)))
-
-(defn process-transactions
-  [b3-movements]
-  (let [db-transactions (io.f-in/get-file-by-entity :transaction)
-        transactions (a.t/movements->transactions b3-movements db-transactions)]
-    (when (not= db-transactions transactions)
-      (println "New transactions to be registered")
-      (io.f-out/upsert transactions)
-      transactions)))
 
 (defn process-b3-movement
   [b3-movements]
@@ -92,18 +75,17 @@
                             (apply concat))]
       (process-b3-movement b3-movements))))
 
-;(defn process-b3-release
+;(defn process-b3-release ;UNUSED
 ;  [b3-file]
 ;  (let [b3-movements (io.f-in/read-xlsx-by-file-name b3-file)]
 ;    (process-b3-movement b3-movements)))
 ;
-;(defn process-b3-release-by-path
+;(defn process-b3-release-by-path ;UNUSED
 ;  [b3-file-path]
 ;  (let [b3-movements (io.f-in/read-xlsx-by-file-path b3-file-path)]
 ;    (process-b3-movement b3-movements)))
 
-;(defn process-b3-folder-only-new
-;  ;DEPRECATED
+;(defn process-b3-folder-only-new ;DEPRECATED
 ;  ;Use process-b3-folder the processing is idempotent
 ;  []
 ;  (let [already-read (or (-> :read-release (io.f-in/get-file-by-entity) :read-release) [])

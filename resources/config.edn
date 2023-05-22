@@ -9,9 +9,9 @@
                                                  :H :operation-total}
                                 :sheet "Movimentação"
                                 :release-folder "./in-data/b3"}}
-                  {:stock      {:columns        {:A :type    ;;(Credito Debito)
+                  {:stock      {:columns        {:A :type
                                                  :B :transaction-date
-                                                 :C :movement-type ;;(Juros Sobre Capital Próprio Rendimento Atualização Incorporação VENCIMENTO Dividendo Transferência - Liquidação Direitos de Subscrição - Não Exercido Leilão de Fração Direito de Subscrição Resgate Fração em Ativos)
+                                                 :C :movement-type
                                                  :D :product
                                                  :E :exchange
                                                  :F :quantity
@@ -19,36 +19,46 @@
                                                  :H :operation-total
                                                  :I :currency}
                                 :sheet "Movimentação"
-                                :release-folder "./in-data/stock"}}]
+                                :release-folder "./in-data/stock"}}
+                  {:crypto      {:columns        {:A :type
+                                                  :B :transaction-date
+                                                  :C :movement-type
+                                                  :D :product
+                                                  :E :exchange
+                                                  :F :quantity
+                                                  :G :unit-price
+                                                  :H :operation-total}
+                                :sheet "Movimentação"
+                                :release-folder "./in-data/crypto"}}]
  :out-data-path  "./out-data/"
-
- :asset-parse    {:product {:type :string :eql :ticket}}
- :transaction-parse {:transaction-date {:type :dd-mm-yyyy :eql :created-at}
-                     :unit-price       {:type :number :eql :average-price}
-                     :quantity         {:type :number :eql :average-price}
-                     :exchange         {:type :string :eql :exchange :adapter {:param [:exchange]
-                                                                               :function (fn [e]
-                                                                                           (condp = e
-                                                                                             "NU INVEST CORRETORA DE VALORES S.A."                       :nu
-                                                                                             "INTER DTVM LTDA"                                           :inter
-                                                                                             "INTER DISTRIBUIDORA DE TITULOS E VALORES MOBILIARIOS LTDA" :inter
-                                                                                             :else                                                       :other))}}
-                     :product          {:type :string :eql :ticket}
-                     :operation-total  {:type :number :eql :operation-total}
-                     :movement-type    {:type :string :eql :operation-type :adapter {:param     [:movement-type :type]
-                                                                                     :function (fn [m t]
-                                                                                                 (cond
-                                                                                                   (and (= t "Debito")
-                                                                                                     (= m "Transferência - Liquidação")) :sell
-                                                                                                   (and (= t "Credito")
-                                                                                                     (= m "Transferência - Liquidação")) :buy
-                                                                                                   (= m "Juros Sobre Capital Próprio") :JCP
-                                                                                                   (= m "Rendimento") :income
-                                                                                                   (= m "Dividendo") :dividend
-                                                                                                   (= m "Leilão de Fração") :waste
-                                                                                                   :else (-> m
-                                                                                                           (clojure.string/replace " " "")
-                                                                                                           clojure.string/lower-case
-                                                                                                           keyword)))}}}
+ ;
+ ;:asset-parse    {:product {:type :string :eql :ticket}}
+ ;:transaction-parse {:transaction-date {:type :dd-mm-yyyy :eql :created-at}
+ ;                    :unit-price       {:type :number :eql :average-price}
+ ;                    :quantity         {:type :number :eql :average-price}
+ ;                    :exchange         {:type :string :eql :exchange :adapter {:param [:exchange]
+ ;                                                                              :function (fn [e]
+ ;                                                                                          (condp = e
+ ;                                                                                            "NU INVEST CORRETORA DE VALORES S.A."                       :nu
+ ;                                                                                            "INTER DTVM LTDA"                                           :inter
+ ;                                                                                            "INTER DISTRIBUIDORA DE TITULOS E VALORES MOBILIARIOS LTDA" :inter
+ ;                                                                                            :else                                                       :other))}}
+ ;                    :product          {:type :string :eql :ticket}
+ ;                    :operation-total  {:type :number :eql :operation-total}
+ ;                    :movement-type    {:type :string :eql :operation-type :adapter {:param     [:movement-type :type]
+ ;                                                                                    :function (fn [m t]
+ ;                                                                                                (cond
+ ;                                                                                                  (and (= t "Debito")
+ ;                                                                                                    (= m "Transferência - Liquidação")) :sell
+ ;                                                                                                  (and (= t "Credito")
+ ;                                                                                                    (= m "Transferência - Liquidação")) :buy
+ ;                                                                                                  (= m "Juros Sobre Capital Próprio") :JCP
+ ;                                                                                                  (= m "Rendimento") :income
+ ;                                                                                                  (= m "Dividendo") :dividend
+ ;                                                                                                  (= m "Leilão de Fração") :waste
+ ;                                                                                                  :else (-> m
+ ;                                                                                                          (clojure.string/replace " " "")
+ ;                                                                                                          clojure.string/lower-case
+ ;                                                                                                          keyword)))}}}
 
  }

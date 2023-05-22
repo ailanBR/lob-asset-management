@@ -35,19 +35,19 @@ Provide where asset need to be purchase and how much
 
 ## TODO
 
-1. [IRPF Release] Add Group, Code and Location
-1. Read EUA equities information
-2. Read crypto information
+1. [Release IRPF] Create USD/BRL price list file getting information from ALPHA_API
+2. [Release IRPF] Generate file 
 3. Turn solution on API or CronJob
 4. Store data on cloud
    1. [] AWS
    2. [] Firebase
    3. [] Other
-5. Register Alpha API ticket in asset/fixed-info ?
-6. Add last price to portfolio
-7. Calculate current profit/loss market price based
+5. Add last price to portfolio
+6. Calculate current profit/loss market price based
+7. Register Alpha API ticket in asset/fixed-info ?
 8. Add a way to manual insert information (Front-end proj?)
 9. Update portfolio after get market last price
+10. 
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)

@@ -1,5 +1,6 @@
 (ns lob-asset-management.adapter.asset
-  (:require [schema.core :as s]
+  (:require [clojure.tools.logging :as log]
+            [schema.core :as s]
             [lob-asset-management.models.asset :as m.a]
             [lob-asset-management.logic.asset :as l.a]
             [lob-asset-management.io.file-in :as io.f-in]
@@ -81,7 +82,7 @@
   ([mov]
    (movements->assets mov ()))
   ([mov db-data]
-   (println "[ASSET] Processing adapter... current assets [" (count db-data) "]")
+   (log/info "[ASSET] Processing adapter... current assets [" (count db-data) "]")
    (let [mov-assets (->> mov
                          (map b3-movement->asset)
                          (group-by :asset/ticket)
@@ -90,9 +91,9 @@
                          (filter #(already-read-asset % db-data))
                          (concat (or db-data []))
                          (sort-by :asset/name))]
-     (println "[ASSET] Concluded adapter... "
-              "read assets [" (count mov-assets) "] "
-              "result [" (count new-assets) "]")
+     (log/info "[ASSET] Concluded adapter... "
+               "read assets [" (count mov-assets) "] "
+               "result [" (count new-assets) "]")
      new-assets)))
 
 (defn disabled-ticket-get-market-price

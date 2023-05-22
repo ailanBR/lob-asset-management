@@ -1,5 +1,6 @@
 (ns lob-asset-management.adapter.portfolio
-  (:require [lob-asset-management.io.file-in :as io.f-in]
+  (:require [clojure.tools.logging :as log]
+            [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.adapter.asset :as a.a]))
 
 (defmulti update-quantity (fn [_ _ op] (keyword op)))
@@ -120,7 +121,7 @@
 
 (defn transactions->portfolio
   [t]
-  (println "[PORTFOLIO] Processing adapter...")
+  (log/info "[PORTFOLIO] Processing adapter...")
   (let [portfolio (->> t
                        (filter-operation)                   ;;Accept only buy and sell
                        (sort-by :transaction/created-at)
@@ -128,7 +129,7 @@
                        (map consolidate-grouped-transactions)
                        (set-portfolio-representation)
                        (sort-by :portfolio/percentage >))]
-    (println "[PORTFOLIO] Concluded adapter...[" (count portfolio) "]")
+    (log/info "[PORTFOLIO] Concluded adapter...[" (count portfolio) "]")
     portfolio))
 
 (defn consolidate-category

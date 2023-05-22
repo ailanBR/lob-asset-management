@@ -13,22 +13,26 @@
     :bdr          "04"
     :fii          "07"
     :etf          "07"
-    :stockEUA     "07"))
+    :stockEUA     "03"
+    :crypto       "08"))
 
 (defn asset-type->code
-  [type]
+  [type ticket]
   (condp = type
     :stockBR      "01"
     :fii          "03"
     :bdr          "04"
     :etf          "09"
-    :stockEUA     "09"))
-
+    :stockEUA     "09"
+    :crypto       (if (= ticket :BTC)
+                    "01"
+                    "02")))
 
 (defn asset-type->location
   [type]
-  (if (= type :stockEUA)
-    "249 - Estados Unidos"
+  (condp = type
+    :stockEUA "249 - Estados Unidos"
+    :crypto "105 - Brasil"
     "105 - Brasil"))
 
 (defn generate-release
@@ -49,7 +53,7 @@
      :tax-number           tax-number
      :year-total-invested  (format "%.2f" year-total-invested)
      :group                (asset-type->group type)
-     :code                 (asset-type->code type)
+     :code                 (asset-type->code type ticket)
      :location             (asset-type->location type)
      :description          (asset->irpf-description quantity asset-name average-price)}))
 
@@ -79,7 +83,7 @@
     (map #(generate-release % assets year) portfolio-release)))
 
 (comment
-  (clojure.pprint/print-table (irpf-release 2022))
+  (clojure.pprint/print-table (->> (irpf-release 2022) (sort-by :code)))
   (->> (io.f-in/get-file-by-entity :transaction)
       (sort-by :transaction/created-at))
   )
