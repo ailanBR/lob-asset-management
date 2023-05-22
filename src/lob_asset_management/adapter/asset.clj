@@ -57,10 +57,10 @@
          (get-part-string digits 8 12) "-"
          (get-part-string digits 12 14))))
 
-(s/defn b3-movement->asset :- m.a/Asset
+(s/defn movements->asset :- m.a/Asset
   [{:keys [product]}]
   ;(println "[ASSET] ROW " (str product))
-  (let [ticket (l.a/b3-ticket->asset-ticket product)
+  (let [ticket (l.a/movement-ticket->asset-ticket product)
         {:keys [name tax-number category]} (get asset-more-info ticket)
         asset-type (ticket->asset-type ticket)]
     {:asset/id         (UUID/randomUUID)
@@ -84,7 +84,7 @@
   ([mov db-data]
    (log/info "[ASSET] Processing adapter... current assets [" (count db-data) "]")
    (let [mov-assets (->> mov
-                         (map b3-movement->asset)
+                         (map movements->asset)
                          (group-by :asset/ticket)
                          (map #(-> % val first)))
          new-assets (->> mov-assets

@@ -21,9 +21,7 @@
         rest
         (filter #(and (not (nil? %))
                       (not (nil? (get % (-> columns first val))))
-                      (not (nil? (get % (-> columns second val))))))
-
-        )))
+                      (not (nil? (get % (-> columns second val)))))))))
 
 (defn read-xlsx-by-file-name
   ([file-name]
@@ -71,7 +69,6 @@
     (if (aux.f/file-exists? full-path)
       (io/delete-file full-path)
       (print "File doesn't exist or has already been deleted"))))
-
 
 (comment
   (get-b3-folder-files)

@@ -7,7 +7,7 @@
             [java-time.api :as t]
             ))
 
-(s/defn b3-exchange->transaction-exchange :- m.t/Exchange
+(s/defn movement-exchange->transaction-exchange :- m.t/Exchange
   [ex :- s/Str]
   (condp = ex
     "NU INVEST CORRETORA DE VALORES S.A."                       :nu
@@ -16,18 +16,18 @@
     "Sproutfy"                                                  :sproutfy
     (-> ex string/lower-case keyword)))
 
-(defn b3-sell? [mov]
+(defn sell? [mov]
   (and (= (:type mov) "Debito")
        (= (:movement-type mov) "Transferência - Liquidação")))
 
-(defn b3-buy? [mov]
+(defn buy? [mov]
   (and (= (:type mov) "Credito")
        (= (:movement-type mov) "Transferência - Liquidação")))
 
-(defn b3-type->transaction-type [{:keys [movement-type] :as mov}]
+(defn movement-type->transaction-type [{:keys [movement-type] :as mov}]
   (cond
-    (b3-sell? mov) :sell
-    (b3-buy? mov) :buy
+    (sell? mov) :sell
+    (buy? mov) :buy
     (= movement-type "Juros Sobre Capital Próprio") :JCP
     (= movement-type "Rendimento") :income
     (= movement-type "Dividendo") :dividend
@@ -38,10 +38,10 @@
               keyword)))
 
 (s/defn gen-transaction-id
-  [{:keys [transaction-date unit-price quantity product exchange] :as b3-movement}]
-  (let [operation-type (b3-type->transaction-type b3-movement)
-        ticket (l.a/b3-ticket->asset-ticket product)
-        exchange' (b3-exchange->transaction-exchange exchange)]
+  [{:keys [transaction-date unit-price quantity product exchange] :as movement}]
+  (let [operation-type (movement-type->transaction-type movement)
+        ticket (l.a/movement-ticket->asset-ticket product)
+        exchange' (movement-exchange->transaction-exchange exchange)]
     (-> (str ticket "-" transaction-date "-" unit-price "-" quantity "-" operation-type "-" exchange')
         (string/replace "/" "")
         (string/replace ":" ""))))
@@ -69,18 +69,18 @@
     (Integer/parseInt (str (last split) (second split) (first split)))))
 
 (s/defn movements->transaction :- m.t/Transaction
-  [{:keys [transaction-date unit-price quantity exchange product operation-total] :as b3-movement}]
-  (let [operation-type (b3-type->transaction-type b3-movement)
-        ticket (l.a/b3-ticket->asset-ticket product)]
-    ;(println "[TRANSACTION] Row => " b3-movement)
-    {:transaction/id              (gen-transaction-id b3-movement)
+  [{:keys [transaction-date unit-price quantity exchange product operation-total] :as movement}]
+  (let [operation-type (movement-type->transaction-type movement)
+        ticket (l.a/movement-ticket->asset-ticket product)]
+    ;(println "[TRANSACTION] Row => " movement)
+    {:transaction/id              (gen-transaction-id movement)
      :transaction/created-at      (convert-date (str transaction-date))
      ;:transaction/asset          asset
      ;:transaction/asset-id       (UUID/randomUUID)
      :transaction.asset/ticket    ticket
      :transaction/average-price   (safe-number->bigdec unit-price)
      :transaction/quantity        (safe-number->bigdec quantity)
-     :transaction/exchange        (b3-exchange->transaction-exchange exchange)
+     :transaction/exchange        (movement-exchange->transaction-exchange exchange)
      :transaction/operation-type  operation-type
      :transaction/processed-at    (-> (t/local-date-time) str)
      :transaction/operation-total (safe-number->bigdec operation-total)}))

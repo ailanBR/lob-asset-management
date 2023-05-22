@@ -8,7 +8,7 @@
        first))
 
 ;TODO: Create a specific ticket for CDB
-(s/defn b3-ticket->asset-ticket  :- s/Keyword
+(s/defn movement-ticket->asset-ticket  :- s/Keyword
   [xlsx-ticket :- s/Str]
   (-> xlsx-ticket
       (clojure.string/split #"-")
