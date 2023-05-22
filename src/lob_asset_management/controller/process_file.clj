@@ -35,8 +35,7 @@
         portfolio (when transactions (a.p/transactions->portfolio transactions))]
     (when portfolio
       (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")
-      (io.f-out/upsert portfolio))
-    (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/total-cost :portfolio/average-price] portfolio)))
+      (io.f-out/upsert portfolio))))
 
 (defn process-folder
   [{:keys [release-folder] :as config-folder}]
@@ -52,28 +51,13 @@
                           (apply concat))]
     (process-movement movements)))
 
-(comment
-  (process-folders)
-
-  (def cm (process-folders))
-  )
-
-(defn process-b3-movement
-  [b3-movements]
-  (let [_ (process-assets b3-movements)
-        transactions (process-transactions b3-movements)
-        portfolio (when transactions (a.p/transactions->portfolio transactions))]
-    (when portfolio
-      (println "New portfolio records to be registered")
-      (io.f-out/upsert portfolio))))
-
 (defn process-b3-folder
   []
   (when-let [folder-files (io.f-in/get-b3-folder-files)]
     (let [b3-movements (->> folder-files
                             (map io.f-in/read-xlsx-by-file-path )
                             (apply concat))]
-      (process-b3-movement b3-movements))))
+      (process-movement b3-movements))))
 
 ;(defn process-b3-release ;UNUSED
 ;  [b3-file]
@@ -84,7 +68,7 @@
 ;  [b3-file-path]
 ;  (let [b3-movements (io.f-in/read-xlsx-by-file-path b3-file-path)]
 ;    (process-b3-movement b3-movements)))
-
+;
 ;(defn process-b3-folder-only-new ;DEPRECATED
 ;  ;Use process-b3-folder the processing is idempotent
 ;  []
@@ -112,5 +96,9 @@
 (comment
 
   (delete-all-files)
+
+  (process-folders)
+
+  (def cm (process-folders))
 
   )
