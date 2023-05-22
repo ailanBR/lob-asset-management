@@ -63,6 +63,12 @@
   (let [file-path (file-full-path :read-release)]
     (edn->file data file-path)))
 
+
+(defmethod upsert :irpf-release [data]
+  ;(create-backup :read-release)
+  (let [file-path (file-full-path :read-release)]
+    (edn->file data file-path)))
+
 (comment
   (def assets [{:asset/ticket :ABEV4} {:asset/ticket :SULA11}])
 

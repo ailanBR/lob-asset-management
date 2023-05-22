@@ -93,6 +93,12 @@ All notable changes to this project will be documented in this file. This change
 - Add price historic in asset
 - Set poller configuration
 
+### 2023-05-22
+- Read crypto info
+- Store stock info
+- Update release group and code
+- Read all releases by configuration
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 

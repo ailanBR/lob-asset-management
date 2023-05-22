@@ -21,7 +21,9 @@
         rest
         (filter #(and (not (nil? %))
                       (not (nil? (get % (-> columns first val))))
-                      (not (nil? (get % (-> columns second val)))))))))
+                      (not (nil? (get % (-> columns second val))))))
+
+        )))
 
 (defn read-xlsx-by-file-name
   ([file-name]

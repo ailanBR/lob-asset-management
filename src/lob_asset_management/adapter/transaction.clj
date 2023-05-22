@@ -1,5 +1,6 @@
 (ns lob-asset-management.adapter.transaction
-  (:require [schema.core :as s]
+  (:require [clojure.tools.logging :as log]
+            [schema.core :as s]
             [clojure.string :as string]
             [lob-asset-management.models.transaction :as m.t]
             [lob-asset-management.logic.asset :as l.a]
@@ -71,7 +72,7 @@
   [{:keys [transaction-date unit-price quantity exchange product operation-total] :as b3-movement}]
   (let [operation-type (b3-type->transaction-type b3-movement)
         ticket (l.a/b3-ticket->asset-ticket product)]
-    (println "[TRANSACTION] Row => " b3-movement)
+    ;(println "[TRANSACTION] Row => " b3-movement)
     {:transaction/id              (gen-transaction-id b3-movement)
      :transaction/created-at      (convert-date (str transaction-date))
      ;:transaction/asset          asset
@@ -95,7 +96,7 @@
   ([mov]
    (movements->transactions mov ()))
   ([mov db-data]
-   (println "[TRANSACTION] Processing adapter...current transactions [" (count db-data) "]")
+   (log/info "[TRANSACTION] Processing adapter...current transactions [" (count db-data) "]")
    (let [mov-transactions (->> mov
                            (map movements->transaction)
                            (group-by :transaction/id)
@@ -104,7 +105,7 @@
                                (filter #(already-read-transaction % db-data))
                                (concat (or db-data []))
                                (sort-by :transaction.asset/ticket))]
-     (println "[TRANSACTION] Concluded adapter... "
-              "read transactions[" (count mov-transactions) "] "
-              "result [" (count new-transactions) "]")
+     (log/info "[TRANSACTION] Concluded adapter... "
+               "read transactions[" (count mov-transactions) "] "
+               "result [" (count new-transactions) "]")
      new-transactions)))
