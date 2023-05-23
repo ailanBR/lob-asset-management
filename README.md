@@ -1,6 +1,6 @@
-# lob-asset-management
+# Lob asset management
 
-A system to provide asset information's to management using functional programming with Clojure.
+A solution created to generate investments income tax release 
 
 ## Usage
 
@@ -36,7 +36,6 @@ Provide where asset need to be purchase and how much
 ## TODO
 
 1. [Release IRPF] Create USD/BRL price list file getting information from ALPHA_API
-2. [Release IRPF] Generate file 
 3. Turn solution on API or CronJob
 4. Store data on cloud
    1. [] AWS

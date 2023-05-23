@@ -1,6 +1,7 @@
 (ns lob-asset-management.controller.release
   (:require [lob-asset-management.adapter.portfolio :as a.p]
-            [lob-asset-management.io.file-in :as io.f-in]))
+            [lob-asset-management.io.file-in :as io.f-in]
+            [lob-asset-management.io.file-out :as io.f-out]))
 
 (defn asset->irpf-description
   [quantity asset-name average-price]
@@ -79,11 +80,19 @@
         portfolio-release (-> filtered-transactions
                               (a.p/transactions->portfolio)
                               (a.p/portfolio-list->irpf-release))
-        assets (io.f-in/get-file-by-entity :asset)]
-    (map #(generate-release % assets year) portfolio-release)))
+        assets (io.f-in/get-file-by-entity :asset)
+        income-tax-release (->> portfolio-release
+                                (map #(generate-release % assets year))
+                                (sort-by :group)
+                                (sort-by :code))]
+    (io.f-out/income-tax-file income-tax-release year)))
 
 (comment
   (clojure.pprint/print-table (->> (irpf-release 2022) (sort-by :code)))
+
   (->> (io.f-in/get-file-by-entity :transaction)
       (sort-by :transaction/created-at))
+
+  (irpf-release 2022)
+
   )

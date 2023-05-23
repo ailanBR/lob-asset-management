@@ -3,6 +3,7 @@
             [lob-asset-management.io.file-in :as io.i]
             [lob-asset-management.controller.process-file :as c.p]
             [lob-asset-management.controller.market :as c.m]
+            [lob-asset-management.controller.release :as c.r]
             [java-time.api :as t]
             ;[clj-time.core :as t]
             [clojure.tools.logging :as log]))
@@ -64,8 +65,11 @@
   (schema.core/set-fn-validation! true)
 
   (c.p/delete-all-files)
-  (c.p/process-b3-folder)
+  (c.p/process-folders)
+  ;(c.p/process-b3-folder)
   ;(c.p/process-b3-folder-only-new)
+
+  (c.r/irpf-release 2022)
 
   (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/average-price] (io.i/get-file-by-entity :portfolio))
   ;;Market data poller

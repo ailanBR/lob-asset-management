@@ -18,8 +18,7 @@
   [ticket :- s/Keyword]
   (let [try-ticket->number (-> ticket
                                name
-                               (clojure.string/replace #"([A-Z])" "")
-                               (clojure.string/replace #"." ""))
+                               (clojure.string/replace #"([A-Z])" ""))
         ticket-number? (empty? try-ticket->number)]
     (cond
       (or (clojure.string/includes? (name ticket) "TESOURO")
@@ -29,6 +28,7 @@
       (contains? m.a/etf-list ticket) :etf
       (contains? m.a/bdr-list ticket) :bdr
       (and (not ticket-number?)
+           (not (= "." try-ticket->number))
            (-> try-ticket->number Integer/parseInt)) :stockBR
       :else :stockEUA)))
 
