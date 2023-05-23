@@ -63,11 +63,6 @@
   (let [file-path (file-full-path :read-release)]
     (edn->file data file-path)))
 
-(defmethod upsert :irpf-release [data]
-  ;(create-backup :read-release)
-  (let [file-path (file-full-path :irpf-release)]
-    (edn->file data file-path)))
-
 (defn income-tax-file
   [data year]
   (let [root-directory (:out-data-path configurations)
