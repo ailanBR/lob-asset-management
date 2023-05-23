@@ -2,7 +2,7 @@
   (:require [clojure.java.io :as io]
             [java-time.api :as t]
             ;[clj-time.core :as t]
-            [lob-asset-management.aux.file :refer [edn->file] :as aux.f]
+            [lob-asset-management.aux.file :refer [edn->file edn->file-table] :as aux.f]
             [schema.core :as s]
             [lob-asset-management.models.file :as m.f]
             [lob-asset-management.relevant :refer [configurations]])
@@ -63,11 +63,11 @@
   (let [file-path (file-full-path :read-release)]
     (edn->file data file-path)))
 
-
-(defmethod upsert :irpf-release [data]
-  ;(create-backup :read-release)
-  (let [file-path (file-full-path :read-release)]
-    (edn->file data file-path)))
+(defn income-tax-file
+  [data year]
+  (let [root-directory (:out-data-path configurations)
+        file-path (str root-directory "income-tax/" year "/income-tax.edn")]
+    (edn->file-table data file-path)))
 
 (comment
   (def assets [{:asset/ticket :ABEV4} {:asset/ticket :SULA11}])

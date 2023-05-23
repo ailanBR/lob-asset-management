@@ -99,6 +99,10 @@ All notable changes to this project will be documented in this file. This change
 - Update release group and code
 - Read all releases by configuration
 
+### 2023-05-23
+- Generate Income Tax release file
+- 
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 
