@@ -105,6 +105,8 @@ All notable changes to this project will be documented in this file. This change
 - Fix market historic price format
 - Change println for log message
 
+### 2023-05-24
+- Add get and register USD price
 
 ## [0.1.1] - 2023-03-25
 ### Changed

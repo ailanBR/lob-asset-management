@@ -6,7 +6,7 @@
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.relevant :refer [asset-more-info]]
-            [java-time.api :as jt])
+            [java-time.api :as t])
   (:import (java.util UUID)))
 
 (defn allowed-get-market-info-tickets?
@@ -111,7 +111,7 @@
   [asset target-hours]
   (< (:asset.market-price/updated-at asset)
      (aux.t/get-current-millis
-       (jt/minus (jt/local-date-time) (jt/hours target-hours)))))
+       (t/minus (t/local-date-time) (t/hours target-hours)))))
 
 (defn get-less-market-price-updated
   ([assets]
