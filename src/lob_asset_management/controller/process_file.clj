@@ -90,7 +90,7 @@
 
 (defn delete-all-files
   []
-  (println "DELETING..." )
+  (log/info "DELETING..." )
   (map io.f-in/delete-file m.f/list-file-name))
 
 (comment

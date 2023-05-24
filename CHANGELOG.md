@@ -101,7 +101,10 @@ All notable changes to this project will be documented in this file. This change
 
 ### 2023-05-23
 - Generate Income Tax release file
-- 
+- Get EUA stock price
+- Fix market historic price format
+- Change println for log message
+
 
 ## [0.1.1] - 2023-03-25
 ### Changed

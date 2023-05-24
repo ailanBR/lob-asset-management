@@ -1,7 +1,8 @@
 (ns lob-asset-management.io.file-out
   (:require [clojure.java.io :as io]
+            [clojure.tools.logging :as log]
             [java-time.api :as t]
-            ;[clj-time.core :as t]
+    ;[clj-time.core :as t]
             [lob-asset-management.aux.file :refer [edn->file edn->file-table] :as aux.f]
             [schema.core :as s]
             [lob-asset-management.models.file :as m.f]
@@ -30,7 +31,7 @@
   (fn [data]
     (cond
       (empty? data)
-      (println "empty data")
+      (log/error "empty data")
 
       (instance? PersistentArrayMap data)
       (-> data first first (#(if (nil? (namespace %)) (keyword %) (-> % namespace keyword))))
