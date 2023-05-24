@@ -83,8 +83,9 @@
         assets (io.f-in/get-file-by-entity :asset)
         income-tax-release (->> portfolio-release
                                 (map #(generate-release % assets year))
-                                (sort-by :group)
-                                (sort-by :code))]
+                                (sort-by :year-total-invested)
+                                (sort-by :code)
+                                (sort-by :group))]
     (io.f-out/income-tax-file income-tax-release year)))
 
 (comment

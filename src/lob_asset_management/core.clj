@@ -1,6 +1,6 @@
 (ns lob-asset-management.core
   (:require [lob-asset-management.adapter.asset :as a.a]
-            [lob-asset-management.io.file-in :as io.i]
+            [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.controller.process-file :as c.p]
             [lob-asset-management.controller.market :as c.m]
             [lob-asset-management.controller.release :as c.r]
@@ -23,8 +23,7 @@
       (try
         (while @run-forest-run
           ;(println "[Poller running" (str (t/local-date-time)) "]")
-          (if (contains? window-hours
-                         (.getHour (t/local-date-time)))
+          (if (contains? window-hours (.getHour (t/local-date-time)))
             (f)
             (log/info "[Poller " (str (t/local-date-time)) "] Out of the configured window hour " window-hours))
           (log/info "[Poller next " (str (t/plus (t/local-date-time)
@@ -71,9 +70,10 @@
 
   (c.r/irpf-release 2022)
 
-  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/average-price] (io.i/get-file-by-entity :portfolio))
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/average-price] (io.f-in/get-file-by-entity :portfolio))
   ;;Market data poller
 
+  (c.m/update-asset-market-price)
   (defn my-function []
     (println "Hello, world! [" (str (t/local-date-time)) "]"))
 
@@ -108,5 +108,5 @@
   ;V1 Choice /Only BR data
   ; INTERVAL => 15seg
   ; WHEN => #(10 11 12 13 14 15 16 17 18)
-
+  (clojure.pprint/print-table [:asset/ticket :asset.market-price/price :asset.market-price/updated-at] (io.f-in/get-file-by-entity :asset))
   )
