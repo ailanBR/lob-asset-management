@@ -108,5 +108,10 @@
   ;V1 Choice /Only BR data
   ; INTERVAL => 15seg
   ; WHEN => #(10 11 12 13 14 15 16 17 18)
-  (clojure.pprint/print-table [:asset/ticket :asset.market-price/price :asset.market-price/updated-at] (io.f-in/get-file-by-entity :asset))
+  (clojure.pprint/print-table
+    [:transaction/created-at :transaction.asset/ticket :transaction/operation-type :transaction/quantity :transaction/average-price :transaction/operation-total]
+    (->> (io.f-in/get-file-by-entity :transaction)
+         (filter #(contains? #{:sproutfy} (:transaction/exchange %)))
+         (sort-by :transaction/created-at)
+         (sort-by :transaction.asset/ticket)))
   )

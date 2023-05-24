@@ -64,6 +64,11 @@
   (let [file-path (file-full-path :read-release)]
     (edn->file data file-path)))
 
+(defmethod upsert :forex-usd [data]
+  ;(create-backup :read-release)
+  (let [file-path (file-full-path :forex-usd)]
+    (edn->file data file-path)))
+
 (defn income-tax-file
   [data year]
   (let [root-directory (:out-data-path configurations)

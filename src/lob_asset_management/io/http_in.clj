@@ -1,7 +1,8 @@
 (ns lob-asset-management.io.http_in
   (:require [clj-http.client :as http]
             [lob-asset-management.relevant :refer [alpha-key]]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [schema.core :as s]))
 
 (defn keyword-space->underline [m]
   (zipmap (map #(keyword (clojure.string/replace (name %) " " "_")) (keys m))
@@ -32,7 +33,6 @@
      (if (= status 200)
        (-> body
            (json/parse-string true)
-           ;(get ":Meta Data")
            (keyword-space->underline)
            (remove-keyword-parenthesis))
        (throw (ex-info "Failed to get stock price information"
@@ -47,13 +47,29 @@
                                                          :symbol   symbol
                                                          :apikey   api-key}})]
      (if (= status 200)
+       (-> body)
+       (throw (ex-info "Failed to get company overview"
+                       {:status (:status status)}))))))
+
+(s/defn get-forex-brl->usd
+  ([]
+   (get-forex-brl->usd :compact alpha-key))
+  ([output-size :- s/Keyword]
+   (get-forex-brl->usd output-size alpha-key))
+  ([output-size  :- s/Keyword
+    api-key  :- s/Str]
+   (let [{:keys [status body]} (http/get "https://www.alphavantage.co/query"
+                                         {:query-params {:function "FX_DAILY"
+                                                         :from_symbol "USD"
+                                                         :to_symbol   "BRL"
+                                                         :outputsize (name output-size)
+                                                         :apikey api-key}})]
+     (if (= status 200)
        (-> body
-           ;(json/parse-string true)
-           ;;(get ":Meta Data")
-           ;(keyword-space->underline)
-           ;(remove-keyword-parenthesis)
-           )
-       (throw (ex-info "Failed to get stock price information"
+           (json/parse-string true)
+           (keyword-space->underline)
+           (remove-keyword-parenthesis))
+       (throw (ex-info "Failed to get usd price"
                        {:status (:status status)}))))))
 
 (comment
@@ -63,18 +79,6 @@
 
   (get abev-result ":Meta Data")
 
-
-  (def formatted-data
-    (let [mains (-> abev-result despace remove-parenteses-b remove-parenteses-a)
-          meta-data (despace (:Meta_Data mains))
-          time-serie (despace (:Time_Series_Daily mains))]
-      {:meta-data   meta-data
-       :time-series time-serie}))
-
-  (def last-price
-    (let [latest-refreshed-dt (-> formatted-data :meta-data :3._Last_Refreshed keyword)
-          latest-refreshed-price (-> formatted-data :time-series latest-refreshed-dt despace :4._close bigdec)]
-      {:price latest-refreshed-price
-       :date latest-refreshed-dt}))
+  (def usd (get-forex-brl->usd))
 
   )
