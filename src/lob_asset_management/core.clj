@@ -70,7 +70,7 @@
 
   (c.r/irpf-release 2022)
 
-  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/average-price] (io.f-in/get-file-by-entity :portfolio))
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/percentage] (io.f-in/get-file-by-entity :portfolio))
   ;;Market data poller
 
   (c.m/update-asset-market-price)

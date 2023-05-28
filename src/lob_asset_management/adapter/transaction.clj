@@ -5,7 +5,8 @@
             [lob-asset-management.models.transaction :as m.t]
             [lob-asset-management.logic.asset :as l.a]
             [java-time.api :as t]
-            ))
+            [lob-asset-management.io.file-in :as io.f-in]
+            [lob-asset-management.aux.time :as aux.t]))
 
 (s/defn movement-exchange->transaction-exchange :- m.t/Exchange
   [ex :- s/Str]
@@ -53,8 +54,7 @@
                               str
                               (string/replace #"\$|R|,|\." "")
                               (string/replace " " "")
-                              (string/replace "-" ""))
-          ]
+                              (string/replace "-" ""))]
       (if (empty? formatted-input)
         0M
         (let [formatted-input-bigdec (bigdec formatted-input)
@@ -63,27 +63,62 @@
                                           formatted-input-bigdec)]
           number-with-decimal-cases)))))
 
-(defn convert-date
+(defn mov-date->transaction-created-at
   [date]
   (let [split (string/split date #"/")]
     (Integer/parseInt (str (last split) (second split) (first split)))))
 
+(defn mov-date->keyword-date
+  [date]
+  (let [split (string/split date #"/")]
+    (keyword (str (last split) "-" (second split) "-" (first split)))))
+
+(defn last-brl-historic-price
+  [date brl->usd-historic]
+  (for [x [0 1 2 3]
+        :let [price-date (aux.t/subtract-days date x)
+              date-keyword (aux.t/clj-date->date-keyword price-date)
+              usd-price (get brl->usd-historic date-keyword)]
+        :when usd-price]
+    usd-price))
+
+(defn brl-price
+  [price transaction-date brl->usd-historic]
+  (let [price-date (mov-date->keyword-date transaction-date)
+        usd-price (first (last-brl-historic-price price-date brl->usd-historic))]
+    (if usd-price
+      (* usd-price price)
+      (log/error (str "[TRANSACTION] Don't find USD price for date " price-date)))))
+
 (s/defn movements->transaction :- m.t/Transaction
-  [{:keys [transaction-date unit-price quantity exchange product operation-total] :as movement}]
-  (let [operation-type (movement-type->transaction-type movement)
-        ticket (l.a/movement-ticket->asset-ticket product)]
-    ;(println "[TRANSACTION] Row => " movement)
-    {:transaction/id              (gen-transaction-id movement)
-     :transaction/created-at      (convert-date (str transaction-date))
-     ;:transaction/asset          asset
-     ;:transaction/asset-id       (UUID/randomUUID)
-     :transaction.asset/ticket    ticket
-     :transaction/average-price   (safe-number->bigdec unit-price)
-     :transaction/quantity        (safe-number->bigdec quantity)
-     :transaction/exchange        (movement-exchange->transaction-exchange exchange)
-     :transaction/operation-type  operation-type
-     :transaction/processed-at    (-> (t/local-date-time) str)
-     :transaction/operation-total (safe-number->bigdec operation-total)}))
+  ([movement]
+   (movements->transaction movement (io.f-in/get-file-by-entity :forex-usd)))
+  ([{:keys [transaction-date unit-price quantity exchange product operation-total currency] :as movement}
+    {brl->usd-historic :forex-usd/historic}]
+   (let [operation-type (movement-type->transaction-type movement)
+         ticket (l.a/movement-ticket->asset-ticket product)
+         currency' (if currency (keyword currency) :BRL)
+         unit-price-bigdec (safe-number->bigdec unit-price)
+         unit-price' (if (= currency' :UST)
+                       (brl-price unit-price-bigdec transaction-date brl->usd-historic)
+                       unit-price-bigdec)
+         operation-total-bigdec (safe-number->bigdec operation-total)
+         operation-total' (if (= currency' :UST)
+                            (brl-price operation-total-bigdec transaction-date brl->usd-historic)
+                            operation-total-bigdec)]
+     ;(println "[TRANSACTION] Row => " movement)
+     {:transaction/id              (gen-transaction-id movement)
+      :transaction/created-at      (mov-date->transaction-created-at (str transaction-date))
+      ;:transaction/asset          asset
+      ;:transaction/asset-id       (UUID/randomUUID)
+      :transaction.asset/ticket    ticket
+      :transaction/average-price   (safe-number->bigdec unit-price')
+      :transaction/quantity        (safe-number->bigdec quantity)
+      :transaction/exchange        (movement-exchange->transaction-exchange exchange)
+      :transaction/operation-type  operation-type
+      :transaction/processed-at    (-> (t/local-date-time) str)
+      :transaction/operation-total (safe-number->bigdec operation-total')
+      :transaction/currency        currency'})))
 
 (defn already-read-transaction
   [{:transaction/keys [id]} db-data]
@@ -94,13 +129,17 @@
 
 (defn movements->transactions
   ([mov]
-   (movements->transactions mov ()))
+   (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)]
+     (movements->transactions mov () forex-usd)))
   ([mov db-data]
+   (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)]
+     (movements->transactions mov db-data forex-usd)))
+  ([mov db-data forex-usd]
    (log/info "[TRANSACTION] Processing adapter...current transactions [" (count db-data) "]")
    (let [mov-transactions (->> mov
-                           (map movements->transaction)
-                           (group-by :transaction/id)
-                           (map #(->> % val (sort-by :transaction/processed-at) last)))
+                               (map #(movements->transaction % forex-usd))
+                               (group-by :transaction/id)
+                               (map #(->> % val (sort-by :transaction/processed-at) last)))
          new-transactions (->> mov-transactions
                                (filter #(already-read-transaction % db-data))
                                (concat (or db-data []))
