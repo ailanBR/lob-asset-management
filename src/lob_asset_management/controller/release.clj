@@ -4,8 +4,17 @@
             [lob-asset-management.io.file-out :as io.f-out]))
 
 (defn asset->irpf-description
-  [quantity asset-name average-price]
-  (str (str quantity) " ações de " asset-name " adquirida ao preço médio de R$ " (format "%.2f" average-price)))
+  [quantity asset-name average-price type]
+  (let [br-asset-desc (str (str quantity) " ações de " asset-name " adquirida ao preço médio de R$ " (format "%.2f" average-price))
+        eua-asset-dec (str (str quantity) " ações de " asset-name " adquirida ao preço médio de USD " (format "%.2f" average-price))
+        crypto-asset-dec (str (str quantity) asset-name " na plataforma Binance")]
+    (condp = type
+      :stockBR  br-asset-desc
+      :bdr      br-asset-desc
+      :fii      br-asset-desc
+      :etf      br-asset-desc
+      :stockEUA eua-asset-dec
+      :crypto   crypto-asset-dec)))
 
 (defn asset-type->group
   [type]
@@ -36,27 +45,37 @@
     :crypto "105 - Brasil"
     "105 - Brasil"))
 
+(defn get-lest-year-price
+  [year historic]
+  (or ((-> year (str "-12-31") keyword) historic)
+      ((-> year (str "-12-30") keyword) historic)
+      ((-> year (str "-12-29") keyword) historic)
+      ((-> year (str "-12-28") keyword) historic)
+      0M))
+
 (defn generate-release
   ;TODO : Adjust last-year-price to
   ; 1. get from API if necessary
   ; 2. get the last year price (Ex. for 2023)
-  [{:keys [ticket average-price quantity]} assets year]
+  [{:keys [ticket average-price quantity]}
+   assets
+   {brl->usd-historic :forex-usd/historic}
+   year]
   (let [{:asset/keys [tax-number type]
          asset-name :asset/name
          historic :asset.market-price/historic} (first (filter #(= (:asset/ticket %) ticket) assets))
-        last-year-price (or ((-> year (str "-12-31") keyword) historic)
-                            ((-> year (str "-12-30") keyword) historic)
-                            ((-> year (str "-12-29") keyword) historic)
-                            ((-> year (str "-12-28") keyword) historic)
-                            0M)
-        year-total-invested (* quantity last-year-price)]
+        last-year-price (get-lest-year-price year historic)
+        last-year-usd-price (get-lest-year-price year brl->usd-historic)
+        year-total-invested (if (= :stockEUA type)
+                              (* (* quantity last-year-price) last-year-usd-price)
+                              (* quantity last-year-price))]
     {:ticket               (name ticket)
      :tax-number           tax-number
      :year-total-invested  (format "%.2f" year-total-invested)
      :group                (asset-type->group type)
      :code                 (asset-type->code type ticket)
      :location             (asset-type->location type)
-     :description          (asset->irpf-description quantity asset-name average-price)}))
+     :description          (asset->irpf-description quantity asset-name average-price type)}))
 
 (defn irpf-release
   "Create a portfolio with transaction end/limite date based to IRPF with information :
@@ -81,12 +100,15 @@
                               (a.p/transactions->portfolio)
                               (a.p/portfolio-list->irpf-release))
         assets (io.f-in/get-file-by-entity :asset)
+        forex-usd (io.f-in/get-file-by-entity :forex-usd)
         income-tax-release (->> portfolio-release
-                                (map #(generate-release % assets year))
+                                (map #(generate-release % assets forex-usd year))
                                 (sort-by :year-total-invested)
                                 (sort-by :code)
                                 (sort-by :group))]
-    (io.f-out/income-tax-file income-tax-release year)))
+    ;(io.f-out/income-tax-file income-tax-release year)
+    income-tax-release
+    ))
 
 (comment
   (clojure.pprint/print-table (->> (irpf-release 2022) (sort-by :code)))
