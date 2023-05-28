@@ -110,14 +110,18 @@
             (contains? #{:buy :sell :JCP :income :dividend :waste} operation-type))
           t))
 
+(defn get-position-percentage
+  [t {:portfolio/keys [total-cost]}]
+  (if (and (> t 0M) (> total-cost 0M))
+    (* 100 (/ total-cost t))
+    0.0))
+
 (defn set-portfolio-representation
   ;FIXME : Consider currently value
   [p]
   (let [total-portfolio (reduce #(+ %1 (:portfolio/total-cost %2)) 0M p)]
     (map #(assoc %
-            :portfolio/percentage (if (and (> 0M total-portfolio) (> 0M (:portfolio/total-cost %)))
-                                    (* 100 (/ (:portfolio/total-cost %) total-portfolio))
-                                    0.0)) p)))
+            :portfolio/percentage (get-position-percentage total-portfolio %)) p)))
 
 (defn transactions->portfolio
   [t]
@@ -174,7 +178,7 @@
 
   (reduce #(+ %1 (:portfolio/percentage %2)) 0M c)
 
-  (clojure.pprint/print-table [:portfolio/ticket :portfolio/category] c)
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/percentage] c)
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   (get-category-representation c)

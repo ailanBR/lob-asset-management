@@ -13,8 +13,6 @@ Read a XLSX document and turn in EDN fallowing the movement type:
  - Dividend
  - Bonus
 
-(OBS: In the first version only BR stocks)
-
 ### Portfolio information
 
 - Average price
@@ -54,6 +52,8 @@ Provide where asset need to be purchase and how much
 3. Adjust category for govern bounds and private bounds
 4. Portfolio percentage with zero
 5. CDB transaction are with operation-type = compra/venda
+6. Discard invalid crypto record
+7. Save eua stock price in BRL or convert in portfolio processing
 
 ## License
 
