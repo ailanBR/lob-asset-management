@@ -10,11 +10,14 @@
 ;TODO: Create a specific ticket for CDB
 (s/defn movement-ticket->asset-ticket  :- s/Keyword
   [xlsx-ticket :- s/Str]
-  (-> xlsx-ticket
-      (clojure.string/split #"-")
-      first
-      clojure.string/trimr
-      (clojure.string/replace #" " "-")
-      clojure.string/lower-case
-      clojure.string/upper-case
-      keyword))
+  (let [xlsx-ticket-split-first (-> xlsx-ticket
+                                    (clojure.string/split #"-")
+                                    first
+                                    clojure.string/trimr)
+        cdb-ticket? (= "CDB" xlsx-ticket-split-first)
+        xlsx-ticket' (if cdb-ticket? xlsx-ticket xlsx-ticket-split-first)]
+    (-> xlsx-ticket'
+        (clojure.string/replace #" " (if cdb-ticket? "" "-"))
+        clojure.string/lower-case
+        clojure.string/upper-case
+        keyword)))
