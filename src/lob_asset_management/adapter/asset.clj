@@ -35,7 +35,8 @@
 (defn ticket->categories
   [ticket]
   (let [{:keys [category]} (get asset-more-info ticket)]
-    (or category [:unknown])))
+    (or category
+        [:unknown])))
 
 (defn get-part-string
   [c start end]

@@ -49,11 +49,7 @@ Provide where asset need to be purchase and how much
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
 2. Consider desdobramento in the portfolio process (OIBR3)
-3. Adjust category for govern bounds and private bounds
-4. Portfolio percentage with zero
 5. CDB transaction are with operation-type = compra/venda
-6. Discard invalid crypto record
-7. Save eua stock price in BRL or convert in portfolio processing
 
 ## License
 
