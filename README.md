@@ -33,18 +33,17 @@ Provide where asset need to be purchase and how much
 
 ## TODO
 
-1. [Release IRPF] Transform USD price to BRL for EUA stocks
 2. Turn solution on CronJob
 3. Store data on cloud
    1. [] AWS
    2. [] Firebase
    3. [] Other
-4. Add last price to portfolio or get from asset
 5. Calculate current profit/loss market price based
 6. Register Alpha API ticket in asset/fixed-info ?
 7. Add a way to manual insert information (Front-end proj?)
 8. Update portfolio after get market last price
-9. 
+9. Get crypto price from Alpha API
+10. Find another option for Alpha API
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)

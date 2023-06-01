@@ -111,17 +111,30 @@
           t))
 
 (defn get-position-percentage
-  [t {:portfolio/keys [total-cost]}]
-  (if (and (> t 0M) (> total-cost 0M))
-    (* 100 (/ total-cost t))
-    0.0))
+  [total assets usd-last-price {:portfolio/keys [average-price ticket quantity]}]
+  (let [{:asset/keys [type]
+         last-price :asset.market-price/price } (->> assets (filter #(= (:asset/ticket %) ticket)) first)
+        position-current-price (if (and (= :stockEUA type)
+                                        last-price
+                                        usd-last-price)
+                                 (* usd-last-price last-price)
+                                 last-price)
+        position-value (* (or position-current-price average-price) quantity)]
+    (when (and (> average-price 0M)
+               (not position-current-price)) (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
+    (if (and (> total 0M) (> position-value 0M))
+      (* 100 (/ position-value total))
+      0.0)))
 
 (defn set-portfolio-representation
   ;FIXME : Consider currently value
   [p]
-  (let [total-portfolio (reduce #(+ %1 (:portfolio/total-cost %2)) 0M p)]
+  (let [assets (io.f-in/get-file-by-entity :asset)
+        {:forex-usd/keys [price]} (io.f-in/get-file-by-entity :forex-usd)
+        total-portfolio (reduce #(+ %1 (:portfolio/total-cost %2)) 0M p)]
+    (when (not price) (log/error (str "[PORTFOLIO] Don't find last USD price")))
     (map #(assoc %
-            :portfolio/percentage (get-position-percentage total-portfolio %)) p)))
+            :portfolio/percentage (get-position-percentage total-portfolio assets price %)) p)))
 
 (defn transactions->portfolio
   [t]
