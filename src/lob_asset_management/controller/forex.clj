@@ -59,7 +59,7 @@
     (let [formatted-data (formatted-data forex-info)
           last-price (forex-last-price formatted-data)]
       last-price)
-    (log/error "[get-b3-market-price] Something was wrong in get market data")))
+    (log/error "[get-stock-market-price] Something was wrong in get market data")))
 
 (defn less-updated-than-target
   [forex-usd target-hours]
