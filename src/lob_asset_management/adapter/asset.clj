@@ -105,7 +105,7 @@
 (defn allowed-type-get-market-price
   [assets]
   (filter (fn [{:asset/keys [type ticket]}]
-            (and (contains? #{:stockBR :fii :stockEUA} type)
+            (and (contains? #{:stockBR :fii :stockEUA :crypto} type)
                  (allowed-get-market-info-tickets? ticket))) assets))
 
 (defn less-updated-than-target

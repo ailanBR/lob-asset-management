@@ -72,6 +72,23 @@
        (throw (ex-info "Failed to get usd price"
                        {:status (:status status)}))))))
 
+(s/defn get-crypto-price
+  ([crypto-ticket :- s/Keyword]
+   (get-crypto-price crypto-ticket alpha-key))
+  ([crypto-ticket  :- s/Keyword
+    api-key  :- s/Str]
+   (let [{:keys [status body]} (http/get "https://www.alphavantage.co/query"
+                                         {:query-params {:function "DIGITAL_CURRENCY_DAILY"
+                                                         :symbol   (name crypto-ticket)
+                                                         :market   "BRL"
+                                                         :apikey   api-key}})]
+     (if (= status 200)
+       (-> body
+           (json/parse-string true)
+           (keyword-space->underline)
+           (remove-keyword-parenthesis))
+       (throw (ex-info "Failed to get crypto price"
+                       {:status (:status status)}))))))
 (comment
   (get-daily-adjusted-prices "CAN")
   (def abev-result (get-daily-adjusted-prices "CAN"))

@@ -111,6 +111,9 @@ All notable changes to this project will be documented in this file. This change
 ### 2023-05-31
 - Chance portfolio allocation to use current asset price
 
+### 2023-06-02
+- Get crypto market price
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 
