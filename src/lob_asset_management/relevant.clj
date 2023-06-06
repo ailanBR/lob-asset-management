@@ -4,6 +4,8 @@
 (def secrets (file->edn "./resources/secrets.edn"))
 
 (def alpha-key (:alpha-vantage-key secrets))
+(def telegram-key (:telegram-bot-key secrets))
+(def telegram-personal-chat (:personal-chat secrets))
 
 (def asset-more-info (file->edn "./resources/asset_fixed_info.edn"))
 

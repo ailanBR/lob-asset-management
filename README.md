@@ -4,32 +4,33 @@ A solution created to generate investments income tax release
 
 ## Usage
 
-### Import asset movements
+### Read XLSX movements
 
-Read a XLSX document and turn in EDN fallowing the movement type:
+Read a XLSX document and turn in EDN entities:
 
- - Buy
- - Sell
- - Dividend
- - Bonus
+ - Asset
+ - Transaction
+ - Portfolio
 
-### Portfolio information
+### Asset
+#### Asset information
+
+- Price
+- Profit/Loss
+- Portfolio percentage1
+- Purchase quantity media
+
+### Portfolio
+#### Portfolio information
 
 - Average price
 - Total cost
 - Profit from dividend's
 - Allocation percentage
 
-### Portfolio balance
+### Portfolio Configuration [TODO]
 
 Provide where asset need to be purchase and how much
-
-### Asset information
-
-- Price
-- Profit/Loss
-- Portfolio percentage1
-- Purchase quantity media
 
 ## TODO
 
@@ -39,15 +40,14 @@ Provide where asset need to be purchase and how much
    2. [] Firebase
    3. [] Other
 3. Calculate current profit/loss market price based
-4. Register Alpha API ticket in asset/fixed-info ?
-5. Add a way to manual insert information (Front-end proj?)
-6. Update portfolio after get market last price
-8. Find another option for Alpha API
+4. Add a way to manual insert information (Front-end proj?)
+5. Update portfolio after get market last price
+6. Find another option for Alpha API
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
 2. Consider desdobramento in the portfolio process (OIBR3)
-5. CDB transaction are with operation-type = compra/venda
+3. CDB transaction are with operation-type = compra/venda
 
 ## License
 
