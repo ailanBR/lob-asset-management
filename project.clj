@@ -20,4 +20,4 @@
   :repl-options {:init-ns lob-asset-management.core
                  :width 12000}
   :jvm-opts ["-Dclojure.tools.logging.factory=clojure.tools.logging.impl/jul-factory"]
-  :main ^:skip-aot lob-asset-management.cor)
+  :main ^:skip-aot lob-asset-management.core)
