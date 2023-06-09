@@ -40,7 +40,6 @@ Provide where asset need to be purchase and how much
    2. [] Firebase
    3. [] Other
 4. Add a way to manual insert information (Front-end proj?)
-5. Update portfolio after get market last price
 6. Find another option for Alpha API
 
 ## FIXME
