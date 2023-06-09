@@ -1,26 +1,28 @@
 (ns lob-asset-management.core
-  (:require [lob-asset-management.io.file-in :as io.f-in]
+  (:require [lob-asset-management.adapter.portfolio :as a.p]
+            [lob-asset-management.io.file-in :as io.f-in]
+            [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.controller.process-file :as c.p]
             [lob-asset-management.controller.market :as c.m]
             [lob-asset-management.controller.release :as c.r]
+            [lob-asset-management.controller.forex :as c.f]
             [java-time.api :as t]
             [clojure.tools.logging :as log]))
 
-(defn poller [f interval]
-  (let [run-forest-run (atom true)
-        window-hours #{10 12 14 16 18 19 20 21 22 23}]
+(defn poller [f-name f interval window]
+  (let [run-forest-run (atom true)]
     (future
       (try
         (while @run-forest-run
           ;(println "[Poller running" (str (t/local-date-time)) "]")
-          (if (contains? window-hours (.getHour (t/local-date-time)))
+          (if (contains? window (.getHour (t/local-date-time)))
             (f)
-            (log/info "[Poller " (str (t/local-date-time)) "] Out of the configured window hour " window-hours))
-          (log/info "[Poller next " (str (t/plus (t/local-date-time)
+            (log/info "[Poller " (str f-name "-" (t/local-date-time)) "] Out of the configured window hour " window))
+          (log/info "[Poller next " (str f-name "-" (t/plus (t/local-date-time)
                                                 (t/millis interval))) "]")
           (Thread/sleep interval))
         (catch Exception e
-          (println "Error in poller: " e))))
+          (println "Error in " f-name " poller: " e))))
     (fn [] (reset! run-forest-run false))))
 
 (defn -main
@@ -42,7 +44,10 @@
         :d (do (println "DELETING ALL FILES IN FOLDER")
                (c.p/delete-all-files))
         :s (do (println "STARTING POOLER")
-               (let [stop-loop (poller #(c.m/update-asset-market-price) 15000)]
+               (let [stop-loop (poller "update-asset"
+                                       #(c.m/update-asset-market-price)
+                                       15000
+                                       #{1 2 3})]
                  (println "Press enter to stop...")
                  (read-line)
                  (future-cancel (stop-loop))
@@ -67,9 +72,25 @@
   (defn my-function []
     (println "Hello, world! [" (str (t/local-date-time)) "]"))
 
-  (def get-market-price-poller (poller #(c.m/update-asset-market-price) 15000))
+
+  (c.f/update-usd-price)
+  (def get-market-price-poller (poller "GetMarketPrice"
+                                       #(c.m/update-asset-market-price)
+                                       15000
+                                       #{8 9 10 12 14 16 18 19 20 21 22 23}))
   (get-market-price-poller)
 
+  (def get-usd-price (poller "GetUSDprice"
+                             #(c.f/update-usd-price)
+                             60000
+                             #{8 10 12 14 16 18}))
+  (get-usd-price)
+
+  (def update-portfolio (poller "UpdatePortfolio"
+                                #(-> (a.p/update-portfolio) (io.f-out/upsert))
+                                30000
+                                #{8 9 10 12 14 16 18 19 20 21 22 23}))
+  (update-portfolio)
   ;INTERVAL CONFIG POLLING ALPHA VANTAGE
   ;LIMIT : 5 API requests per minute and 500 requests per day
   ;15000 => 15sec => 4 Request per minute
@@ -93,5 +114,4 @@
     (->> (io.f-in/get-file-by-entity :transaction)
          (filter #(contains? #{:sproutfy} (:transaction/exchange %)))
          (sort-by :transaction/created-at)
-         (sort-by :transaction.asset/ticket)))
-  )
+         (sort-by :transaction.asset/ticket))))

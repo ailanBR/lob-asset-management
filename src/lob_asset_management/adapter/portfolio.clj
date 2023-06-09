@@ -178,6 +178,18 @@
     (log/info "[PORTFOLIO] Concluded adapter...[" (count portfolio) "]")
     portfolio))
 
+(defn update-portfolio
+  ([]
+   (let [portfolio (io.f-in/get-file-by-entity :portfolio)]
+     (update-portfolio portfolio)))
+  ([p]
+   (log/info "[PORTFOLIO] Updating...")
+   (let [updated-portfolio (->> p
+                                set-portfolio-representation
+                                (sort-by :portfolio/percentage >))]
+     (log/info "[PORTFOLIO] updated")
+     updated-portfolio)))
+
 (defn consolidate-category
   [{:category/keys [total]}
    {:portfolio/keys [category total-cost]}]
@@ -230,5 +242,7 @@
 
   (reduce #(+ %1 (:portfolio.profit-loss/value %2) (:portfolio/dividend %2)) 0M c)
   (reduce #(+ %1 (:portfolio/dividend %2)) 0M c)
+
+  (update-portfolio)
 
   )

@@ -13,7 +13,7 @@
 (comment
   (def auth (auth/create-token "GOOGLE_APPLICATION_CREDENTIALS"))
 
-  (println (System/getenv "GG_J"))
+  (println (System/getenv "GOOGLE_APPLICATION_CREDENTIALS"))
   (def t (System/getenv "GG_J"))
 
   (defn clean-env-var [env-var]
