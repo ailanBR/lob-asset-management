@@ -23,7 +23,7 @@
 
   (println (System/getenv "GOOGLE_APPLICATION_CREDENTIALS"))
 
-  (println (System/getenv "GG_A"))
+  (println (System/getenv "GG_C"))
 
   (let [my-var (System/getenv "TESTE_KEY")]
     (println my-var))

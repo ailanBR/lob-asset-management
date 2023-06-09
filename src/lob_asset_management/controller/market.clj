@@ -69,6 +69,7 @@
 
 (defn get-stock-market-price
   [asset]
+  (log/info "[get-stock-market-price] started")
   (if-let [market-info (io.http/get-daily-adjusted-prices asset)]
     (let [formatted-data (formatted-data market-info)
           last-price (last-price formatted-data)]
@@ -77,6 +78,7 @@
 
 (defn get-crypto-market-price
   [crypto-ticket]
+  (log/info "[get-crypto-market-price] started")
   (if-let [market-info (io.http/get-crypto-price crypto-ticket)]
     (let [formatted-data (formatted-data market-info)
           last-price (last-price formatted-data)]
@@ -145,7 +147,7 @@
 
 (comment
   (def aux-market-info (io.http/get-daily-adjusted-prices "CAN"))
-  (def market-formated (get-stock-market-price "ABEV3.SA"))
+  (def market-formated (get-crypto-market-price :USDT))
 
   (def company-overview (io.http/get-company-overview "ABEV3.SA"))
 
