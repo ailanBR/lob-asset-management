@@ -100,7 +100,7 @@
 (defn disabled-ticket-get-market-price
   [assets]
   (filter (fn [{:asset/keys [ticket]}]
-            (not (contains? #{:INHF12} ticket))) assets))
+            (not (contains? #{:INHF12 :USDT} ticket))) assets))
 
 (defn allowed-type-get-market-price
   [assets]

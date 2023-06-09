@@ -1,24 +1,14 @@
 (ns lob-asset-management.core
-  (:require [lob-asset-management.adapter.asset :as a.a]
-            [lob-asset-management.io.file-in :as io.f-in]
+  (:require [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.controller.process-file :as c.p]
             [lob-asset-management.controller.market :as c.m]
             [lob-asset-management.controller.release :as c.r]
             [java-time.api :as t]
-            ;[clj-time.core :as t]
             [clojure.tools.logging :as log]))
-
-(defn foo
-  "I don't do a whole lot."
-  [x]
-  (println x "Hello, World!"))
-
-(defn my-function []
-  (println "Hello, world! [" (str (t/local-date-time)) "]"))
 
 (defn poller [f interval]
   (let [run-forest-run (atom true)
-        window-hours #{10 12 14 16 18}]
+        window-hours #{10 12 14 16 18 19 20 21 22 23}]
     (future
       (try
         (while @run-forest-run
@@ -51,7 +41,7 @@
                (c.p/process-b3-folder))
         :d (do (println "DELETING ALL FILES IN FOLDER")
                (c.p/delete-all-files))
-        :s (do (println "STATING POOLER")
+        :s (do (println "STARTING POOLER")
                (let [stop-loop (poller #(c.m/update-asset-market-price) 15000)]
                  (println "Press enter to stop...")
                  (read-line)
@@ -79,16 +69,6 @@
 
   (def get-market-price-poller (poller #(c.m/update-asset-market-price) 15000))
   (get-market-price-poller)
-
-  (let [stop-loop (poller my-function 3000)]
-    (println "Press enter to stop.")
-    (read-line)
-    (future-cancel (stop-loop))
-    @(stop-loop))
-
-  (let [stop-loop (poller my-function 15000)]
-    (Thread/sleep 60000)
-    (stop-loop))
 
   ;INTERVAL CONFIG POLLING ALPHA VANTAGE
   ;LIMIT : 5 API requests per minute and 500 requests per day

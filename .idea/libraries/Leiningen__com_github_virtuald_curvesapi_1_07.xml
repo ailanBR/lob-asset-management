@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Leiningen: com.github.virtuald/curvesapi:1.07">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/com/github/virtuald/curvesapi/1.07/curvesapi-1.07.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

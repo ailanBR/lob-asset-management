@@ -39,7 +39,6 @@ Provide where asset need to be purchase and how much
    1. [] AWS
    2. [] Firebase
    3. [] Other
-3. Calculate current profit/loss market price based
 4. Add a way to manual insert information (Front-end proj?)
 5. Update portfolio after get market last price
 6. Find another option for Alpha API

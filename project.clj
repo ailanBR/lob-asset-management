@@ -15,7 +15,9 @@
                  [org.clojure/tools.logging "1.2.4"]
                  [telegrambot-lib "2.3.0"]
                  [cheshire "5.10.1"]
-                 [alekcz/fire "0.5.0"]]
-  :repl-options {:init-ns lob-asset-management.core}
+                 [alekcz/fire "0.5.0"]
+                 [environ "1.2.0"]]
+  :repl-options {:init-ns lob-asset-management.core
+                 :width 12000}
   :jvm-opts ["-Dclojure.tools.logging.factory=clojure.tools.logging.impl/jul-factory"]
   :main ^:skip-aot lob-asset-management.core)

@@ -31,11 +31,7 @@
         tt-c (* (or c-qt 0.0) (or c-ap 0.0))]
     (- tt-t tt-c)))
 
-(defmulti consolidate-transactions
-           (fn [_ {:transaction/keys [operation-type]}]
-             (keyword operation-type)))
-
-(defmethod consolidate-transactions :buy
+(defn consolidate
   [{:portfolio/keys [transaction-ids dividend]
     consolidate-quantity :portfolio/quantity :as consolidated}
    {:transaction/keys [id operation-type quantity]
@@ -43,27 +39,33 @@
   (let [updated-quantity (update-quantity consolidate-quantity quantity operation-type)
         updated-cost (updated-total-cost consolidated transaction)]
     {:portfolio/ticket          ticket
-     :portfolio/average-price   (/ updated-cost updated-quantity)
      :portfolio/quantity        updated-quantity
      :portfolio/total-cost      updated-cost
      :portfolio/transaction-ids (conj transaction-ids id)
      :portfolio/category        (-> ticket (a.a/ticket->categories) first)
-     :portfolio/dividend        (or dividend 0M)}))
+     :portfolio/dividend        (or dividend 0M)})
+  )
+
+(defmulti consolidate-transactions
+           (fn [_ {:transaction/keys [operation-type]}]
+             (keyword operation-type)))
+
+(defmethod consolidate-transactions :buy
+  [{consolidate-quantity :portfolio/quantity :as consolidated}
+   {:transaction/keys [operation-type quantity] :as transaction}]
+  (let [updated-quantity (update-quantity consolidate-quantity quantity operation-type)
+        updated-cost (updated-total-cost consolidated transaction)
+        consolidated (consolidate consolidated transaction)]
+    (assoc consolidated
+      :portfolio/average-price (/ updated-cost updated-quantity))))
 
 (defmethod consolidate-transactions :sell
-  [{:portfolio/keys         [transaction-ids dividend]
-    consolidate-quantity :portfolio/quantity
-    portfolio-average-price :portfolio/average-price :as consolidated}
-   {:transaction/keys [id operation-type quantity]
-    ticket            :transaction.asset/ticket :as transaction}]
-  (let [updated-quantity (update-quantity consolidate-quantity quantity operation-type)
-        updated-cost (updated-total-cost consolidated transaction)]
-    {:portfolio/ticket          ticket
-     :portfolio/average-price   portfolio-average-price
-     :portfolio/quantity        updated-quantity
-     :portfolio/total-cost      updated-cost
-     :portfolio/transaction-ids (conj transaction-ids id)
-     :portfolio/dividend        (or dividend 0M)}))
+  ;TODO : sell profit loss
+  [{portfolio-average-price :portfolio/average-price :as consolidated}
+   transaction]
+  (let [consolidated (consolidate consolidated transaction)]
+    (assoc consolidated
+      :portfolio/average-price portfolio-average-price)))
 
 (defn get-total-operation
   [{:transaction/keys [quantity average-price operation-total]}]
@@ -111,9 +113,18 @@
           t))
 
 (defn get-position-percentage
-  [total assets usd-last-price {:portfolio/keys [average-price ticket quantity]}]
+  [total position-value {:portfolio/keys [average-price ticket]}]
+  (when (and (> average-price 0M)
+             (<= position-value 0M))
+    (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
+  (if (and (> total 0M) (> position-value 0M))
+    (* 100 (/ position-value total))
+    0.0))
+
+(defn get-position-value
+  [assets usd-last-price {:portfolio/keys [average-price ticket quantity]}]
   (let [{:asset/keys [type]
-         last-price :asset.market-price/price } (->> assets (filter #(= (:asset/ticket %) ticket)) first)
+         last-price  :asset.market-price/price} (->> assets (filter #(= (:asset/ticket %) ticket)) first)
         position-current-price (if (and (= :stockEUA type)
                                         last-price
                                         usd-last-price)
@@ -121,20 +132,38 @@
                                  last-price)
         position-value (* (or position-current-price average-price) quantity)]
     (when (and (> average-price 0M)
-               (not position-current-price)) (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
-    (if (and (> total 0M) (> position-value 0M))
-      (* 100 (/ position-value total))
-      0.0)))
+               (not position-current-price))
+      (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
+    position-value))
+
+(defn get-position-profit-loss-value
+  [position-value {:portfolio/keys [total-cost]}]
+  (if (> position-value 0M)
+    (- position-value total-cost)
+    0.0))
+
+(defn get-position-profit-loss-percentage
+  [{:portfolio/keys [total-cost]} profit-loss]
+  (if (and (> total-cost 0M)
+           (not (= profit-loss 0M)))
+    (bigdec (* (/ profit-loss total-cost) 100))
+    0.0))
 
 (defn set-portfolio-representation
-  ;FIXME : Consider currently value
   [p]
   (let [assets (io.f-in/get-file-by-entity :asset)
         {:forex-usd/keys [price]} (io.f-in/get-file-by-entity :forex-usd)
         total-portfolio (reduce #(+ %1 (:portfolio/total-cost %2)) 0M p)]
     (when (not price) (log/error (str "[PORTFOLIO] Don't find last USD price")))
-    (map #(assoc %
-            :portfolio/percentage (get-position-percentage total-portfolio assets price %)) p)))
+    (map (fn [portfolio-row]
+            ;(format "%.2f" position-value)
+           (let [position-value (get-position-value assets price portfolio-row)
+                 profit-loss (get-position-profit-loss-value position-value portfolio-row)]
+             (assoc portfolio-row
+               :portfolio/total-last-value position-value
+               :portfolio/percentage (get-position-percentage total-portfolio position-value portfolio-row)
+               :portfolio.profit-loss/value profit-loss
+               :portfolio.profit-loss/percentage (get-position-profit-loss-percentage portfolio-row profit-loss)))) p)))
 
 (defn transactions->portfolio
   [t]
@@ -191,11 +220,15 @@
 
   (reduce #(+ %1 (:portfolio/percentage %2)) 0M c)
 
-  (clojure.pprint/print-table [:portfolio/ticket :portfolio/percentage] c)
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/total-cost :portfolio/total-last-value :portfolio/quantity :portfolio.profit-loss/percentage :portfolio.profit-loss/value] c)
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   (get-category-representation c)
   (def category (get-category-representation c))
 
   (clojure.pprint/print-table category)
+
+  (reduce #(+ %1 (:portfolio.profit-loss/value %2) (:portfolio/dividend %2)) 0M c)
+  (reduce #(+ %1 (:portfolio/dividend %2)) 0M c)
+
   )
