@@ -119,6 +119,13 @@
                             assets)]
     updated-assets))
 
+(defn less-updated-asset
+  ([]
+   (when-let [assets (io.f-in/get-file-by-entity :asset)]
+     (less-updated-asset assets)))
+  ([assets]
+   (-> assets (a.a/get-less-market-price-updated 1 1) first)))
+
 (defn update-asset-market-price
   ([]
    (if-let [assets (io.f-in/get-file-by-entity :asset)]
@@ -130,7 +137,8 @@
          (let [market-last-price (get-market-price less-updated-asset)
                updated-assets (update-assets assets less-updated-asset market-last-price)]
            (log/info "[MARKET-UPDATING] Success " ticket " price " (:price market-last-price))
-           (io.f-out/upsert updated-assets)))
+           (io.f-out/upsert updated-assets)
+           updated-assets))
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
 
 #_(defn get-asset-market-price

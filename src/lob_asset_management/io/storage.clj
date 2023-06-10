@@ -3,11 +3,7 @@
              [fire.auth :as auth]
              [clojure.string :as str]
              [environ.core :refer [env]]
-             [cheshire.core :as json]
-             ))
-
-
-
+             [cheshire.core :as json]))
 
 
 (comment

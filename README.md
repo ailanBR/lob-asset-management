@@ -34,13 +34,15 @@ Provide where asset need to be purchase and how much
 
 ## TODO
 
-1. Turn solution on CronJob
+1. Turn solution on CronJob (Doing)
 2. Store data on cloud
    1. [] AWS
-   2. [] Firebase
+   2. [] Firebase (Doing)
    3. [] Other
 4. Add a way to manual insert information (Front-end proj?)
+   5. Function to read the file and add one row
 6. Find another option for Alpha API
+7. Document the transaction types and what happening
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
