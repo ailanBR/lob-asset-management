@@ -28,14 +28,31 @@
       (io.f-out/upsert transactions)
       transactions)))
 
+(defn process-portfolio
+  [transactions]
+  (when transactions
+    (let [portfolio (a.p/transactions->portfolio transactions)]
+      (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")
+      (io.f-out/upsert portfolio)
+      portfolio)))
+
 (defn process-movement
   [movements]
-  (let [_ (process-assets movements)
+  (let [assets (process-assets movements)
         transactions (process-transactions movements)
-        portfolio (when transactions (a.p/transactions->portfolio transactions))]
-    (when portfolio
-      (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")
-      (io.f-out/upsert portfolio))))
+        portfolio (process-portfolio transactions)]
+    (log/info (str "Updates\n"
+                   (count assets) " - Assets\n"
+                   (count transactions) " - Transactions\n"
+                   (count portfolio) " - Portfolio\n")))
+  ;(let [_ (process-assets movements)
+  ;      transactions (process-transactions movements)
+  ;      portfolio (process-portfolio transactions)]
+    ;(when portfolio
+    ;  (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")
+    ;  (io.f-out/upsert portfolio))
+    ;)
+)
 
 (defn process-folder
   [{:keys [release-folder] :as config-folder}]

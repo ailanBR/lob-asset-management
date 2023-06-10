@@ -115,7 +115,8 @@
 (defn get-position-percentage
   [total position-value {:portfolio/keys [average-price ticket]}]
   (when (and (> average-price 0M)
-             (<= position-value 0M))
+             (<= position-value 0M)
+             (not (contains? #{:SULA3 :BSEV3} ticket)))
     (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
   (if (and (> total 0M) (> position-value 0M))
     (* 100 (/ position-value total))
@@ -132,7 +133,8 @@
                                  last-price)
         position-value (* (or position-current-price average-price) quantity)]
     (when (and (> average-price 0M)
-               (not position-current-price))
+               (not position-current-price)
+               (not (contains? #{:LINX3 :DEFI11 :USDT :SULA3 :BSEV3} ticket)))
       (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
     position-value))
 
