@@ -34,15 +34,31 @@ Provide where asset need to be purchase and how much
 
 ## TODO
 
-1. Turn solution on CronJob (Doing)
+1. Turn solution on ~~CronJob~~ Poller (Doing)
+   1. [x] Polling function
+   2. [x] Polling process
+   3. [ ] Fix read files (Process folder executing from terminal)
 2. Store data on cloud
-   1. [] AWS
-   2. [] Firebase (Doing)
-   3. [] Other
+   1. [ ] AWS
+      1. ~~Thinking about the item 4. maybe we can use S3 only for the in-data files~~
+   2. [ ] Firebase (Doing)
+      1. [x] Find firebase library (alekcz/fire)
+      2. [x] Create firebase project 
+      3. [ ] Fix connection only works in terminal (lein run)
+      4. [ ] Create write/read documents
+   3. [ ] Do nothing
+      1. Solution works for read/write entities in terminal
+      2. ~~The problem is only **maybe** in the in-data files~~
 3. Add a way to manual insert information (Front-end proj?)
-   1. Function to read the file and add one row
-4. Document the transaction types and what happening
-5. Find another option for Alpha API
+   1. Function to read stored file and add one row
+4. [Documentation] Document the transaction types and what happening
+5. [Market] Don't get market price for stocks on weekends/holiday
+6. [Portfolio] Compare Gain/Loss with days ago
+   1. [ ] D-1
+   2. [ ] Week
+   3. [ ] Month
+   4. [ ] Year
+7. Find another option for Alpha API
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
