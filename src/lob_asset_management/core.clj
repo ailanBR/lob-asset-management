@@ -1,24 +1,25 @@
 (ns lob-asset-management.core
   (:require [lob-asset-management.adapter.portfolio :as a.p]
+            [lob-asset-management.controller.forex :as c.f]
+            [lob-asset-management.controller.market :as c.m]
+            [lob-asset-management.controller.process-file :as c.p]
+            [lob-asset-management.controller.release :as c.r]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
-            [lob-asset-management.controller.process-file :as c.p]
-            [lob-asset-management.controller.market :as c.m]
-            [lob-asset-management.controller.release :as c.r]
-            [lob-asset-management.controller.forex :as c.f]
+            [lob-asset-management.relevant :refer [configurations]]
             [java-time.api :as t]
             [clojure.tools.logging :as log]
             [clojure.tools.cli :refer [parse-opts]]
-            [lob-asset-management.io.storage :as io.s])
-  (:import (java.net InetAddress)))
+            [lob-asset-management.io.storage :as io.s]))
+
 (def cli-options
   [;; First three strings describe a short-option, long-option with optional
    ;; example argument description, and a description. All three are optional
    ;; and positional.
-   ;["-p" "--port PORT" "Port number"
-   ; :default 80
-   ; :parse-fn #(Integer/parseInt %)
-   ; :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
+   ["-y" "--year PORT" "Year of the release"
+    :default 2022
+    :parse-fn #(Integer/parseInt %)
+    :validate [#(< 2021 % 2024) "Must be a number between 2021 and 2023"]]
    ;["-H" "--hostname HOST" "Remote host"
    ; :default (InetAddress/getByName "localhost")
    ; ;; Specify a string to output in the default column in the options summary
@@ -53,9 +54,9 @@
         options-summary
         ""
         "Actions:"
-        "  start    Start a new server"
-        "  stop     Stop an existing server"
-        "  status   Print a server's status"
+        "  start    Start the get market price and update portfolio"
+        "  read     Read the movements files"
+        "  release  Generate a new release"
         ""
         "Please refer to the manual page for more information."]
        (clojure.string/join \newline)))
@@ -77,7 +78,7 @@
       {:exit-message (error-msg errors)}
       ;; custom validation on arguments
       (and (= 1 (count arguments))
-           (#{"start" "stop" "status"} (first arguments)))
+           (#{"start" "read" "release"} (first arguments)))
       {:action (first arguments) :options options}
       :else ; failed custom validation => exit with usage summary
       {:exit-message (usage summary)})))
@@ -126,41 +127,7 @@
                    (future-cancel (stop-loop))
                    @(stop-loop))
         "read"    (c.p/process-folders)
-        "release" (c.r/irpf-release 2022)))))
-
-;-------------------------------------------
-
-
-#_(defn -main
-  ;FIXME : Command don't executed
-  ; NOP :- 1. Maybe is the root path, the function don't find the files
-  ; 2. Don't have access to read/write in command line
-  [& args]
-  (when (nil? args)
-    (println "SELECT A COMMAND")
-    (println " p -> Process all files in the release folder")
-    (println " d -> Delete all files in the release folder")
-    (println " pn -> Process new files in the release folder")
-    (println " s -> Start poller process"))
-  (when-let [read (or (first args) (read-line))]
-    (let [command (-> read clojure.string/lower-case keyword)]
-      (condp = command
-        :p (do (println "PROCESSING FILE FOLDERS")
-               (c.p/process-b3-folder))
-        :d (do (println "DELETING ALL FILES IN FOLDER")
-               (c.p/delete-all-files))
-        :s (do (println "STARTING POOLER")
-               (let [stop-loop (poller "update-asset"
-                                       #(c.m/update-asset-market-price)
-                                       15000
-                                       #{1 2 3})]
-                 (println "Press enter to stop...")
-                 (read-line)
-                 (future-cancel (stop-loop))
-                 @(stop-loop)))
-        :e  (println (System/getenv "GOOGLE_APPLICATION_CREDENTIALS"))
-        (println "INVALID COMMAND"))))
-  (println "FINISH"))
+        "release" (c.r/irpf-release (:year options))))))
 
 (comment
   (schema.core/set-fn-validation! true)

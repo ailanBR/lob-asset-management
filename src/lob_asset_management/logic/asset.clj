@@ -17,7 +17,10 @@
         cdb-ticket? (= "CDB" xlsx-ticket-split-first)
         xlsx-ticket' (if cdb-ticket? xlsx-ticket xlsx-ticket-split-first)]
     (-> xlsx-ticket'
-        (clojure.string/replace #" " (if cdb-ticket? "" "-"))
+        (clojure.string/replace #" " "-")
+        (clojure.string/replace #"S/A" "SA")
+        (clojure.string/replace #"---" "-")
+        (clojure.string/replace #"--" "-")
         clojure.string/lower-case
         clojure.string/upper-case
         keyword)))

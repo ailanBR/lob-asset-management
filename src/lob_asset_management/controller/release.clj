@@ -7,18 +7,21 @@
   [quantity asset-name average-price type]
   (let [br-asset-desc (str (str quantity) " ações de " asset-name " adquirida ao preço médio de R$ " (format "%.2f" average-price))
         eua-asset-dec (str (str quantity) " ações de " asset-name " adquirida ao preço médio de USD " (format "%.2f" average-price))
-        crypto-asset-dec (str (str quantity) asset-name " na plataforma Binance")]
+        crypto-asset-dec (str (str quantity) asset-name " na plataforma Binance")
+        fixed-income-dec (str "APLICACAO DE RENDA FIXA " asset-name)]
     (condp = type
-      :stockBR  br-asset-desc
-      :bdr      br-asset-desc
-      :fii      br-asset-desc
-      :etf      br-asset-desc
-      :stockEUA eua-asset-dec
-      :crypto   crypto-asset-dec)))
+      :fixed-income fixed-income-dec
+      :stockBR      br-asset-desc
+      :bdr          br-asset-desc
+      :fii          br-asset-desc
+      :etf          br-asset-desc
+      :stockEUA     eua-asset-dec
+      :crypto       crypto-asset-dec)))
 
 (defn asset-type->group
   [type]
   (condp = type
+    :fixed-income "04"
     :stockBR      "03"
     :bdr          "04"
     :fii          "07"
@@ -29,6 +32,7 @@
 (defn asset-type->code
   [type ticket]
   (condp = type
+    :fixed-income "02"
     :stockBR      "01"
     :fii          "03"
     :bdr          "04"
@@ -106,7 +110,7 @@
                                 (sort-by :year-total-invested)
                                 (sort-by :code)
                                 (sort-by :group))]
-    ;(io.f-out/income-tax-file income-tax-release year)
+    (io.f-out/income-tax-file income-tax-release year)
     income-tax-release
     ))
 
