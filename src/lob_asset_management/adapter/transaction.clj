@@ -17,13 +17,15 @@
     "Sproutfy"                                                  :sproutfy
     (-> ex string/lower-case keyword)))
 
-(defn sell? [mov]
-  (and (= (:type mov) "Debito")
-       (= (:movement-type mov) "Transferência - Liquidação")))
+(defn sell? [{:keys [type movement-type]}]
+  (and (= type"Debito")
+       (or (= movement-type "Transferência - Liquidação")
+           (= movement-type "COMPRA / VENDA"))))
 
-(defn buy? [mov]
-  (and (= (:type mov) "Credito")
-       (= (:movement-type mov) "Transferência - Liquidação")))
+(defn buy? [{:keys [type movement-type]}]
+  (and (= type "Credito")
+       (or (= movement-type "Transferência - Liquidação")
+           (= movement-type "COMPRA / VENDA"))))
 
 (defn movement-type->transaction-type [{:keys [movement-type] :as mov}]
   (cond

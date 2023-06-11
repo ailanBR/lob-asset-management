@@ -39,15 +39,14 @@ Provide where asset need to be purchase and how much
    1. [] AWS
    2. [] Firebase (Doing)
    3. [] Other
-4. Add a way to manual insert information (Front-end proj?)
-   5. Function to read the file and add one row
-6. Find another option for Alpha API
-7. Document the transaction types and what happening
+3. Add a way to manual insert information (Front-end proj?)
+   1. Function to read the file and add one row
+4. Document the transaction types and what happening
+5. Find another option for Alpha API
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
 2. Consider desdobramento in the portfolio process (OIBR3)
-3. CDB transaction are with operation-type = compra/venda
 
 ## License
 
