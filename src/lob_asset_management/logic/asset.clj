@@ -1,5 +1,6 @@
 (ns lob-asset-management.logic.asset
-  (:require [schema.core :as s]))
+  (:require [lob-asset-management.aux.time :as aux.t]
+            [java-time.api :as t]))
 
 (defn get-asset-by-name
   [assets name]
@@ -7,20 +8,15 @@
        (filter #(= name (:asset/name %)))
        first))
 
-;TODO: Create a specific ticket for CDB
-(s/defn movement-ticket->asset-ticket  :- s/Keyword
-  [xlsx-ticket :- s/Str]
-  (let [xlsx-ticket-split-first (-> xlsx-ticket
-                                    (clojure.string/split #"-")
-                                    first
-                                    clojure.string/trimr)
-        cdb-ticket? (= "CDB" xlsx-ticket-split-first)
-        xlsx-ticket' (if cdb-ticket? xlsx-ticket xlsx-ticket-split-first)]
-    (-> xlsx-ticket'
-        (clojure.string/replace #" " "-")
-        (clojure.string/replace #"S/A" "SA")
-        (clojure.string/replace #"---" "-")
-        (clojure.string/replace #"--" "-")
-        clojure.string/lower-case
-        clojure.string/upper-case
-        keyword)))
+(defn already-exist-asset?
+  [ticket db-data]
+  (if (empty? db-data)
+    false
+    (let [db-data-tickets (->> db-data (map :asset/ticket) set)]
+      (contains? db-data-tickets ticket))))
+
+(defn less-updated-than-target?
+  [target-hours updated-at]
+  (or (nil? updated-at)
+      (< updated-at
+         (aux.t/get-current-millis (t/minus (t/local-date-time) (t/hours target-hours))))))

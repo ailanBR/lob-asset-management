@@ -3,10 +3,11 @@
             [schema.core :as s]
             [clojure.string :as string]
             [lob-asset-management.models.transaction :as m.t]
-            [lob-asset-management.logic.asset :as l.a]
+            [lob-asset-management.adapter.asset :as a.a]
             [java-time.api :as t]
             [lob-asset-management.io.file-in :as io.f-in]
-            [lob-asset-management.aux.time :as aux.t]))
+            [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.logic.transaction :as l.t]))
 
 (s/defn movement-exchange->transaction-exchange :- m.t/Exchange
   [ex :- s/Str]
@@ -17,20 +18,10 @@
     "Sproutfy"                                                  :sproutfy
     (-> ex string/lower-case keyword)))
 
-(defn sell? [{:keys [type movement-type]}]
-  (and (= type"Debito")
-       (or (= movement-type "Transferência - Liquidação")
-           (= movement-type "COMPRA / VENDA"))))
-
-(defn buy? [{:keys [type movement-type]}]
-  (and (= type "Credito")
-       (or (= movement-type "Transferência - Liquidação")
-           (= movement-type "COMPRA / VENDA"))))
-
 (defn movement-type->transaction-type [{:keys [movement-type] :as mov}]
   (cond
-    (sell? mov) :sell
-    (buy? mov) :buy
+    (l.t/sell? mov) :sell
+    (l.t/buy? mov) :buy
     (= movement-type "Juros Sobre Capital Próprio") :JCP
     (= movement-type "Rendimento") :income
     (= movement-type "Dividendo") :dividend
@@ -43,7 +34,7 @@
 (s/defn gen-transaction-id
   [{:keys [transaction-date unit-price quantity product exchange] :as movement}]
   (let [operation-type (movement-type->transaction-type movement)
-        ticket (l.a/movement-ticket->asset-ticket product)
+        ticket (a.a/movement-ticket->asset-ticket product)
         exchange' (movement-exchange->transaction-exchange exchange)]
     (-> (str ticket "-" transaction-date "-" unit-price "-" quantity "-" operation-type "-" exchange')
         (string/replace "/" "")
@@ -98,7 +89,7 @@
   ([{:keys [transaction-date unit-price quantity exchange product operation-total currency] :as movement}
     {brl->usd-historic :forex-usd/historic}]
    (let [operation-type (movement-type->transaction-type movement)
-         ticket (l.a/movement-ticket->asset-ticket product)
+         ticket (a.a/movement-ticket->asset-ticket product)
          currency' (if currency (keyword currency) :BRL)
          unit-price-bigdec (safe-number->bigdec unit-price)
          unit-price' (if (= currency' :UST)
@@ -111,8 +102,6 @@
      ;(println "[TRANSACTION] Row => " movement)
      {:transaction/id              (gen-transaction-id movement)
       :transaction/created-at      (mov-date->transaction-created-at (str transaction-date))
-      ;:transaction/asset          asset
-      ;:transaction/asset-id       (UUID/randomUUID)
       :transaction.asset/ticket    ticket
       :transaction/average-price   (safe-number->bigdec unit-price')
       :transaction/quantity        (safe-number->bigdec quantity)
@@ -122,12 +111,12 @@
       :transaction/operation-total (safe-number->bigdec operation-total')
       :transaction/currency        currency'})))
 
-(defn already-read-transaction
-  [{:transaction/keys [id]} db-data]
+(defn remove-already-exist-transaction
+  [db-data transactions]
   (if (empty? db-data)
-    true
-    (let [db-data-tickets (->> db-data (map :transaction/id) set)]
-      (not (contains? db-data-tickets id)))))
+    transactions
+    (remove #(let [db-data-tickets (->> db-data (map :transaction/id) set)]
+               (contains? db-data-tickets (:transaction/id %))) transactions)))
 
 (defn movements->transactions
   ([mov]
@@ -143,7 +132,7 @@
                                (group-by :transaction/id)
                                (map #(->> % val (sort-by :transaction/processed-at) last)))
          new-transactions (->> mov-transactions
-                               (filter #(already-read-transaction % db-data))
+                               (remove-already-exist-transaction db-data)
                                (concat (or db-data []))
                                (sort-by :transaction.asset/ticket))]
      (log/info "[TRANSACTION] Concluded adapter... "
