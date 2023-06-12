@@ -58,11 +58,13 @@ Provide where asset need to be purchase and how much
    2. [ ] Week
    3. [ ] Month
    4. [ ] Year
-7. Find another option for Alpha API
+7. [Http_in] Find another option for Alpha API
+8. [Telegram] Send periodic telegram message
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
 2. Consider desdobramento in the portfolio process (OIBR3)
+3. Remove asset/id field to use only asset/ticket
 
 ## License
 

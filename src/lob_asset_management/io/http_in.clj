@@ -1,26 +1,8 @@
 (ns lob-asset-management.io.http_in
   (:require [clj-http.client :as http]
             [lob-asset-management.relevant :refer [alpha-key]]
-            [cheshire.core :as json]
+            [lob-asset-management.adapter.alpha-vantage-api :as a.ava]
             [schema.core :as s]))
-
-(defn keyword-space->underline [m]
-  (zipmap (map #(keyword (clojure.string/replace (name %) " " "_")) (keys m))
-          (vals m)))
-
-(defn remove-close-parenthesis [m]
-  (zipmap (map #(keyword (clojure.string/replace (name %) ")" "")) (keys m))
-          (vals m)))
-
-(defn remove-open-parenthesis [m]
-  (zipmap (map #(keyword (clojure.string/replace (name %) "(" "")) (keys m))
-          (vals m)))
-
-(defn remove-keyword-parenthesis
-  [m]
-  (-> m
-      remove-close-parenthesis
-      remove-open-parenthesis))
 
 (defn get-daily-adjusted-prices
   ([symbol]
@@ -31,10 +13,7 @@
                                             :symbol   symbol
                                             :apikey   api-key}})]
      (if (= status 200)
-       (-> body
-           (json/parse-string true)
-           (keyword-space->underline)
-           (remove-keyword-parenthesis))
+       (a.ava/response->internal body)
        (throw (ex-info "Failed to get stock price information"
                        {:status (:status status)}))))))
 
@@ -65,10 +44,7 @@
                                                          :outputsize (name output-size)
                                                          :apikey api-key}})]
      (if (= status 200)
-       (-> body
-           (json/parse-string true)
-           (keyword-space->underline)
-           (remove-keyword-parenthesis))
+       (a.ava/response->internal body)
        (throw (ex-info "Failed to get usd price"
                        {:status (:status status)}))))))
 
@@ -83,12 +59,10 @@
                                                          :market   "BRL"
                                                          :apikey   api-key}})]
      (if (= status 200)
-       (-> body
-           (json/parse-string true)
-           (keyword-space->underline)
-           (remove-keyword-parenthesis))
+       (a.ava/response->internal body)
        (throw (ex-info "Failed to get crypto price"
                        {:status (:status status)}))))))
+
 (comment
   (get-daily-adjusted-prices "CAN")
   (def abev-result (get-daily-adjusted-prices "CAN"))
