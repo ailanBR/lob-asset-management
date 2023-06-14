@@ -2,7 +2,8 @@
   (:require [clojure.tools.logging :as log]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.adapter.asset :as a.a]
-            [lob-asset-management.logic.portfolio :as l.p]))
+            [lob-asset-management.logic.portfolio :as l.p]
+            [lob-asset-management.aux.time :as aux.t]))
 
 (defmulti update-quantity (fn [_ _ op] (keyword op)))
 
@@ -137,12 +138,12 @@
 (defn set-portfolio-representation
   [p]
   (let [assets (io.f-in/get-file-by-entity :asset)
-        {:forex-usd/keys [price]} (io.f-in/get-file-by-entity :forex-usd)
+        {usd-last-price :forex-usd/price} (io.f-in/get-file-by-entity :forex-usd)
         total-portfolio (reduce #(+ %1 (:portfolio/total-cost %2)) 0M p)]
-    (when (not price) (log/error (str "[PORTFOLIO] Don't find last USD price")))
+    (when (not usd-last-price) (log/error (str "[PORTFOLIO] Don't find last USD price")))
     (map (fn [{:portfolio/keys [total-cost average-price ticket] :as portfolio-row}]
             ;(format "%.2f" position-value)
-           (let [position-value (get-position-value assets price portfolio-row)
+           (let [position-value (get-position-value assets usd-last-price portfolio-row)
                  profit-loss (l.p/position-profit-loss-value position-value total-cost)]
              (when (and (> average-price 0M) (<= position-value 0M) (not (contains? #{:SULA3 :BSEV3} ticket)))
                (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
@@ -213,24 +214,78 @@
   [portfolio-list]
   (map portfolio-row->irpf-release portfolio-list))
 
+
 (comment
   (def t (io.f-in/get-file-by-entity :transaction))
   (transactions->portfolio t)
+  ;===============================================
   (def c (transactions->portfolio t))
-
   (reduce #(+ %1 (:portfolio/percentage %2)) 0M c)
-
   (clojure.pprint/print-table [:portfolio/ticket :portfolio/total-cost :portfolio/total-last-value :portfolio/quantity :portfolio.profit-loss/percentage :portfolio.profit-loss/value] c)
-
-  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;===============================================
+  ;Category FLOW
   (get-category-representation c)
   (def category (get-category-representation c))
-
   (clojure.pprint/print-table category)
-
+  ;===============================================
+  ;TOTAL profit/loss + dividend
   (reduce #(+ %1 (:portfolio.profit-loss/value %2) (:portfolio/dividend %2)) 0M c)
   (reduce #(+ %1 (:portfolio/dividend %2)) 0M c)
-
+  ;===============================================
   (update-portfolio)
+  ;===============================================
+  (def assets (io.f-in/get-file-by-entity :asset))
+  (def asset (first assets))
 
+  (defn past-price-date
+    [price-date historic to-subtract]
+    (let [subtracted-date (aux.t/subtract-days price-date to-subtract)]
+      (when (subtracted-date historic)
+        {:past-date  subtracted-date
+         :past-price (subtracted-date historic)})))
+
+  (let [{:asset.market-price/keys [price price-date historic]
+         :asset/keys [type]} (first assets)
+        to-subtract 1
+        ;day-of-week (-> price-date
+        ;                (aux.t/subtract-days to-subtract)
+        ;                aux.t/day-of-week)
+        ;subtract-days (if (= type :crypto)
+        ;                to-subtract
+        ;                (condp = day-of-week
+        ;                  7 (+ to-subtract 2)
+        ;                  6 (+ to-subtract 1)
+        ;                  to-subtract))
+        ;d1-dt (aux.t/subtract-days price-date subtract-days)
+        ;d1-price (d1-dt historic)
+        {:keys [past-date past-price]} (first (for [x [0 1 2 3 4]
+                                                    :let [subtracted-date (aux.t/subtract-days price-date (+ x to-subtract))
+                                                          past-price (subtracted-date historic)]
+                                                    :when past-price]
+                                                {:past-date  subtracted-date
+                                                 :past-price past-price}))
+        ;d1-price (or (past-price-date price-date historic to-subtract)
+        ;             (past-price-date price-date historic (+ 1 to-subtract))
+        ;             (past-price-date price-date historic (+ 2 to-subtract))
+        ;             (past-price-date price-date historic (+ 3 to-subtract))
+        ;             (past-price-date price-date historic (+ 4 to-subtract)))
+        ;d1-dt (aux.t/subtract-days price-date 1)
+        diff-amount (- price past-price)
+        diff-percentage (if (and (> price 0M) (not (= diff-amount 0M)))
+                          (* 100 (with-precision 4 (/ diff-amount price)))
+                          0.0)]
+    {:last-price price
+     :last-price-date price-date
+     :diff-amount diff-amount
+     :diff-percentage diff-percentage})
+
+  (def usd-price (io.f-in/get-file-by-entity :forex-usd))
+
+  (def usd-last-price (:forex-usd/price usd-price))
+
+
+
+  (def portfolio (io.f-in/get-file-by-entity :portfolio))
+  (def portfolio-row (first portfolio))
+  (def p-v (get-position-value assets usd-last-price portfolio-row))
   )

@@ -12,13 +12,19 @@
    (let [c-dt (coerce/to-date-time (str dt))]
      (.getMillis c-dt))))
 
-(defn subtract-days
-  [dt days]
-  (let [c-dt (coerce/to-date-time (name dt))]
-    (t/minus c-dt (t/days days))))
+(defn day-of-week
+  [dt]
+  (t/day-of-week dt))
 
 (defn clj-date->date-keyword
   [dt]
   (let [dt-str (str dt)
         dt-split (clojure.string/split dt-str #"T")]
     (keyword (first dt-split))))
+
+(defn subtract-days
+  [dt days]
+  (let [c-dt (coerce/to-date-time (name dt))]
+    (-> c-dt
+        (t/minus (t/days days))
+        clj-date->date-keyword)))
