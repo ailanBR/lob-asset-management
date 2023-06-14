@@ -105,10 +105,12 @@
    {:keys [price updated-at date historic]}]
   (if (= id asset-id)
     (let [updated-historic (merge (:asset.market-price/historic asset) historic)]
-      (assoc asset :asset.market-price/price price
-                   :asset.market-price/updated-at updated-at
-                   :asset.market-price/price-date date
-                   :asset.market-price/historic updated-historic))
+      (-> asset
+          (assoc :asset.market-price/price price
+                 :asset.market-price/updated-at updated-at
+                 :asset.market-price/price-date date
+                 :asset.market-price/historic updated-historic)
+          (dissoc :asset.market-price/retry-attempts)))
     asset))
 
 (defn update-assets
@@ -116,6 +118,21 @@
    {less-updated-asset-id :asset/id}
    market-last-price]
   (let [updated-assets (map #(update-asset % less-updated-asset-id market-last-price)
+                            assets)]
+    updated-assets))
+
+(defn update-asset-retry-attempt
+  [{:asset/keys [id] :as asset
+    :asset.market-price/keys [retry-attempts]}
+   asset-id]
+  (if (= id asset-id)
+    (assoc asset :asset.market-price/retry-attempts (+ 1 (or retry-attempts 0)))
+    asset))
+
+(defn update-assets-retry-attempt
+  [assets
+   {less-updated-asset-id :asset/id}]
+  (let [updated-assets (map #(update-asset-retry-attempt % less-updated-asset-id)
                             assets)]
     updated-assets))
 
@@ -132,13 +149,25 @@
      (update-asset-market-price assets)
      (log/error "[MARKET-UPDATING] update-asset-market-price - can't get assets")))
   ([assets]
-   (if-let [{:asset/keys [ticket] :as less-updated-asset} (-> assets (a.a/get-less-market-price-updated 1 1) first)]
-     (do (log/info "[MARKET-UPDATING] Stating get asset price for " (:asset/ticket less-updated-asset))
-         (let [market-last-price (get-market-price less-updated-asset)
-               updated-assets (update-assets assets less-updated-asset market-last-price)]
-           (log/info "[MARKET-UPDATING] Success " ticket " price " (:price market-last-price))
-           (io.f-out/upsert updated-assets)
-           updated-assets))
+   (if-let [{:asset/keys [ticket] :as less-updated-asset
+             :asset.market-price/keys [retry-attempts]} (-> assets (a.a/get-less-market-price-updated 1 1) first)]
+     (try
+       (do (log/info "[MARKET-UPDATING] Stating get asset price for " (:asset/ticket less-updated-asset))
+           (let [market-last-price (get-market-price less-updated-asset)
+                 updated-assets (update-assets assets less-updated-asset market-last-price)]
+             (log/info "[MARKET-UPDATING] Success " ticket " price " (:price market-last-price))
+             (io.f-out/upsert updated-assets)
+             updated-assets))
+       (catch Exception e
+         (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
+             (if (< (or retry-attempts 0) 3)
+               (do
+                 (log/info (str "Already retry [" (or retry-attempts 0) "], new attempt after 5sec"))
+                 (let [updated-assets (update-assets-retry-attempt assets less-updated-asset)]
+                   (io.f-out/upsert updated-assets)
+                   (Thread/sleep 5000)
+                   (update-asset-market-price)))
+               (log/info (str "Retry limit archived"))))))
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
 
 #_(defn get-asset-market-price

@@ -55,12 +55,11 @@
                      "|\n") "" result-release)
        "</pre>"))
 
-
 (defn send-daily-result
   []
   (let [result-release (c.r/compare-past-price-assets)
         result-message (daily-result-table-message result-release)]
-    result-message))
+    (send-message result-message)))
 
 (comment
 
