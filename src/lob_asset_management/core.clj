@@ -98,7 +98,7 @@
         "start"  (let [stop-loop (poller "Main"
                                          #(start-processing)
                                          20000
-                                         #{9 12 13 16 17 18 19 20 22 23})]
+                                         #{9 12 13 16 17 18 19 20 22 23 00})]
                    (println "Press enter to stop...")
                    (read-line)
                    (future-cancel (stop-loop))
@@ -131,7 +131,7 @@
   (def update-portfolio (poller "UpdatePortfolio"
                                 #(-> (a.p/update-portfolio) (io.f-out/upsert))
                                 30000
-                                #{8 9 10 12 14 16 18 19 20 21 22 23}))
+                                #{8 9 10 12 14 16 18 19 20 21 22 23  }))
   (update-portfolio)
   ;INTERVAL CONFIG POLLING ALPHA VANTAGE
   ;LIMIT : 5 API requests per minute and 500 requests per day

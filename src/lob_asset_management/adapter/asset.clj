@@ -114,7 +114,7 @@
 (defn remove-disabled-ticket
   [assets]
   (remove (fn [{:asset/keys [ticket]}]
-            (contains? #{:INHF12 :USDT} ticket)) assets))
+            (contains? #{:INHF12 :USDT :BUSD} ticket)) assets))
 
 (defn filter-allowed-type
   [assets]
@@ -127,6 +127,11 @@
   (filter #(l.a/less-updated-than-target? target-hours (:asset.market-price/updated-at %))
           assets))
 
+(defn remove-limit-attempts
+  [assets]
+  (remove (fn [{:asset.market-price/keys [retry-attempts]}]
+            (> (or retry-attempts 0) 2)) assets))
+
 (defn get-less-market-price-updated
   ([assets]
    (get-less-market-price-updated assets 1))
@@ -136,6 +141,7 @@
    (let [filter-assets (->> assets
                             filter-allowed-type
                             remove-disabled-ticket
+                            remove-limit-attempts
                             (sort-by :asset.market-price/updated-at)
                             (filter-less-updated-than-target? min-updated-hours))]
      (or (take quantity filter-assets)

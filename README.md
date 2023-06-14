@@ -60,6 +60,7 @@ Provide where asset need to be purchase and how much
    4. [ ] Year
 7. [Http_in] Find another option for Alpha API
 8. [Telegram] Send periodic telegram message
+9. [Market] Add retry to get price
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
