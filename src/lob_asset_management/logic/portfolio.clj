@@ -16,5 +16,5 @@
 (defn position-percentage
   [total position-value]
   (if (and (> total 0M) (> position-value 0M))
-    (* 100 (/ position-value total))
+    (bigdec (* 100 (/ position-value total)))
     0.0))

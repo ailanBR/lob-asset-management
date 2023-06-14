@@ -69,8 +69,7 @@
 (defn last-brl-historic-price
   [date brl->usd-historic]
   (for [x [0 1 2 3]
-        :let [price-date (aux.t/subtract-days date x)
-              date-keyword (aux.t/clj-date->date-keyword price-date)
+        :let [date-keyword (aux.t/subtract-days date x)
               usd-price (get brl->usd-historic date-keyword)]
         :when usd-price]
     usd-price))

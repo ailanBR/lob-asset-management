@@ -54,7 +54,7 @@ Provide where asset need to be purchase and how much
 4. [Documentation] Document the transaction types and what happening
 5. [Market] Don't get market price for stocks on weekends/holiday
 6. [Portfolio] Compare Gain/Loss with days ago
-   1. [ ] D-1
+   1. [x] D-1
    2. [ ] Week
    3. [ ] Month
    4. [ ] Year
@@ -65,6 +65,7 @@ Provide where asset need to be purchase and how much
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
 2. Consider desdobramento in the portfolio process (OIBR3)
 3. Remove asset/id field to use only asset/ticket
+4. Set telegram key as environment variable
 
 ## License
 

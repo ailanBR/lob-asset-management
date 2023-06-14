@@ -155,7 +155,7 @@
 
 (comment
   (def aux-market-info (io.http/get-daily-adjusted-prices "CAN"))
-  (def market-formated (get-crypto-market-price :USDT))
+  (def market-formated (get-crypto-market-price :ALGO))
 
   (def company-overview (io.http/get-company-overview "ABEV3.SA"))
 
