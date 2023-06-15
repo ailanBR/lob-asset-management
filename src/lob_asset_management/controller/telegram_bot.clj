@@ -1,14 +1,17 @@
 (ns lob-asset-management.controller.telegram-bot
-  (:require [telegrambot-lib.core :as tbot]
-            [lob-asset-management.relevant :refer [telegram-key telegram-personal-chat]]
-            [lob-asset-management.io.file-in :as io.file-in]
+  (:require [clojure.tools.logging :as log]
             [lob-asset-management.controller.release :as c.r]
+            [lob-asset-management.io.file-in :as io.file-in]
+            [lob-asset-management.relevant :refer [telegram-key telegram-personal-chat]]
+            [telegrambot-lib.core :as tbot]
             ))
 
 (defn send-message
-  [message]
-  (let [mybot (tbot/create telegram-key)]
-    (tbot/send-message mybot telegram-personal-chat message {:parse_mode "html"})))
+  ([message]
+   (let [mybot (tbot/create telegram-key)]
+     (send-message message mybot)))
+  ([message mybot]
+   (tbot/send-message mybot telegram-personal-chat message {:parse_mode "html"})))
 
 (defn portfolio-table-message
   [portfolio]
@@ -61,14 +64,57 @@
         result-message (daily-result-table-message result-release)]
     (send-message result-message)))
 
+(def phrases
+  ["Se você acha que a instrução é cara, experimente a ignorância - Benjamin Franklin"
+   "You are going to be happy said life, but first I will make you strong. - Manuscrito encontrado em Accra, Paulo Coelho"
+
+   "Pois as cores são muitas, mas a luz é uma - liber cordis cincti serpente"
+   "Se eu te surpreendi, cê me subestimou - Nova Sorte, Felipe Ret"
+   "Os iluminados caminham nas trevas"
+   "Não quero ser um rei \nNão quero ser um zé\nSó quero minha moeda \nE a minha de fé\n - That is my way, Edi Rock "])
+
+(defn send-invalid-command
+  [bot]
+  (send-message (nth phrases (rand-int (count phrases))) bot))
+
+(def config
+  {:timeout 10}) ;the bot api timeout is in seconds
+
+(defn poll-updates
+  "Long poll for recent chat messages from Telegram."
+  ([bot]
+   (poll-updates bot nil))
+
+  ([bot offset]
+   (let [resp (tbot/get-updates bot {:offset offset
+                                     :timeout (:timeout config)})]
+     (if (contains? resp :error)
+       (log/error "tbot/get-updates error:" (:error resp))
+       resp))))
+
+(defn mybot
+  []
+  (tbot/create telegram-key))
+
+(defn handle-msg
+  [bot msg]
+  (let [msg-txt (-> msg :message :text)]
+    (condp = msg-txt
+      "/portfolio" (send-portfolio-table)
+      "/daily" (send-daily-result)
+      (send-invalid-command bot))))
+
 (comment
 
   (def mybot (tbot/create telegram-key))
 
   (tbot/get-me mybot)
 
-  (tbot/get-updates mybot)
+  (tbot/get-updates mybot {:offset 63479744})
+
+  (def update (tbot/get-updates mybot 63479743))
   ;{:offset 63479739} => update_id message or more updated
+  (-> update :result last :message :text)
 
   (tbot/send-message mybot telegram-personal-chat "Eu sou o Goku")
 
@@ -133,5 +179,7 @@
 
   (tbot/send-message mybot telegram-personal-chat "Teste pulando 1 linha \n linha 2" {:parse_mode "MarkdownV2"})
 
-  (println (send-daily-result))
+  (send-daily-result)
+
   )
+

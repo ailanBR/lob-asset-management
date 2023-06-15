@@ -100,10 +100,15 @@
       (get-stock-market-price less-updated-asset-ticket))))
 
 (defn update-asset
-  [{:asset/keys [id] :as asset}
+  [{:asset/keys [id]
+    current-price :asset.market-price/price
+    current-date :asset.market-price/price-date :as asset}
    asset-id
    {:keys [price updated-at date historic]}]
-  (if (= id asset-id)
+  (if (and (= id asset-id)
+           ;(not (= current-price price))
+           ;(not (= current-date date))
+           )
     (let [updated-historic (merge (:asset.market-price/historic asset) historic)]
       (-> asset
           (assoc :asset.market-price/price price
@@ -155,7 +160,7 @@
        (do (log/info "[MARKET-UPDATING] Stating get asset price for " (:asset/ticket less-updated-asset))
            (let [market-last-price (get-market-price less-updated-asset)
                  updated-assets (update-assets assets less-updated-asset market-last-price)]
-             (log/info "[MARKET-UPDATING] Success " ticket " price " (:price market-last-price))
+             (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
              (io.f-out/upsert updated-assets)
              updated-assets))
        (catch Exception e
@@ -184,7 +189,7 @@
 
 (comment
   (def aux-market-info (io.http/get-daily-adjusted-prices "CAN"))
-  (def market-formated (get-crypto-market-price :ALGO))
+  (def market-formated (get-stock-market-price "ABEV3.SA"))
 
   (def company-overview (io.http/get-company-overview "ABEV3.SA"))
 
