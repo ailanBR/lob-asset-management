@@ -8,7 +8,6 @@
             [lob-asset-management.relevant :refer [configurations]]
             [schema.core :as s]))
 
-
 (defn read-xlsx-by-file-path
   ([file-path]
    (read-xlsx-by-file-path file-path (-> configurations :releases first :b3-release)))
@@ -31,7 +30,6 @@
    (let [file-path (str file-folder file-name)]
      (read-xlsx-by-file-path file-path xlsx-config))))
 
-
 (defn file-full-path [file-name]
   (let [root-directory (:out-data-path configurations)]
     (str root-directory file-name "/" file-name ".edn")))
@@ -53,11 +51,11 @@
         (map read-xlsx-by-file-path)
         (apply concat))))
 
-(defn get-b3-folder-files
+(defn get-folder-files
   ([]
-   (get-b3-folder-files (-> configurations :releases first :b3-release :release-folder )))
-  ([b3-folder]
-   (->> b3-folder
+   (get-folder-files (-> configurations :releases first :b3-release :release-folder )))
+  ([folder]
+   (->> folder
         io/file
         file-seq
         (filter #(.isFile %))
@@ -71,5 +69,5 @@
       (print "File doesn't exist or has already been deleted"))))
 
 (comment
-  (get-b3-folder-files)
+  (get-folder-files)
   )

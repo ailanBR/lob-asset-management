@@ -5,15 +5,23 @@
             [lob-asset-management.logic.portfolio :as l.p]
             [lob-asset-management.aux.time :as aux.t]))
 
+(defn safe-big
+  [value]
+  (or value 0M))
+
+(defn safe-dob
+  [value]
+  (or value 0.0))
+
 (defmulti update-quantity (fn [_ _ op] (keyword op)))
 
 (defmethod update-quantity :buy
   [c-qt t-qt _]
-  (+ (or c-qt 0.0) t-qt))
+  (+ (safe-dob c-qt) t-qt))
 
 (defmethod update-quantity :sell                            ;TODO: throw exception when c-qt = 0
   [c-qt t-qt _]
-  (- (or c-qt 0.0) t-qt))
+  (- (safe-dob c-qt) t-qt))
 
 (defmulti updated-total-cost (fn [_ {:transaction/keys [operation-type]}] (keyword operation-type)))
 
@@ -22,7 +30,7 @@
     c-ap :portfolio/average-price}
    {:transaction/keys [quantity average-price]}]
   (let [tt-t (* average-price quantity)
-        tt-c (* (or c-qt 0.0) (or c-ap 0.0))]
+        tt-c (* (safe-dob c-qt) (safe-dob c-ap))]
     (+ tt-t tt-c)))
 
 (defmethod updated-total-cost :sell
@@ -30,13 +38,13 @@
     c-ap :portfolio/average-price}
    {:transaction/keys [quantity average-price]}]
   (let [tt-t (* average-price quantity)
-        tt-c (* (or c-qt 0.0) (or c-ap 0.0))]
+        tt-c (* (safe-dob c-qt) (safe-dob c-ap))]
     (- tt-t tt-c)))
 
 (defn consolidate
-  [{:portfolio/keys [transaction-ids dividend]
+  [{:portfolio/keys [transaction-ids dividend exchanges]
     consolidate-quantity :portfolio/quantity :as consolidated}
-   {:transaction/keys [id operation-type quantity]
+   {:transaction/keys [id operation-type quantity exchange]
     ticket :transaction.asset/ticket :as transaction}]
   (let [updated-quantity (update-quantity consolidate-quantity quantity operation-type)
         updated-cost (updated-total-cost consolidated transaction)]
@@ -45,11 +53,12 @@
      :portfolio/total-cost      updated-cost
      :portfolio/transaction-ids (conj transaction-ids id)
      :portfolio/category        (-> ticket (a.a/ticket->categories) first)
-     :portfolio/dividend        (or dividend 0M)}))
+     :portfolio/exchanges       (if (contains? exchanges exchange) exchanges (-> exchanges (conj exchange) set))
+     :portfolio/dividend        (safe-big dividend)}))
 
 (defmulti consolidate-transactions
-           (fn [_ {:transaction/keys [operation-type]}]
-             (keyword operation-type)))
+          (fn [_ {:transaction/keys [operation-type]}]
+            (keyword operation-type)))
 
 (defmethod consolidate-transactions :buy
   [{consolidate-quantity :portfolio/quantity :as consolidated}
@@ -76,16 +85,17 @@
       operation-total)))
 
 (defn add-dividend-profit
-  [{:portfolio/keys [transaction-ids dividend total-cost quantity average-price]}
-   {:transaction/keys [id] ticket :transaction.asset/ticket :as transaction}]
+  [{:portfolio/keys [transaction-ids dividend total-cost quantity average-price exchanges]}
+   {:transaction/keys [id exchange] ticket :transaction.asset/ticket :as transaction}]
   (let [transaction-total-operation (total-operation transaction)]
     {:portfolio/ticket          ticket
-     :portfolio/average-price   (or average-price 0M)
-     :portfolio/quantity        (or quantity 0.0)
-     :portfolio/total-cost      (or total-cost 0M)
+     :portfolio/average-price   (safe-big average-price)
+     :portfolio/quantity        (safe-dob quantity)
+     :portfolio/total-cost      (safe-big total-cost)
      :portfolio/transaction-ids (conj transaction-ids id)
      :portfolio/category        (-> ticket (a.a/ticket->categories) first)
-     :portfolio/dividend        (+ (or dividend 0M) transaction-total-operation)}))
+     :portfolio/exchanges       (if (contains? exchanges exchange) exchanges (-> exchanges (conj exchange) set))
+     :portfolio/dividend        (+ (safe-big dividend) transaction-total-operation)}))
 
 (defmethod consolidate-transactions :JCP
   [consolidated transaction]
@@ -180,10 +190,16 @@
      updated-portfolio)))
 
 (defn consolidate-category
-  [{:category/keys [total]}
-   {:portfolio/keys [category total-cost]}]
-  {:category/name  category
-   :category/total-cost (+ (or 0M total) total-cost)})
+  [{cat-total-cost :category/total-cost
+    cat-last-value :category/total-last-value}
+   {:portfolio/keys [category total-cost total-last-value]}]
+  (let [position-cost (safe-big total-cost)
+        position-last-value (or total-last-value position-cost)
+        category-total-cost (safe-big cat-total-cost)
+        category-last-value (safe-big cat-last-value)]
+    {:category/name             category
+     :category/total-cost       (+ category-total-cost position-cost)
+     :category/total-last-value (+ category-last-value position-last-value)}))
 
 (defn consolidate-categories
   [[_ p]]
@@ -191,17 +207,21 @@
 
 (defn set-category-representation
   [c]
-  (let [total-category (reduce #(+ %1 (:category/total-cost %2)) 0M c)]
-    (map #(assoc % :category/percentage (* 100
-                                           (/ (:category/total-cost %)
-                                              total-category))) c)))
+  (let [total-category (reduce #(+ %1 (or (:category/total-last-value %2)
+                                          (:category/total-cost %2))) 0M c)]
+    (map #(assoc %
+            :category/percentage (l.p/position-percentage total-category
+                                                          (or (:category/total-last-value %)
+                                                              (:category/total-cost %)))
+            :category/profit-loss (- (:category/total-last-value %) (:category/total-cost %))) c)))
 
 (defn get-category-representation
-  [p]
-  (->> p
+  [portfolio]
+  (->> portfolio
        (group-by :portfolio/category)
        (map consolidate-categories)
-       (set-category-representation)))
+       (set-category-representation)
+       ))
 
 (defn portfolio-row->irpf-release
   [{:portfolio/keys [ticket average-price quantity total-cost]}]
@@ -214,6 +234,42 @@
   [portfolio-list]
   (map portfolio-row->irpf-release portfolio-list))
 
+(defn get-total
+  [portfolio]
+  (reduce (fn [{:total/keys [profit-asset-grow invested current profit-dividend
+                             brl-value usd-value crypto-value]}
+               {:portfolio/keys             [dividend total-cost total-last-value exchanges]
+                profit-loss :portfolio.profit-loss/value}]
+            (let [profit-asset-grow' (+ (safe-big profit-asset-grow) (safe-big profit-loss))
+                  profit-dividend' (+ (safe-big profit-dividend) (safe-big dividend))
+                  profit-total (+ profit-asset-grow' profit-dividend')
+                  total-invested (+ (safe-big invested) (safe-big total-cost))
+                  total-current (+ (safe-big current) (safe-big total-last-value))
+                  brl-value' (if (or (contains? exchanges :nu) (contains? exchanges :inter))
+                               (+ (safe-big brl-value) (+ (safe-big total-last-value)))
+                               (safe-big brl-value))
+                  usd-value' (if (contains? exchanges :sproutfy )
+                               (+ (safe-big usd-value) (+ (safe-big total-last-value)))
+                               (safe-big usd-value))
+                  crypto-value' (if (or (contains? exchanges :freebtc)
+                                        (contains? exchanges :binance)
+                                        (contains? exchanges :localbitoin)
+                                        (contains? exchanges :pancakeswap))
+                                  (+ (safe-big crypto-value) (+ (safe-big total-last-value)))
+                                  (safe-big crypto-value))]
+              {:total/profit-asset-grow profit-asset-grow'
+               :total/profit-dividend   profit-dividend'
+               :total/profit-total      profit-total
+               :total/profit-total-percentage (l.p/position-profit-loss-percentage total-invested profit-total)
+               :total/invested          total-invested
+               :total/current           (+ (safe-big current) (safe-big total-last-value))
+               :total/brl-value         brl-value'
+               :total/brl-percentage    (l.p/position-percentage total-current brl-value')
+               :total/usd-value         usd-value'
+               :total/usd-percentage    (l.p/position-percentage total-current usd-value')
+               :total/crypto-value      crypto-value'
+               :total/crypto-percentage (l.p/position-percentage total-current crypto-value')
+               })) {} portfolio))
 
 (comment
   (def t (io.f-in/get-file-by-entity :transaction))
@@ -226,6 +282,7 @@
   ;Category FLOW
   (get-category-representation c)
   (def category (get-category-representation c))
+  (filter #(= nil (:portfolio/exchange %)) c)
   (clojure.pprint/print-table category)
   ;===============================================
   ;TOTAL profit/loss + dividend
