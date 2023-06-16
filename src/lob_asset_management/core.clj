@@ -116,7 +116,7 @@
       (case action
         "start" (let [bot (t.bot/mybot)
                       stop-loop (poller "Main"
-                                        #(start-processing #{17 18 19} bot)
+                                        #(start-processing #{17 18 19 20 21} bot)
                                         13000
                                         #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
                   (println "Press enter to stop...")
