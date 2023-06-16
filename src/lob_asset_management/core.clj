@@ -64,15 +64,34 @@
   (println msg)
   (System/exit status))
 
+(defonce update-id (atom nil))
+
+(defn set-id!
+  "Sets the update id to process next as the passed in `id`."
+  [id]
+  (reset! update-id id))
+
+(defn check-telegram-messages
+  [bot]
+  (let [updates (t.bot/poll-updates bot @update-id)
+        messages (:result updates)]
+    (doseq [msg messages]
+      (t.bot/handle-msg bot msg)
+      (-> msg :update_id inc set-id!))))
+
 (defn start-processing
-  []
+  [stock-window bot]
   (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)
-        update-target-hour 1]
+        update-target-hour 1
+        current-hour (.getHour (t/local-date-time))]
+    (check-telegram-messages bot)
     (if (c.f/less-updated-than-target forex-usd update-target-hour)
       (c.f/update-usd-price)
-      (when (c.m/update-asset-market-price)
-        (-> (a.p/update-portfolio)
-            (io.f-out/upsert))))))
+      (if (contains? stock-window current-hour)
+        (when (c.m/update-asset-market-price)
+          (-> (a.p/update-portfolio)
+              (io.f-out/upsert)))
+        (log/info "[Stock window " (t/local-date-time) "] Out of the configured " stock-window)))))
 
 (defn poller [f-name f interval window]
   (let [run-forest-run (atom true)]
@@ -95,14 +114,15 @@
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (case action
-        "start"  (let [stop-loop (poller "Main"
-                                         #(start-processing)
-                                         20000
-                                         #{9 12 13 16 17 18 19 20 22 23 00})]
-                   (println "Press enter to stop...")
-                   (read-line)
-                   (future-cancel (stop-loop))
-                   @(stop-loop))
+        "start" (let [bot (t.bot/mybot)
+                      stop-loop (poller "Main"
+                                        #(start-processing #{17 18 19 20 21} bot)
+                                        13000
+                                        #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
+                  (println "Press enter to stop...")
+                  (read-line)
+                  (future-cancel (stop-loop))
+                  @(stop-loop))
         "read"    (c.p/process-folders)
         "release" (c.r/irpf-release (:year options))
         "telegram" (t.bot/send-portfolio-table)))))

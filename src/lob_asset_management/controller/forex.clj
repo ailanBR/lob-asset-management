@@ -63,9 +63,10 @@
 
 (defn less-updated-than-target
   [forex-usd target-hours]
-  (< (:forex-usd/updated-at forex-usd)
-     (aux.t/get-current-millis
-       (t/minus (t/local-date-time) (t/hours target-hours)))))
+  (or (not (:forex-usd/updated-at forex-usd))
+      (< (:forex-usd/updated-at forex-usd)
+          (aux.t/get-current-millis
+            (t/minus (t/local-date-time) (t/hours target-hours))))))
 
 (defn update-forex-usd
   [{forex-usd-historic :forex-usd/historic}
@@ -83,12 +84,13 @@
    (update-usd-price forex-usd 1))
   ([forex-usd update-target-hour]
    (if (or (nil? forex-usd) (less-updated-than-target forex-usd update-target-hour))
-     (do (log/info "[FOREX-UPDATING] Stating get usd price")
+     (do (log/info "[FOREX-UPDATING] Starting get usd price")
          (let [output-size (if forex-usd :compact :full)
                usd-last-price (get-usd-price :full)
                updated-forex (update-forex-usd forex-usd usd-last-price)]
            (log/info "[FOREX-UPDATING] Success with size " output-size " last price" (:price usd-last-price))
-           (io.f-out/upsert updated-forex)))
+           (io.f-out/upsert updated-forex)
+           updated-forex))
      (log/warn "[FOREX-UPDATING] No usd price to be updated"))))
 
 (defn get-brl->usd-price

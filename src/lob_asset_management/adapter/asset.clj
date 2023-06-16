@@ -114,13 +114,17 @@
 (defn remove-disabled-ticket
   [assets]
   (remove (fn [{:asset/keys [ticket]}]
-            (contains? #{:INHF12 :USDT :BUSD} ticket)) assets))
+            (contains? #{:INHF12 :USDT :SULA3 :SULA11} ticket)) assets))
 
 (defn filter-allowed-type
+  ([assets]
+   (filter-allowed-type assets #{:stockBR :fii :stockEUA :crypto}))
+  ([assets allowed-types]
+   (filter #(contains? allowed-types (:asset/type %)) assets)))
+
+(defn filter-allowed-ticket
   [assets]
-  (filter (fn [{:asset/keys [type ticket]}]
-            (and (contains? #{:stockBR :fii :stockEUA :crypto} type)
-                 (allowed-ticket-get-market-info? ticket))) assets))
+  (filter #(allowed-ticket-get-market-info? (:asset/ticket %)) assets))
 
 (defn filter-less-updated-than-target?
   [target-hours assets]
@@ -140,6 +144,7 @@
   ([assets quantity min-updated-hours]
    (let [filter-assets (->> assets
                             filter-allowed-type
+                            filter-allowed-ticket
                             remove-disabled-ticket
                             remove-limit-attempts
                             (sort-by :asset.market-price/updated-at)
