@@ -8,8 +8,7 @@
 
 (defn position-profit-loss-percentage
   [total-cost profit-loss]
-  (if (and (> total-cost 0M)
-           (not (= profit-loss 0M)))
+  (if (and (> total-cost 0M) (not (= profit-loss 0M)))
     (bigdec (* (/ profit-loss total-cost) 100))
     0.0))
 

@@ -125,7 +125,7 @@
                   @(stop-loop))
         "read"    (c.p/process-folders)
         "release" (c.r/irpf-release (:year options))
-        "telegram" (t.bot/send-portfolio-table)))))
+        "telegram" (t.bot/send-portfolio-table (t.bot/mybot))))))
 
 (comment
   (schema.core/set-fn-validation! true)
@@ -172,10 +172,11 @@
   ; INTERVAL => 15seg
   ; WHEN => #(10 11 12 13 14 15 16 17 18)
   (clojure.pprint/print-table
-    [:transaction/created-at  :transaction/operation-type :transaction/quantity :transaction/average-price :transaction/operation-total]
+    [:transaction/exchange]
     (->> (io.f-in/get-file-by-entity :transaction)
-         (filter #(contains? #{:sproutfy} (:transaction/exchange %)))
-         (sort-by :transaction/created-at)
-         (sort-by :transaction.asset/ticket)
+         ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
+         (sort-by :transaction/exchange)
+         ;(sort-by :transaction/created-at)
+         ;(sort-by :transaction.asset/ticket)
          ))
   )

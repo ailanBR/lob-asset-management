@@ -67,6 +67,7 @@ Provide where asset need to be purchase and how much
 2. Consider desdobramento in the portfolio process (OIBR3)
 3. Remove asset/id field to use only asset/ticket
 4. Set telegram key as environment variable
+5. Remove read file from adapters
 
 ## License
 

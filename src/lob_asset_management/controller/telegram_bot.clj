@@ -1,5 +1,6 @@
 (ns lob-asset-management.controller.telegram-bot
   (:require [clojure.tools.logging :as log]
+            [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.controller.release :as c.r]
             [lob-asset-management.io.file-in :as io.file-in]
             [lob-asset-management.relevant :refer [telegram-key telegram-personal-chat]]
@@ -31,11 +32,11 @@
        "</pre>"))
 
 (defn send-portfolio-table
-  ([]
-   (send-portfolio-table (io.file-in/get-file-by-entity :portfolio)))
-  ([portfolio]
+  ([bot]
+   (send-portfolio-table bot (io.file-in/get-file-by-entity :portfolio)))
+  ([bot portfolio]
    (let [portfolio-table (portfolio-table-message portfolio)]
-     (send-message portfolio-table))))
+     (send-message portfolio-table bot))))
 
 (defn daily-result-table-message
   [result-release]
@@ -59,10 +60,94 @@
        "</pre>"))
 
 (defn send-daily-result
-  []
+  [bot]
   (let [result-release (c.r/compare-past-price-assets)
         result-message (daily-result-table-message result-release)]
-    (send-message result-message)))
+    result-message
+    (send-message result-message bot)))
+
+(defn category-portfolio-message
+  [result-release]
+  (str "<b>\uD83D\uDCCACategory overview \uD83D\uDCCA</b>\n"
+       "<pre>\n"
+       "| Category | Last Price |   %   |\n"                ; Profit R$ |
+       "|----------|:----------:|-------|\n"                ;-----------|
+       (reduce #(str %1
+                     "|"
+                     (format "%-10s" (-> %2 :category/name name clojure.string/upper-case))
+                     "|"
+                     (format "%-12s"
+                             (str "R$" (format "%9s" (format "%.2f" (:category/total-last-value %2)))))
+                     "|"
+                     (format "%7s" (str (format "%.2f" (:category/percentage %2)) "%"))
+                     ;"|"
+                     ;(format "%-11s"
+                     ;        (str "R$" (format "%9s" (format "%.2f" (:category/profit-loss %2)))))
+                     "|\n") "" result-release)
+       "</pre>"))
+
+(defn send-category-portfolio
+  [bot]
+  (let [portfolio (io.file-in/get-file-by-entity :portfolio)
+        portfolio-category (a.p/get-category-representation portfolio)]
+    (send-message (category-portfolio-message portfolio-category) bot)))
+
+(defn total-overview-message
+  [{:total/keys [invested current profit-dividend profit-total-percentage profit-total
+                 brl-value brl-percentage usd-value usd-percentage crypto-value crypto-percentage]}]
+  (str "<b>\uD83D\uDCB0 Total overview \uD83D\uDCB0</b>\n"
+       "\n"
+       "<b>"(format "%-14s" "Current value") ":</b> "
+       (str "R$" (format "%9s" (format "%.2f" current))) " "
+       (if (pos? profit-total-percentage) " \uD83D\uDCC8 " " \uD83D\uDCC9 ")
+       (str (format "%.2f" profit-total-percentage) "%") "\n\n"
+       "<pre>\n"
+       "| Moeda |  Total R$  |    %   |\n"
+       "|-------|:----------:|-------:|\n"
+       "|"
+       (format "%-7s" "R$")
+       "|"
+       (format "%-12s" (str "R$" (format "%10s" (format "%.2f" brl-value))))
+       "|"
+       (format "%8s" (format "%.2f %%" brl-percentage))
+       "|\n"
+       "|"
+       (format "%-7s" "U$D")
+       "|"
+       (format "%-12s" (str "R$" (format "%10s" (format "%.2f" usd-value))))
+       "|"
+       (format "%8s" (format "%.2f %%" usd-percentage))
+       "|\n"
+       "|"
+       (format "%-7s" "Crypto")
+       "|"
+       (format "%-12s" (str "R$" (format "%10s" (format "%.2f" crypto-value))))
+       "|"
+       (format "%8s" (format "%.2f %%" crypto-percentage))
+       "|\n"
+
+       "</pre>"
+
+       "\n\n"
+
+       "<b>" (format "%-14s" "Invested") ":</b> "
+       (str "R$" (format "%9s" (format "%.2f" invested))) "\n\n"
+
+
+       "<b>"(format "%-14s" "Profit/loss") ":</b> "
+       (str "R$" (format "%9s" (format "%.2f" profit-total))) "\n"
+
+
+       "<b>" (format "%-14s" "Dividend ") ":</b> "
+       (str "R$" (format "%9s" (format "%.2f" profit-dividend))) "\n"))
+
+(defn send-total-overview
+  [bot]
+  (let [portfolio (io.file-in/get-file-by-entity :portfolio)
+        portfolio-total (a.p/get-total portfolio)]
+    (total-overview-message portfolio-total)
+    ;(send-message (total-overview-message portfolio-total) bot)
+    ))
 
 (def phrases
   ["Se você acha que a instrução é cara, experimente a ignorância - Benjamin Franklin"
@@ -100,8 +185,11 @@
   [bot msg]
   (let [msg-txt (-> msg :message :text)]
     (condp = msg-txt
-      "/portfolio" (send-portfolio-table)
-      "/daily" (send-daily-result)
+      "/portfolio" (send-portfolio-table bot)
+      "/daily" (send-daily-result bot)
+      "/category" (send-category-portfolio bot)
+      "/total" (send-total-overview bot)
+      "/dividend" (send-invalid-command bot)
       (send-invalid-command bot))))
 
 (comment
