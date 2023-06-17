@@ -1,17 +1,9 @@
 (ns lob-asset-management.adapter.portfolio
   (:require [clojure.tools.logging :as log]
-            [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.logic.portfolio :as l.p]
-            [lob-asset-management.aux.time :as aux.t]))
-
-(defn safe-big
-  [value]
-  (or value 0M))
-
-(defn safe-dob
-  [value]
-  (or value 0.0))
+            [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.aux.money :refer [safe-big safe-dob]]))
 
 (defmulti update-quantity (fn [_ _ op] (keyword op)))
 
@@ -113,21 +105,38 @@
   [consolidated transaction]
   (add-dividend-profit consolidated transaction))
 
+(defmethod consolidate-transactions :grupamento
+  [{:portfolio/keys [ticket average-price total-cost transaction-ids exchanges dividend]
+    portfolio-quantity :portfolio/quantity}
+   {:transaction/keys [quantity id exchange]}]
+  (let [factor (/ portfolio-quantity quantity)
+        average-price' (* factor average-price)
+        total-cost' (* quantity average-price')]
+    {:portfolio/ticket          ticket
+     :portfolio/average-price   (safe-big average-price')
+     :portfolio/quantity        (safe-dob quantity)
+     :portfolio/total-cost      (safe-big total-cost')
+     :portfolio/transaction-ids (conj transaction-ids id)
+     :portfolio/category        (-> ticket (a.a/ticket->categories) first)
+     :portfolio/exchanges       (if (contains? exchanges exchange) exchanges (-> exchanges (conj exchange) set))
+     :portfolio/dividend        (safe-big dividend)}))
+
 (defn consolidate-grouped-transactions
-  [[_ v2]]
-  (reduce (fn [c t] (consolidate-transactions c t)) {} v2))
+  [[_ transactions]]
+  (reduce #(consolidate-transactions %1 %2) {} transactions))
 
 (defn filter-operation
-  [t]
-  (filter (fn [{:transaction/keys [operation-type]}]
-            (contains? #{:buy :sell :JCP :income :dividend :waste} operation-type))
-          t))
+  [transaction]
+  (filter #(contains?
+             #{:buy :sell :JCP :income :dividend :waste :grupamento}
+             (:transaction/operation-type %))
+          transaction))
 
 (defn remove-fixed-income
-  [t]
-  (remove (fn [{:transaction.asset/keys [ticket]}]
-            (clojure.string/includes? (name ticket) "CDB"))
-          t))
+  [transaction]
+  (remove #(clojure.string/includes?
+             (-> % :transaction.asset/ticket name) "CDB")
+          transaction))
 
 (defn get-position-value
   [assets usd-last-price {:portfolio/keys [average-price ticket quantity]}]
@@ -146,10 +155,8 @@
     position-value))
 
 (defn set-portfolio-representation
-  [p]
-  (let [assets (io.f-in/get-file-by-entity :asset)
-        {usd-last-price :forex-usd/price} (io.f-in/get-file-by-entity :forex-usd)
-        total-portfolio (reduce #(+ %1 (:portfolio/total-cost %2)) 0M p)]
+  [assets {usd-last-price :forex-usd/price} portfolio]
+  (let [total-portfolio (reduce #(+ %1 (:portfolio/total-cost %2)) 0M portfolio)]
     (when (not usd-last-price) (log/error (str "[PORTFOLIO] Don't find last USD price")))
     (map (fn [{:portfolio/keys [total-cost average-price ticket] :as portfolio-row}]
             ;(format "%.2f" position-value)
@@ -161,33 +168,30 @@
                :portfolio/total-last-value position-value
                :portfolio/percentage (l.p/position-percentage total-portfolio position-value)
                :portfolio.profit-loss/value profit-loss
-               :portfolio.profit-loss/percentage (l.p/position-profit-loss-percentage total-cost profit-loss)))) p)))
+               :portfolio.profit-loss/percentage (l.p/position-profit-loss-percentage total-cost profit-loss)))) portfolio)))
 
 (defn transactions->portfolio
-  [t]
+  [transactions assets forex-usd]
   (log/info "[PORTFOLIO] Processing adapter...")
-  (let [portfolio (->> t
+  (let [portfolio (->> transactions
                        (filter-operation)                   ;;Accept only buy and sell
                        (remove-fixed-income)
                        (sort-by :transaction/created-at)
                        (group-by :transaction.asset/ticket)
                        (map consolidate-grouped-transactions)
-                       (set-portfolio-representation)
+                       (set-portfolio-representation assets forex-usd)
                        (sort-by :portfolio/percentage >))]
     (log/info "[PORTFOLIO] Concluded adapter...[" (count portfolio) "]")
     portfolio))
 
 (defn update-portfolio
-  ([]
-   (let [portfolio (io.f-in/get-file-by-entity :portfolio)]
-     (update-portfolio portfolio)))
-  ([p]
-   (log/info "[PORTFOLIO] Updating...")
-   (let [updated-portfolio (->> p
-                                set-portfolio-representation
-                                (sort-by :portfolio/percentage >))]
-     (log/info "[PORTFOLIO] updated")
-     updated-portfolio)))
+  [portfolio assets forex-usd]
+  (log/info "[PORTFOLIO] Updating...")
+  (let [updated-portfolio (->> portfolio
+                               (set-portfolio-representation assets forex-usd)
+                               (sort-by :portfolio/percentage >))]
+    (log/info "[PORTFOLIO] updated")
+    updated-portfolio))
 
 (defn consolidate-category
   [{cat-total-cost :category/total-cost
@@ -220,8 +224,7 @@
   (->> portfolio
        (group-by :portfolio/category)
        (map consolidate-categories)
-       (set-category-representation)
-       ))
+       (set-category-representation)))
 
 (defn portfolio-row->irpf-release
   [{:portfolio/keys [ticket average-price quantity total-cost]}]
@@ -268,11 +271,10 @@
                :total/usd-value         usd-value'
                :total/usd-percentage    (l.p/position-percentage total-current usd-value')
                :total/crypto-value      crypto-value'
-               :total/crypto-percentage (l.p/position-percentage total-current crypto-value')
-               })) {} portfolio))
+               :total/crypto-percentage (l.p/position-percentage total-current crypto-value')})) {} portfolio))
 
 (comment
-  (def t (io.f-in/get-file-by-entity :transaction))
+  (def t (lob-asset-management.io.file-in/get-file-by-entity :transaction))
   (transactions->portfolio t)
   ;===============================================
   (def c (transactions->portfolio t))
@@ -289,9 +291,12 @@
   (reduce #(+ %1 (:portfolio.profit-loss/value %2) (:portfolio/dividend %2)) 0M c)
   (reduce #(+ %1 (:portfolio/dividend %2)) 0M c)
   ;===============================================
-  (update-portfolio)
+  (let [forex-usd (lob-asset-management.io.file-in/get-file-by-entity :forex-usd)
+        assets (lob-asset-management.io.file-in/get-file-by-entity :asset)
+        portfolio (lob-asset-management.io.file-in/get-file-by-entity :portfolio)]
+    (update-portfolio portfolio assets forex-usd))
   ;===============================================
-  (def assets (io.f-in/get-file-by-entity :asset))
+  (def assets (lob-asset-management.io.file-in/get-file-by-entity :asset))
   (def asset (first assets))
 
   (defn past-price-date
@@ -336,13 +341,11 @@
      :diff-amount diff-amount
      :diff-percentage diff-percentage})
 
-  (def usd-price (io.f-in/get-file-by-entity :forex-usd))
+  (def usd-price (lob-asset-management.io.file-in/get-file-by-entity :forex-usd))
 
   (def usd-last-price (:forex-usd/price usd-price))
 
-
-
-  (def portfolio (io.f-in/get-file-by-entity :portfolio))
+  (def portfolio (lob-asset-management.io.file-in/get-file-by-entity :portfolio))
   (def portfolio-row (first portfolio))
   (def p-v (get-position-value assets usd-last-price portfolio-row))
   )

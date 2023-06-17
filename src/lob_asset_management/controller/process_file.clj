@@ -22,7 +22,8 @@
   [movements]
   (log/info "[PROCESS TRANSACTIONS] Started")
   (let [db-transactions (io.f-in/get-file-by-entity :transaction)
-        transactions (a.t/movements->transactions movements db-transactions)]
+        usd-price (io.f-in/get-file-by-entity :forex-usd)
+        transactions (a.t/movements->transactions movements db-transactions usd-price)]
     (when (not= db-transactions transactions)
       (log/info "[PROCESS TRANSACTIONS] New transactions to be registered")
       (io.f-out/upsert transactions)
@@ -31,7 +32,9 @@
 (defn process-portfolio
   [transactions]
   (when transactions
-    (let [portfolio (a.p/transactions->portfolio transactions)]
+    (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)
+          assets (io.f-in/get-file-by-entity :asset)
+          portfolio (a.p/transactions->portfolio transactions assets forex-usd)]
       (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")
       (io.f-out/upsert portfolio)
       portfolio)))
