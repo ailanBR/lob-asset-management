@@ -82,6 +82,8 @@
 (defn start-processing
   [stock-window bot]
   (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)
+        assets (io.f-in/get-file-by-entity :asset)
+        portfolio (io.f-in/get-file-by-entity :portfolio)
         update-target-hour 1
         current-hour (.getHour (t/local-date-time))]
     (check-telegram-messages bot)
@@ -89,7 +91,7 @@
       (c.f/update-usd-price)
       (if (contains? stock-window current-hour)
         (when (c.m/update-asset-market-price)
-          (-> (a.p/update-portfolio)
+          (-> (a.p/update-portfolio portfolio assets forex-usd)
               (io.f-out/upsert)))
         (log/info "[Stock window " (t/local-date-time) "] Out of the configured " stock-window)))))
 
@@ -136,23 +138,6 @@
   (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity] (io.f-in/get-file-by-entity :portfolio))
   ;;Market data poller
 
-  (def get-market-price-poller (poller "GetMarketPrice"
-                                       #(c.m/update-asset-market-price)
-                                       15000
-                                       #{8 9 10 12 14 16 18 19 20 21 22 23}))
-  (get-market-price-poller)
-
-  (def get-usd-price (poller "GetUSDprice"
-                             #(c.f/update-usd-price)
-                             60000
-                             #{8 10 12 14 16 18}))
-  (get-usd-price)
-
-  (def update-portfolio (poller "UpdatePortfolio"
-                                #(-> (a.p/update-portfolio) (io.f-out/upsert))
-                                30000
-                                #{8 9 10 12 14 16 18 19 20 21 22 23  }))
-  (update-portfolio)
   ;INTERVAL CONFIG POLLING ALPHA VANTAGE
   ;LIMIT : 5 API requests per minute and 500 requests per day
   ;15000 => 15sec => 4 Request per minute
@@ -171,12 +156,54 @@
   ;V1 Choice /Only BR data
   ; INTERVAL => 15seg
   ; WHEN => #(10 11 12 13 14 15 16 17 18)
+  ;:transaction/quantity :transaction/average-price :transaction/quantity :transaction/average-price
   (clojure.pprint/print-table
-    [:transaction/exchange]
+    [:transaction/created-at :transaction.asset/ticket :transaction/operation-type :transaction/operation-total ]
     (->> (io.f-in/get-file-by-entity :transaction)
+         (filter #(or (= :OIBR3 (:transaction.asset/ticket %))
+                      (= :OIBR1 (:transaction.asset/ticket %))))
          ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
-         (sort-by :transaction/exchange)
-         ;(sort-by :transaction/created-at)
+         ;(sort-by :transaction/exchange)
+         (sort-by :transaction/created-at)
          ;(sort-by :transaction.asset/ticket)
          ))
+
+  ;=========================================
+  (def oi (->> (io.f-in/get-file-by-entity :transaction)
+               (filter #(or (= :OIBR3 (:transaction.asset/ticket %))
+                            (= :OIBR1 (:transaction.asset/ticket %))))
+               (filter #(= :grupamento (:transaction/operation-type %)))
+               ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
+               ;(sort-by :transaction/exchange)
+               (sort-by :transaction/created-at)
+               ;(sort-by :transaction.asset/ticket)
+               ))
+  (clojure.pprint/pprint oi)
+  ;:transaction/quantity is the new quantity!
+  ;to the change in the portfolio/consolidation process
+  ;
+  (def oi-p (->> (io.f-in/get-file-by-entity :portfolio)
+               (filter #(or (= :OIBR3 (:portfolio/ticket %))
+                            (= :OIBR1 (:portfolio/ticket %))))))
+  (clojure.pprint/pprint oi-p)
+  ;373.0 -> 37.3M
+  ;if (= :grupamento (:transaction/operation-type %))
+  ;Get the factor (/ 373.0 37.3M) => 10.0
+  ;
+  ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   )

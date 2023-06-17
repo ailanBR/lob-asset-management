@@ -96,8 +96,10 @@
         filtered-transactions (->> transactions
                                    (sort-by :transaction/created-at)
                                    (filter #(< (:transaction/created-at %) next-year-first-date)))
+        forex-usd (io.f-in/get-file-by-entity :forex-usd)
+        assets (io.f-in/get-file-by-entity :asset)
         portfolio-release (-> filtered-transactions
-                              (a.p/transactions->portfolio)
+                              (a.p/transactions->portfolio assets forex-usd)
                               (a.p/portfolio-list->irpf-release))
         assets (io.f-in/get-file-by-entity :asset)
         forex-usd (io.f-in/get-file-by-entity :forex-usd)

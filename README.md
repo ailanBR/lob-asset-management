@@ -64,10 +64,8 @@ Provide where asset need to be purchase and how much
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
-2. Consider desdobramento in the portfolio process (OIBR3)
-3. Remove asset/id field to use only asset/ticket
 4. Set telegram key as environment variable
-5. Remove read file from adapters
+3. Remove asset/id field to use only asset/ticket
 
 ## License
 

@@ -3,10 +3,7 @@
             [schema.core :as s]
             [lob-asset-management.models.asset :as m.a]
             [lob-asset-management.logic.asset :as l.a]
-            [lob-asset-management.io.file-in :as io.f-in]
-            [lob-asset-management.aux.time :as aux.t]
-            [lob-asset-management.relevant :refer [asset-more-info]]
-            [java-time.api :as t])
+            [lob-asset-management.relevant :refer [asset-more-info]])
   (:import (java.util UUID)))
 
 (defn allowed-ticket-get-market-info?
@@ -153,7 +150,7 @@
          nil))))
 
 (comment
-  (def assets-file (io.f-in/get-file-by-entity :asset))
+  (def assets-file (lob-asset-management.io.file-in/get-file-by-entity :asset))
 
   (clojure.pprint/print-table assets-file)
 
