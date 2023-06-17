@@ -14,7 +14,7 @@
   ([message mybot]
    (tbot/send-message mybot telegram-personal-chat message {:parse_mode "html"})))
 
-(defn portfolio-table-message
+(defn- portfolio-table-message
   [portfolio]
   (str "<b>\uD83D\uDCCA Portfolio allocation \uD83D\uDCCA</b>\n"
        "<pre>\n"
@@ -38,7 +38,7 @@
    (let [portfolio-table (portfolio-table-message portfolio)]
      (send-message portfolio-table bot))))
 
-(defn daily-result-table-message
+(defn- daily-result-table-message
   [result-release]
   (str "<b>\uD83D\uDCC8 Daily result \uD83D\uDCC9</b>\n"
        "<pre>\n"
@@ -66,7 +66,7 @@
     result-message
     (send-message result-message bot)))
 
-(defn category-portfolio-message
+(defn- category-portfolio-message
   [result-release]
   (str "<b>\uD83D\uDCCACategory overview \uD83D\uDCCA</b>\n"
        "<pre>\n"
@@ -92,7 +92,7 @@
         portfolio-category (a.p/get-category-representation portfolio)]
     (send-message (category-portfolio-message portfolio-category) bot)))
 
-(defn total-overview-message
+(defn- total-overview-message
   [{:total/keys [invested current profit-dividend profit-total-percentage profit-total
                  brl-value brl-percentage usd-value usd-percentage crypto-value crypto-percentage]}]
   (str "<b>\uD83D\uDCB0 Total overview \uD83D\uDCB0</b>\n"
@@ -145,9 +145,7 @@
   [bot]
   (let [portfolio (io.file-in/get-file-by-entity :portfolio)
         portfolio-total (a.p/get-total portfolio)]
-    (total-overview-message portfolio-total)
-    ;(send-message (total-overview-message portfolio-total) bot)
-    ))
+    (send-message (total-overview-message portfolio-total) bot)))
 
 (def phrases
   ["Se você acha que a instrução é cara, experimente a ignorância - Benjamin Franklin"
@@ -162,8 +160,7 @@
   [bot]
   (send-message (nth phrases (rand-int (count phrases))) bot))
 
-(def config
-  {:timeout 10}) ;the bot api timeout is in seconds
+(def config {:timeout 10}) ;the bot api timeout is in seconds
 
 (defn poll-updates
   "Long poll for recent chat messages from Telegram."
@@ -176,6 +173,19 @@
      (if (contains? resp :error)
        (log/error "tbot/get-updates error:" (:error resp))
        resp))))
+
+(def auto-message-scheduled
+  [{:hour 21 :minute 00 :f send-total-overview}
+   {:hour 21 :minute 00 :f send-daily-result}
+   {:hour 17 :minute 38 :f send-portfolio-table}])
+
+(defn auto-message
+  [bot time interval]
+  (map (fn [{:keys [hour minute f]}]
+         (when (and (= (.getHour time) hour)
+                    (= (.getMinute time) minute)
+                    (< (.getSecond time) (* 2 interval)))   ;FIXME use atom ?
+           (f bot))) auto-message-scheduled))
 
 (defn mybot
   []

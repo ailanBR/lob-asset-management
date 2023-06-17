@@ -58,13 +58,12 @@ Provide where asset need to be purchase and how much
    2. [ ] Week
    3. [ ] Month
    4. [ ] Year
-7. [Http_in] Find another option for Alpha API
-8. [Telegram] Send periodic telegram message
-9. [Market] Count API calls
+7. [Http_in] Find another option for Alpha API / Web Scraping
+8. [Market] Count API calls
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
-4. Set telegram key as environment variable
+2. Set telegram key as environment variable
 3. Remove asset/id field to use only asset/ticket
 
 ## License
