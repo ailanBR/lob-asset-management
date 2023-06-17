@@ -35,10 +35,10 @@
 
 (defn consolidate
   [{:portfolio/keys [transaction-ids dividend exchanges]
-    consolidate-quantity :portfolio/quantity :as consolidated}
+    portfolio-quantity :portfolio/quantity :as consolidated}
    {:transaction/keys [id operation-type quantity exchange]
     ticket :transaction.asset/ticket :as transaction}]
-  (let [updated-quantity (update-quantity consolidate-quantity quantity operation-type)
+  (let [updated-quantity (update-quantity portfolio-quantity quantity operation-type)
         updated-cost (updated-total-cost consolidated transaction)]
     {:portfolio/ticket          ticket
      :portfolio/quantity        updated-quantity
@@ -106,7 +106,7 @@
   (add-dividend-profit consolidated transaction))
 
 (defmethod consolidate-transactions :grupamento
-  [{:portfolio/keys [ticket average-price total-cost transaction-ids exchanges dividend]
+  [{:portfolio/keys [ticket average-price transaction-ids exchanges dividend]
     portfolio-quantity :portfolio/quantity}
    {:transaction/keys [quantity id exchange]}]
   (let [factor (/ portfolio-quantity quantity)
@@ -121,14 +121,39 @@
      :portfolio/exchanges       (if (contains? exchanges exchange) exchanges (-> exchanges (conj exchange) set))
      :portfolio/dividend        (safe-big dividend)}))
 
+(defn add-transaction-quantity
+  [{:portfolio/keys [ticket total-cost transaction-ids exchanges dividend]
+    portfolio-quantity :portfolio/quantity}
+   {:transaction/keys [quantity id exchange]}]
+  (let [quantity' (+ portfolio-quantity quantity)
+        average-price' (/ total-cost quantity')]
+    {:portfolio/ticket          ticket
+     :portfolio/average-price   (safe-big average-price')
+     :portfolio/quantity        (safe-dob quantity')
+     :portfolio/total-cost      (safe-big total-cost)
+     :portfolio/transaction-ids (conj transaction-ids id)
+     :portfolio/category        (-> ticket (a.a/ticket->categories) first)
+     :portfolio/exchanges       (if (contains? exchanges exchange) exchanges (-> exchanges (conj exchange) set))
+     :portfolio/dividend        (safe-big dividend)}))
+
+(defmethod consolidate-transactions :desdobro
+  [portfolio transaction]
+  (add-transaction-quantity portfolio transaction))
+
+(defmethod consolidate-transactions :bonificaçãoemativos
+  [portfolio transaction]
+  (add-transaction-quantity portfolio transaction))
+
 (defn consolidate-grouped-transactions
   [[_ transactions]]
-  (reduce #(consolidate-transactions %1 %2) {} transactions))
+  (->> transactions
+       (sort-by :transaction/created-at)
+       (reduce #(consolidate-transactions %1 %2) {})))
 
 (defn filter-operation
   [transaction]
   (filter #(contains?
-             #{:buy :sell :JCP :income :dividend :waste :grupamento}
+             #{:buy :sell :JCP :income :dividend :waste :grupamento :desdobro :bonificaçãoemativos}
              (:transaction/operation-type %))
           transaction))
 
