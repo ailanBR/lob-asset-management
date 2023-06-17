@@ -72,21 +72,22 @@
   (reset! update-id id))
 
 (defn check-telegram-messages
-  [bot]
+  [bot interval]
   (let [updates (t.bot/poll-updates bot @update-id)
         messages (:result updates)]
     (doseq [msg messages]
       (t.bot/handle-msg bot msg)
-      (-> msg :update_id inc set-id!))))
+      (-> msg :update_id inc set-id!))
+    (t.bot/auto-message bot (t/local-date-time) interval)))
 
 (defn start-processing
-  [stock-window bot]
+  [stock-window interval bot]
   (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)
         assets (io.f-in/get-file-by-entity :asset)
         portfolio (io.f-in/get-file-by-entity :portfolio)
         update-target-hour 1
         current-hour (.getHour (t/local-date-time))]
-    (check-telegram-messages bot)
+    (check-telegram-messages bot interval)
     (if (c.f/less-updated-than-target forex-usd update-target-hour)
       (c.f/update-usd-price)
       (if (contains? stock-window current-hour)
@@ -117,8 +118,9 @@
       (exit (if ok? 0 1) exit-message)
       (case action
         "start" (let [bot (t.bot/mybot)
+                      interval 13000
                       stop-loop (poller "Main"
-                                        #(start-processing #{17 18 19 20 21} bot)
+                                        #(start-processing #{17 18 19 20 21} interval bot)
                                         13000
                                         #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
                   (println "Press enter to stop...")
@@ -167,7 +169,6 @@
          (sort-by :transaction/created-at)
          ;(sort-by :transaction.asset/ticket)
          ))
-
   ;=========================================
   (def oi (->> (io.f-in/get-file-by-entity :transaction)
                (filter #(or (= :OIBR3 (:transaction.asset/ticket %))
