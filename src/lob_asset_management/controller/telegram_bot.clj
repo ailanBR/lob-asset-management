@@ -18,16 +18,18 @@
   [portfolio]
   (str "<b>\uD83D\uDCCA Portfolio allocation \uD83D\uDCCA</b>\n"
        "<pre>\n"
-       "| Ticket   |      R$     |   %   |\n"
-       "|----------|:-----------:|------:|\n"
+       "|Ticket|    R$    |  %  |  Res  |\n"
+       "|:-----|:--------:|-----|------:|\n"
        (reduce #(str %1
                      "|"
-                     (format "%-10s" (-> %2 :portfolio/ticket name))
+                     (format "%-6s" (-> %2 :portfolio/ticket name))
                      "|"
-                     (format "%-13s"
-                             (str "R$" (format "%9s" (format "%.2f" (:portfolio/total-last-value %2)))))
+                     (format "%-10s"
+                             (str "R$" (format "%8s" (format "%.2f" (:portfolio/total-last-value %2)))))
                      "|"
-                     (format "%-7s" (str (format "%.2f" (:portfolio/percentage %2)) "%"))
+                     (format "%5s" (format "%.2f%%" (:portfolio/percentage %2)))
+                     "|"
+                     (format "%7s" (format "%.1f%%" (:portfolio.profit-loss/percentage %2)))
                      "|\n") "" portfolio)
        "</pre>"))
 
