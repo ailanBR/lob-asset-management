@@ -3,6 +3,7 @@
             [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.controller.release :as c.r]
             [lob-asset-management.io.file-in :as io.file-in]
+            [lob-asset-management.logic.portfolio :as l.p]
             [lob-asset-management.relevant :refer [telegram-key telegram-personal-chat]]
             [telegrambot-lib.core :as tbot]
             ))
@@ -17,7 +18,7 @@
 (defn- portfolio-table-message
   [portfolio]
   (str "<b>\uD83D\uDCCA Portfolio allocation \uD83D\uDCCA</b>\n"
-       "<pre>\n"
+       "<pre>"
        "|Ticket|    R$    |  %  |  Res  |\n"
        "|:-----|:--------:|-----|------:|\n"
        (reduce #(str %1
@@ -43,7 +44,7 @@
 (defn- daily-result-table-message
   [result-release]
   (str "<b>\uD83D\uDCC8 Daily result \uD83D\uDCC9</b>\n"
-       "<pre>\n"
+       "<pre>"
        "|  Ticket  | Last Price |   %   | Last date | Comp date |\n"
        "|----------|:----------:|-------|-----------|-----------|\n"
        (reduce #(str %1
@@ -71,7 +72,7 @@
 (defn- category-portfolio-message
   [result-release]
   (str "<b>\uD83D\uDCCACategory overview \uD83D\uDCCA</b>\n"
-       "<pre>\n"
+       "<pre>"
        "| Category | Last Price |   %   |\n"                ; Profit R$ |
        "|----------|:----------:|-------|\n"                ;-----------|
        (reduce #(str %1
@@ -94,60 +95,68 @@
         portfolio-category (a.p/get-category-representation portfolio)]
     (send-message (category-portfolio-message portfolio-category) bot)))
 
+(defn- total-currency-row
+  [desc
+   {:total/keys [current profit-total-percentage]}
+   total-current]
+  (str "|"
+       (format "%-7s" desc)
+       "|"
+       (format "%-11s" (str "R$" (format "%9s" (format "%.2f" current))))
+       "|"
+       (format "%7s" (format "%.2f%%" (l.p/position-percentage total-current current)))
+       "|"
+       (format "%7s" (format "%.1f%%" profit-total-percentage))
+       "|\n"))
+
 (defn- total-overview-message
   [{:total/keys [invested current profit-dividend profit-total-percentage profit-total
-                 brl-value brl-percentage usd-value usd-percentage crypto-value crypto-percentage]}]
+                 brl usd crypto]}]
   (str "<b>\uD83D\uDCB0 Total overview \uD83D\uDCB0</b>\n"
        "\n"
        "<b>"(format "%-14s" "Current value") ":</b> "
        (str "R$" (format "%9s" (format "%.2f" current))) " "
        (if (pos? profit-total-percentage) " \uD83D\uDCC8 " " \uD83D\uDCC9 ")
        (str (format "%.2f" profit-total-percentage) "%") "\n\n"
-       "<pre>\n"
-       "| Moeda |  Total R$  |    %   |\n"
-       "|-------|:----------:|-------:|\n"
-       "|"
-       (format "%-7s" "R$")
-       "|"
-       (format "%-12s" (str "R$" (format "%10s" (format "%.2f" brl-value))))
-       "|"
-       (format "%8s" (format "%.2f %%" brl-percentage))
-       "|\n"
-       "|"
-       (format "%-7s" "U$D")
-       "|"
-       (format "%-12s" (str "R$" (format "%10s" (format "%.2f" usd-value))))
-       "|"
-       (format "%8s" (format "%.2f %%" usd-percentage))
-       "|\n"
-       "|"
-       (format "%-7s" "Crypto")
-       "|"
-       (format "%-12s" (str "R$" (format "%10s" (format "%.2f" crypto-value))))
-       "|"
-       (format "%8s" (format "%.2f %%" crypto-percentage))
-       "|\n"
-
-       "</pre>"
-
-       "\n\n"
 
        "<b>" (format "%-14s" "Invested") ":</b> "
        (str "R$" (format "%9s" (format "%.2f" invested))) "\n\n"
 
-
        "<b>"(format "%-14s" "Profit/loss") ":</b> "
        (str "R$" (format "%9s" (format "%.2f" profit-total))) "\n"
 
-
        "<b>" (format "%-14s" "Dividend ") ":</b> "
-       (str "R$" (format "%9s" (format "%.2f" profit-dividend))) "\n"))
+       (str "R$" (format "%9s" (format "%.2f" profit-dividend))) "\n\n"
+
+       "<pre>"
+       "| Moeda |  Amount   |   %   |  Res  |\n"
+       "|-------|:---------:|-------|------:|\n"
+       (total-currency-row "R$" brl current)
+       (total-currency-row "U$D" usd current)
+       (total-currency-row "Crypto" crypto current)
+       "</pre>"))
 
 (defn send-total-overview
   [bot]
   (let [portfolio (io.file-in/get-file-by-entity :portfolio)
-        portfolio-total (a.p/get-total portfolio)]
-    (send-message (total-overview-message portfolio-total) bot)))
+        portfolio-total (a.p/get-total portfolio)
+        brl-total (->> portfolio
+                       (filter #(or (contains? (:portfolio/exchanges %) :nu)
+                                    (contains? (:portfolio/exchanges %) :inter)))
+                       a.p/get-total)
+        usd-total (->> portfolio
+                       (filter #(contains? (:portfolio/exchanges %) :sproutfy ))
+                       a.p/get-total)
+        crypto-total (->> portfolio
+                          (filter #(or (contains? (:portfolio/exchanges %) :freebtc)
+                                       (contains? (:portfolio/exchanges %) :binance)
+                                       (contains? (:portfolio/exchanges %) :localbitoin)
+                                       (contains? (:portfolio/exchanges %) :pancakeswap)))
+                          a.p/get-total)]
+    (-> portfolio-total
+        (assoc :total/brl brl-total :total/usd usd-total :total/crypto crypto-total)
+        total-overview-message
+        (send-message bot))))
 
 (def phrases
   ["Se você acha que a instrução é cara, experimente a ignorância - Benjamin Franklin"
@@ -186,7 +195,7 @@
   (map (fn [{:keys [hour minute f]}]
          (when (and (= (.getHour time) hour)
                     (= (.getMinute time) minute)
-                    (< (.getSecond time) (* 2 interval)))   ;FIXME use atom ?
+                    (< (.getSecond time) interval))   ;FIXME use atom ?
            (f bot))) auto-message-scheduled))
 
 (defn mybot
@@ -205,7 +214,6 @@
       (send-invalid-command bot))))
 
 (comment
-
   (def mybot (tbot/create telegram-key))
 
   (tbot/get-me mybot)
@@ -220,66 +228,6 @@
 
   (tbot/get-my-commands mybot)
 
-  (def assets (io.file-in/get-file-by-entity :asset))
-  (def portfolio (io.file-in/get-file-by-entity :portfolio))
-
-  (def assets-str (reduce #(str %1 "\n" (-> %2 :asset/ticket name)) "" assets))
-  (tbot/send-message mybot telegram-personal-chat assets-str)
-
-  (def portfolio-resume
-    (reduce #(str %1
-                  "\n"
-                  (-> "%-10s"
-                      (format (-> %2 :portfolio/ticket name))
-                      (clojure.string/replace #" " "-")
-                      )
-                  "R$ "
-                  (format "%.2f" (:portfolio/total-last-value %2))
-                  " "
-                  "(" (format "%.2f" (:portfolio/percentage %2)) "%)"
-                  )
-            "*Portfolio allocation*"
-            portfolio))
-  (tbot/send-message mybot telegram-personal-chat portfolio-resume)
-
-  (def portfolio-resume-html
-    (reduce #(str %1
-                  "\n"
-                  (-> "%-10s"
-                      (format (-> %2 :portfolio/ticket name))
-                      (clojure.string/replace #" " ".")
-                      )
-                  "R$ "
-                  (format "%.2f" (:portfolio/total-last-value %2))
-                  " "
-                  "(" (format "%.2f" (:portfolio/percentage %2)) "%)"
-                  )
-            "<b>\uD83D\uDCCA Portfolio allocation \uD83D\uDCCA</b>\n"
-            portfolio))
-  ;Emoji list https://www.w3schools.com/charsets/ref_emoji.asp
-  (tbot/send-message mybot telegram-personal-chat portfolio-resume-html {:parse_mode "html"})
-
-  (def portfolio-table
-    (str "<b>\uD83D\uDCCA Portfolio allocation \uD83D\uDCCA</b>\n"
-         "<pre>\n"
-         "| Ticket   |      R$     |   %   |\n"
-         "|----------|:-----------:|------:|\n"
-         (reduce #(str %1
-                       "|"
-                       (format "%-10s" (-> %2 :portfolio/ticket name))
-                       "|"
-                       (format "%-13s"
-                               (str "R$" (format "%9s" (format "%.2f" (:portfolio/total-last-value %2)))))
-                       "|"
-                       (format "%-7s" (str (format "%.2f" (:portfolio/percentage %2)) "%"))
-                       "|\n") "" portfolio)
-         "</pre>"))
-
-  (tbot/send-message mybot telegram-personal-chat portfolio-table {:parse_mode "html"})
-
   (tbot/send-message mybot telegram-personal-chat "Teste pulando 1 linha \n linha 2" {:parse_mode "MarkdownV2"})
-
-  (send-daily-result)
-
   )
 

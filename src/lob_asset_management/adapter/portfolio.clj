@@ -264,39 +264,20 @@
 
 (defn get-total
   [portfolio]
-  (reduce (fn [{:total/keys [profit-asset-grow invested current profit-dividend
-                             brl-value usd-value crypto-value]}
-               {:portfolio/keys             [dividend total-cost total-last-value exchanges]
+  (reduce (fn [{:total/keys [profit-asset-grow invested current profit-dividend]}
+               {:portfolio/keys [dividend total-cost total-last-value]
                 profit-loss :portfolio.profit-loss/value}]
             (let [profit-asset-grow' (+ (safe-big profit-asset-grow) (safe-big profit-loss))
                   profit-dividend' (+ (safe-big profit-dividend) (safe-big dividend))
                   profit-total (+ profit-asset-grow' profit-dividend')
                   total-invested (+ (safe-big invested) (safe-big total-cost))
-                  total-current (+ (safe-big current) (safe-big total-last-value))
-                  brl-value' (if (or (contains? exchanges :nu) (contains? exchanges :inter))
-                               (+ (safe-big brl-value) (+ (safe-big total-last-value)))
-                               (safe-big brl-value))
-                  usd-value' (if (contains? exchanges :sproutfy )
-                               (+ (safe-big usd-value) (+ (safe-big total-last-value)))
-                               (safe-big usd-value))
-                  crypto-value' (if (or (contains? exchanges :freebtc)
-                                        (contains? exchanges :binance)
-                                        (contains? exchanges :localbitoin)
-                                        (contains? exchanges :pancakeswap))
-                                  (+ (safe-big crypto-value) (+ (safe-big total-last-value)))
-                                  (safe-big crypto-value))]
+                  total-current (+ (safe-big current) (safe-big total-last-value))]
               {:total/profit-asset-grow profit-asset-grow'
                :total/profit-dividend   profit-dividend'
                :total/profit-total      profit-total
                :total/profit-total-percentage (l.p/position-profit-loss-percentage total-invested profit-total)
                :total/invested          total-invested
-               :total/current           (+ (safe-big current) (safe-big total-last-value))
-               :total/brl-value         brl-value'
-               :total/brl-percentage    (l.p/position-percentage total-current brl-value')
-               :total/usd-value         usd-value'
-               :total/usd-percentage    (l.p/position-percentage total-current usd-value')
-               :total/crypto-value      crypto-value'
-               :total/crypto-percentage (l.p/position-percentage total-current crypto-value')})) {} portfolio))
+               :total/current           total-current})) {} portfolio))
 
 (comment
   (def t (lob-asset-management.io.file-in/get-file-by-entity :transaction))
