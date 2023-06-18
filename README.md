@@ -63,6 +63,7 @@ Provide where asset need to be purchase and how much
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
+2. Consider subscription
 2. Set telegram key as environment variable
 3. Remove asset/id field to use only asset/ticket
 

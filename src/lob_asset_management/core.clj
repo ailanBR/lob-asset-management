@@ -137,7 +137,13 @@
   (c.p/delete-all-files)
   (c.p/process-folders)
 
-  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity] (io.f-in/get-file-by-entity :portfolio))
+  (clojure.pprint/print-table
+    [:portfolio/ticket :portfolio/quantity]
+    (->> (io.f-in/get-file-by-entity :portfolio)
+         (filter #(or (contains? (:portfolio/exchanges %) :nu)
+                      (contains? (:portfolio/exchanges %) :inter)))
+         (sort-by :portfolio/ticket)
+         ))
   ;;Market data poller
 
   ;INTERVAL CONFIG POLLING ALPHA VANTAGE
@@ -160,10 +166,14 @@
   ; WHEN => #(10 11 12 13 14 15 16 17 18)
   ;:transaction/quantity :transaction/average-price :transaction/quantity :transaction/average-price
   (clojure.pprint/print-table
-    [:transaction/created-at :transaction.asset/ticket :transaction/operation-type :transaction/operation-total ]
+    [:transaction/created-at :transaction/operation-type :transaction/quantity ]
     (->> (io.f-in/get-file-by-entity :transaction)
-         (filter #(or (= :OIBR3 (:transaction.asset/ticket %))
-                      (= :OIBR1 (:transaction.asset/ticket %))))
+         ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
+         (filter #(or (= :B3SA3 (:transaction.asset/ticket %))))
+         ;(remove #(contains?
+         ;           #{:buy :sell :JCP :income :dividend :waste :grupamento}
+         ;           (:transaction/operation-type %)))
+         ;(filter #(or (= :ROMI3 (:transaction.asset/ticket %))))
          ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
          ;(sort-by :transaction/exchange)
          (sort-by :transaction/created-at)
@@ -171,9 +181,8 @@
          ))
   ;=========================================
   (def oi (->> (io.f-in/get-file-by-entity :transaction)
-               (filter #(or (= :OIBR3 (:transaction.asset/ticket %))
-                            (= :OIBR1 (:transaction.asset/ticket %))))
-               (filter #(= :grupamento (:transaction/operation-type %)))
+               (filter #(or (= :B3SA33 (:transaction.asset/ticket %))))
+               ;(filter #(= :bonificaçãoemativos (:transaction/operation-type %)))
                ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
                ;(sort-by :transaction/exchange)
                (sort-by :transaction/created-at)
@@ -192,19 +201,4 @@
   ;Get the factor (/ 373.0 37.3M) => 10.0
   ;
   ;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  )
+)
