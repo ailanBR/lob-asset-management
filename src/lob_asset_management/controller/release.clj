@@ -121,10 +121,11 @@
 
 (defn compare-past-price-asset
   [{:asset.market-price/keys [price price-date historic]
-    :asset/keys [ticket]}]
+    :asset/keys [ticket]}
+   days]
   (when historic
-    (let [to-subtract 1
-          {:keys [past-date past-price]} (first (for [x [0 1 2 3 4]
+    (let [to-subtract days
+          {:keys [past-date past-price]} (first (for [x (range 0 10)
                                                       :let [subtracted-date (aux.t/subtract-days price-date (+ x to-subtract))
                                                             past-price (subtracted-date historic)]
                                                       :when past-price]
@@ -141,12 +142,16 @@
        :diff-amount     diff-amount
        :diff-percentage diff-percentage})))
 
-(defn compare-past-price-assets
+(defn compare-past-day-price-assets
   ([]
-   (compare-past-price-assets (io.f-in/get-file-by-entity :asset)))
-  ([assets]
+   (compare-past-day-price-assets 1))
+  ([days]
+   (let [assets (io.f-in/get-file-by-entity :asset)]
+     (compare-past-day-price-assets assets days)))
+  ([assets days]
+   (println days)
    (->> assets
-        (map compare-past-price-asset)
+        (map #(compare-past-price-asset % days))
         (remove nil?)
         (remove #(contains? #{:HAPV3 :BIDI11 :SULA11 :SULA3} (:ticket %)))
         (sort-by :diff-percentage >))))
@@ -202,6 +207,6 @@
      :diff-amount diff-amount
      :diff-percentage diff-percentage})
 
-  (clojure.pprint/print-table [:ticket :last-price :diff-percentage :last-price-date] (compare-past-price-assets))
+  (clojure.pprint/print-table [:ticket :last-price :diff-percentage :last-price-date] (compare-past-day-price-assets 1))
 
   )
