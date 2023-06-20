@@ -53,11 +53,6 @@ Provide where asset need to be purchase and how much
    1. Function to read stored file and add one row
 4. [Documentation] Document the transaction types and what happening
 5. [Market] Don't get market price for stocks on weekends/holiday
-6. [Portfolio] Compare Gain/Loss with days ago
-   1. [x] D-1
-   2. [ ] Week
-   3. [ ] Month
-   4. [ ] Year
 7. [Http_in] Find another option for Alpha API / Web Scraping
 8. [Market] Count API calls
 
