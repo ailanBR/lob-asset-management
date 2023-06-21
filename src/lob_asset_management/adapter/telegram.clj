@@ -1,5 +1,6 @@
 (ns lob-asset-management.adapter.telegram
-  (:require [lob-asset-management.logic.portfolio :as l.p]))
+  (:require [lob-asset-management.logic.portfolio :as l.p]
+            [lob-asset-management.models.asset :as a.m]))
 
 (defn portfolio-table-message
   [portfolio]
@@ -128,9 +129,9 @@
   (let [number (atom 0)]
     (str "<b>\uD83D\uDCCA Portfolio allocation \uD83D\uDCCA</b>\n"
          "<pre>"
-         "|n.|Ticket| Category |  %  |\n"
-         "|--|:-----|:--------:|-----|\n"
-         (reduce (fn [current {:portfolio/keys [ticket category percentage]}]
+         "|n.|Ticket| Category |  %  | Qnt |\n"
+         "|--|:-----|:--------:|-----|-----|\n"
+         (reduce (fn [current {:portfolio/keys [ticket category percentage quantity]}]
                    (swap! number inc)
                    (str current
                         "|"
@@ -141,6 +142,10 @@
                         (format "%-10s" (name category))
                         "|"
                         (format "%5s" (format "%.2f%%" percentage))
+                        "|"
+                        (format "%5s" (if (< quantity 1)
+                                        (format "%.3f" quantity)
+                                        (format "%.1f" quantity)))
                         "|\n")) "" portfolio)
          "</pre>")))
 
