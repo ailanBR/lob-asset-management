@@ -64,7 +64,6 @@
       :portfolio/sell-profit (safe-big portfolio-sell-profit))))
 
 (defmethod consolidate-transactions :sell
-  ;TODO : register profit/loss
   [{portfolio-average-price :portfolio/average-price
     portfolio-sell-profit :portfolio/sell-profit :as consolidated}
    {:transaction/keys [quantity average-price] :as transaction}]
