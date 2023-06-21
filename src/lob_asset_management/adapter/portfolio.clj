@@ -53,21 +53,25 @@
             (keyword operation-type)))
 
 (defmethod consolidate-transactions :buy
-  [{consolidate-quantity :portfolio/quantity :as consolidated}
+  [{consolidate-quantity :portfolio/quantity
+    portfolio-sell-profit :portfolio/sell-profit :as consolidated}
    {:transaction/keys [operation-type quantity] :as transaction}]
   (let [updated-quantity (update-quantity consolidate-quantity quantity operation-type)
         updated-cost (updated-total-cost consolidated transaction)
         consolidated (consolidate consolidated transaction)]
     (assoc consolidated
-      :portfolio/average-price (/ updated-cost updated-quantity))))
+      :portfolio/average-price (/ updated-cost updated-quantity)
+      :portfolio/sell-profit (safe-big portfolio-sell-profit))))
 
 (defmethod consolidate-transactions :sell
-  ;TODO : register profit/loss
-  [{portfolio-average-price :portfolio/average-price :as consolidated}
-   transaction]
-  (let [consolidated (consolidate consolidated transaction)]
+  [{portfolio-average-price :portfolio/average-price
+    portfolio-sell-profit :portfolio/sell-profit :as consolidated}
+   {:transaction/keys [quantity average-price] :as transaction}]
+  (let [consolidated (consolidate consolidated transaction)
+        sell-profit (-> average-price (- portfolio-average-price) (* quantity))]
     (assoc consolidated
-      :portfolio/average-price portfolio-average-price)))
+      :portfolio/average-price portfolio-average-price
+      :portfolio/sell-profit   (+ (or portfolio-sell-profit 0M) sell-profit))))
 
 (defn total-operation
   [{:transaction/keys [quantity average-price operation-total]}]
@@ -77,7 +81,7 @@
       operation-total)))
 
 (defn add-dividend-profit
-  [{:portfolio/keys [transaction-ids dividend total-cost quantity average-price exchanges]}
+  [{:portfolio/keys [transaction-ids dividend total-cost quantity average-price exchanges sell-profit]}
    {:transaction/keys [id exchange] ticket :transaction.asset/ticket :as transaction}]
   (let [transaction-total-operation (total-operation transaction)]
     {:portfolio/ticket          ticket
@@ -87,7 +91,8 @@
      :portfolio/transaction-ids (conj transaction-ids id)
      :portfolio/category        (-> ticket (a.a/ticket->categories) first)
      :portfolio/exchanges       (if (contains? exchanges exchange) exchanges (-> exchanges (conj exchange) set))
-     :portfolio/dividend        (+ (safe-big dividend) transaction-total-operation)}))
+     :portfolio/dividend        (+ (safe-big dividend) transaction-total-operation)
+     :portfolio/sell-profit     (safe-big sell-profit)}))
 
 (defmethod consolidate-transactions :JCP
   [consolidated transaction]
@@ -106,7 +111,7 @@
   (add-dividend-profit consolidated transaction))
 
 (defmethod consolidate-transactions :grupamento
-  [{:portfolio/keys [ticket average-price transaction-ids exchanges dividend]
+  [{:portfolio/keys [ticket average-price transaction-ids exchanges dividend sell-profit]
     portfolio-quantity :portfolio/quantity}
    {:transaction/keys [quantity id exchange]}]
   (let [factor (/ portfolio-quantity quantity)
@@ -119,10 +124,11 @@
      :portfolio/transaction-ids (conj transaction-ids id)
      :portfolio/category        (-> ticket (a.a/ticket->categories) first)
      :portfolio/exchanges       (if (contains? exchanges exchange) exchanges (-> exchanges (conj exchange) set))
-     :portfolio/dividend        (safe-big dividend)}))
+     :portfolio/dividend        (safe-big dividend)
+     :portfolio/sell-profit     (safe-big sell-profit)}))
 
 (defn add-transaction-quantity
-  [{:portfolio/keys [ticket total-cost transaction-ids exchanges dividend]
+  [{:portfolio/keys [ticket total-cost transaction-ids exchanges dividend sell-profit]
     portfolio-quantity :portfolio/quantity}
    {:transaction/keys [quantity id exchange]}]
   (let [quantity' (+ portfolio-quantity quantity)
@@ -134,7 +140,8 @@
      :portfolio/transaction-ids (conj transaction-ids id)
      :portfolio/category        (-> ticket (a.a/ticket->categories) first)
      :portfolio/exchanges       (if (contains? exchanges exchange) exchanges (-> exchanges (conj exchange) set))
-     :portfolio/dividend        (safe-big dividend)}))
+     :portfolio/dividend        (safe-big dividend)
+     :portfolio/sell-profit     (safe-big sell-profit)}))
 
 (defmethod consolidate-transactions :desdobro
   [portfolio transaction]
@@ -281,11 +288,14 @@
 
 (comment
   (def t (lob-asset-management.io.file-in/get-file-by-entity :transaction))
-  (transactions->portfolio t)
+  (def a (lob-asset-management.io.file-in/get-file-by-entity :asset))
+  (def f (lob-asset-management.io.file-in/get-file-by-entity :forex-usd))
+  (transactions->portfolio t a f)
   ;===============================================
-  (def c (transactions->portfolio t))
+  (def c (transactions->portfolio t a f))
   (reduce #(+ %1 (:portfolio/percentage %2)) 0M c)
   (clojure.pprint/print-table [:portfolio/ticket :portfolio/total-cost :portfolio/total-last-value :portfolio/quantity :portfolio.profit-loss/percentage :portfolio.profit-loss/value] c)
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/sell-profit] c)
   ;===============================================
   ;Category FLOW
   (get-category-representation c)
