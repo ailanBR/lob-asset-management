@@ -14,14 +14,7 @@
 
 (defn day-of-week
   [dt]
-  (cond
-    (jt/monday? dt) 1
-    (jt/tuesday? dt) 2
-    (jt/wednesday? dt) 3
-    (jt/thursday? dt) 4
-    (jt/friday? dt) 5
-    (jt/saturday? dt) 6
-    (jt/sunday? dt) 7))
+  (-> dt jt/day-of-week jt/value))
 
 (defn clj-date->date-keyword
   [dt]

@@ -4,8 +4,7 @@
             [lob-asset-management.models.asset :as m.a]
             [lob-asset-management.logic.asset :as l.a]
             [lob-asset-management.relevant :refer [asset-more-info]]
-            [lob-asset-management.aux.util :refer [assoc-if]
-             ])
+            [lob-asset-management.aux.util :refer [assoc-if]])
   (:import (java.util UUID)))
 
 (defn allowed-ticket-get-market-info?
