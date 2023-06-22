@@ -48,7 +48,6 @@ Provide where asset need to be purchase and how much
 2. Add a way to manual insert information (Front-end proj?)
    1. Function to read stored file and add one row
 3. [Documentation] Document the transaction types and what happening
-4. [Market] Don't get market price for stocks on weekends/holiday
 5. [Http_in] Find another option for Alpha API / Web Scraping
 6. [Market] Count API calls
 7. Consider subscription events
