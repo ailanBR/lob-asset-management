@@ -1,5 +1,6 @@
 (ns lob-asset-management.core
   (:require [lob-asset-management.adapter.portfolio :as a.p]
+            [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.controller.forex :as c.f]
             [lob-asset-management.controller.market :as c.m]
             [lob-asset-management.controller.process-file :as c.p]
@@ -72,13 +73,13 @@
   (reset! update-id id))
 
 (defn check-telegram-messages
-  [bot interval]
+  [bot interval time]
   (let [updates (t.bot/poll-updates bot @update-id)
         messages (:result updates)]
     (doseq [msg messages]
       (t.bot/handle-msg bot msg)
       (-> msg :update_id inc set-id!))
-    (t.bot/auto-message bot (t/local-date-time) interval)))
+    (t.bot/auto-message bot time interval)))
 
 (defn start-processing
   [stock-window interval bot]
@@ -86,12 +87,14 @@
         assets (io.f-in/get-file-by-entity :asset)
         portfolio (io.f-in/get-file-by-entity :portfolio)
         update-target-hour 1
-        current-hour (.getHour (t/local-date-time))]
-    (check-telegram-messages bot interval)
+        current-time (t/local-date-time)
+        current-hour (.getHour current-time)
+        day-of-week (aux.t/day-of-week current-time)]
+    (check-telegram-messages bot interval current-time)
     (if (c.f/less-updated-than-target forex-usd update-target-hour)
       (c.f/update-usd-price)
       (if (contains? stock-window current-hour)
-        (when (c.m/update-asset-market-price)
+        (when (c.m/update-asset-market-price assets day-of-week)
           (-> (a.p/update-portfolio portfolio assets forex-usd)
               (io.f-out/upsert)))
         (log/info "[Stock window " (t/local-date-time) "] Out of the configured " stock-window)))))
@@ -120,7 +123,7 @@
         "start" (let [bot (t.bot/mybot)
                       interval 13000
                       stop-loop (poller "Main"
-                                        #(start-processing #{14 15 19 20 21} interval bot)
+                                        #(start-processing #{14 15 19 20 21 22} interval bot)
                                         13000
                                         #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
                   (println "Press enter to stop...")

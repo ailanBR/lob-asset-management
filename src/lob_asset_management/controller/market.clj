@@ -142,20 +142,17 @@
     updated-assets))
 
 (defn less-updated-asset
-  ([]
-   (when-let [assets (io.f-in/get-file-by-entity :asset)]
-     (less-updated-asset assets)))
-  ([assets]
-   (-> assets (a.a/get-less-market-price-updated 1 1) first)))
+  [assets day-of-week]
+  (-> assets (a.a/get-less-market-price-updated {:day-of-week day-of-week}) first))
 
 (defn update-asset-market-price
   ([]
    (if-let [assets (io.f-in/get-file-by-entity :asset)]
-     (update-asset-market-price assets)
+     (update-asset-market-price assets 1)
      (log/error "[MARKET-UPDATING] update-asset-market-price - can't get assets")))
-  ([assets]
+  ([assets day-of-week]
    (if-let [{:asset/keys [ticket] :as less-updated-asset
-             :asset.market-price/keys [retry-attempts]} (-> assets (a.a/get-less-market-price-updated 1 1) first)]
+             :asset.market-price/keys [retry-attempts]} (less-updated-asset assets day-of-week)]
      (try
        (do (log/info "[MARKET-UPDATING] Stating get asset price for " (:asset/ticket less-updated-asset))
            (let [market-last-price (get-market-price less-updated-asset)
@@ -171,14 +168,14 @@
                  (let [updated-assets (update-assets-retry-attempt assets less-updated-asset)]
                    (io.f-out/upsert updated-assets)
                    (Thread/sleep 5000)
-                   (update-asset-market-price)))
+                   (update-asset-market-price updated-assets day-of-week)))
                (log/info (str "Retry limit archived"))))))
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
 
 #_(defn get-asset-market-price
   "Receive a list of assets and return the list updated without read or write data"
   [assets]
-  (if-let [less-updated-asset (-> assets (a.a/get-less-market-price-updated) first)]
+  (if-let [less-updated-asset (-> assets a.a/get-less-market-price-updated first)]
     (do (log/info "[MARKET-PRICE] Stating get asset price for " (:asset/ticket less-updated-asset))
         (let [less-updated-asset-ticket (in-ticket->out-ticket less-updated-asset)
               market-last-price (get-stock-market-price less-updated-asset-ticket)

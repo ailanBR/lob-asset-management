@@ -3,7 +3,9 @@
             [schema.core :as s]
             [lob-asset-management.models.asset :as m.a]
             [lob-asset-management.logic.asset :as l.a]
-            [lob-asset-management.relevant :refer [asset-more-info]])
+            [lob-asset-management.relevant :refer [asset-more-info]]
+            [lob-asset-management.aux.util :refer [assoc-if]
+             ])
   (:import (java.util UUID)))
 
 (defn allowed-ticket-get-market-info?
@@ -25,7 +27,7 @@
       (contains? m.a/etf-list ticket) :etf
       (contains? m.a/bdr-list ticket) :bdr
       (and (not ticket-number?)
-           (not (= "." try-ticket->number))
+           (not= "." try-ticket->number)
            (-> try-ticket->number Integer/parseInt)) :stockBR
       :else :stockEUA)))
 
@@ -115,15 +117,15 @@
 
 (defn filter-allowed-type
   ([assets]
-   (filter-allowed-type assets #{:stockBR :fii :stockEUA :crypto}))
-  ([assets allowed-types]
+   (filter-allowed-type #{:stockBR :fii :stockEUA :crypto} assets))
+  ([allowed-types assets]
    (filter #(contains? allowed-types (:asset/type %)) assets)))
 
 (defn filter-allowed-ticket
   [assets]
   (filter #(allowed-ticket-get-market-info? (:asset/ticket %)) assets))
 
-(defn filter-less-updated-than-target?
+(defn filter-less-updated-than-target?                      ;TODO: Receive milliseconds instead target-hours
   [target-hours assets]
   (filter #(l.a/less-updated-than-target? target-hours (:asset.market-price/updated-at %))
           assets))
@@ -133,26 +135,42 @@
   (remove (fn [{:asset.market-price/keys [retry-attempts]}]
             (> (or retry-attempts 0) 2)) assets))
 
+(defn get-less-updated-config
+  [args]
+  (assoc-if {:quantity          1
+             :min-updated-hours 1
+             :type              #{:stockBR :fii :stockEUA :crypto}
+             :day-of-week       1} args))
+
 (defn get-less-market-price-updated
-  ([assets]
-   (get-less-market-price-updated assets 1))
-  ([assets quantity]
-   (get-less-market-price-updated assets quantity 1))
-  ([assets quantity min-updated-hours]
-   (let [filter-assets (->> assets
-                            filter-allowed-type
-                            filter-allowed-ticket
-                            remove-disabled-ticket
-                            remove-limit-attempts
-                            (sort-by :asset.market-price/updated-at)
-                            (filter-less-updated-than-target? min-updated-hours))]
-     (or (take quantity filter-assets)
-         nil))))
+  "Return the less updated asset
+
+   Receive an option map with filter parameters
+     :quantity -> How many assets will be returned  [default => 1]
+     :min-updated-hours -> The less updated asset than [default => 1]
+     :type -> Only asset types from this list [default => #{:stockBR :fii :stockEUA :crypto}]
+     :day-of-week -> On weekends get only crypto prices [default => 1 (Monday)]"
+  [assets & args]
+  {:pre [(boolean assets)]}
+  (let [{:keys [quantity min-updated-hours
+                type day-of-week]} (get-less-updated-config (first args))
+        type' (if (> day-of-week 5) #{:crypto} type)
+        filter-assets (->> assets
+                           (filter-allowed-type type')
+                           filter-allowed-ticket
+                           remove-disabled-ticket
+                           remove-limit-attempts
+                           (sort-by :asset.market-price/updated-at)
+                           (filter-less-updated-than-target? min-updated-hours))]
+    (or (take quantity filter-assets)
+        nil)))
 
 (comment
   (def assets-file (lob-asset-management.io.file-in/get-file-by-entity :asset))
 
   (clojure.pprint/print-table assets-file)
 
-  (get-less-market-price-updated assets-file 1 1)
+  (get-less-market-price-updated assets-file {:min-updated-hours 1
+                                              :quantity 1
+                                              :day-of-week 7})
   )
