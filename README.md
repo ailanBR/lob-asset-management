@@ -34,11 +34,7 @@ Provide where asset need to be purchase and how much
 
 ## TODO
 
-1. Turn solution on ~~CronJob~~ Poller (Doing)
-   1. [x] Polling function
-   2. [x] Polling process
-   3. [ ] Fix read files (Process folder executing from terminal)
-2. Store data on cloud
+1. Store data on cloud
    1. [ ] AWS
       1. ~~Thinking about the item 4. maybe we can use S3 only for the in-data files~~
    2. [ ] Firebase (Doing)
@@ -49,16 +45,15 @@ Provide where asset need to be purchase and how much
    3. [ ] Do nothing
       1. Solution works for read/write entities in terminal
       2. ~~The problem is only **maybe** in the in-data files~~
-3. Add a way to manual insert information (Front-end proj?)
+2. Add a way to manual insert information (Front-end proj?)
    1. Function to read stored file and add one row
-4. [Documentation] Document the transaction types and what happening
-5. [Market] Don't get market price for stocks on weekends/holiday
-7. [Http_in] Find another option for Alpha API / Web Scraping
-8. [Market] Count API calls
+3. [Documentation] Document the transaction types and what happening
+5. [Http_in] Find another option for Alpha API / Web Scraping
+6. [Market] Count API calls
+7. Consider subscription events
 
 ## FIXME
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
-2. Consider subscription
 2. Set telegram key as environment variable
 
 ## License

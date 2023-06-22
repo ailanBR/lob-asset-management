@@ -14,7 +14,7 @@
 
 (defn day-of-week
   [dt]
-  (t/day-of-week dt))
+  (-> dt jt/day-of-week jt/value))
 
 (defn clj-date->date-keyword
   [dt]

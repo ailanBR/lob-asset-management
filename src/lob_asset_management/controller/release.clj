@@ -132,7 +132,7 @@
                                                   {:past-date  subtracted-date
                                                    :past-price past-price}))
           diff-amount (- price past-price)
-          diff-percentage (if (and (> price 0M) (not (= diff-amount 0M)))
+          diff-percentage (if (and (> price 0M) (not= diff-amount 0M))
                             (* 100 (with-precision 4 (/ diff-amount price)))
                             0.0)]
       {:ticket          ticket
@@ -199,7 +199,7 @@
         ;             (past-price-date price-date historic (+ 4 to-subtract)))
         ;d1-dt (aux.t/subtract-days price-date 1)
         diff-amount (- price past-price)
-        diff-percentage (if (and (> price 0M) (not (= diff-amount 0M)))
+        diff-percentage (if (and (> price 0M) (not= diff-amount 0M))
                           (* 100 (with-precision 4 (/ diff-amount price)))
                           0.0)]
     {:last-price price
