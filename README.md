@@ -3,7 +3,6 @@
 A solution created to generate investments income tax release 
 
 ## Usage
-
 ### Read XLSX movements
 
 Read a XLSX document and turn in EDN entities:
@@ -48,11 +47,12 @@ Provide where asset need to be purchase and how much
 2. Add a way to manual insert information (Front-end proj?)
    1. Function to read stored file and add one row
 3. [Documentation] Document the transaction types and what happening
-5. [Http_in] Find another option for Alpha API / Web Scraping
-6. [Market] Count API calls
-7. Consider subscription events
+4. [Http_in] Find another option for Alpha API / Web Scraping
+5. [Market] Count API calls
+6. Consider subscription events
 
 ## FIXME
+
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
 2. Set telegram key as environment variable
 

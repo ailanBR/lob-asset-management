@@ -1,45 +1,56 @@
 (ns lob-asset-management.adapter.alpha-vantage-api
-  (:require [cheshire.core :as json]))
+  (:require [cheshire.core :as json]
+            [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.aux.util :refer [remove-keyword-parenthesis
+                                                   str-space->keyword-underline]]))
 
-(defn keyword-space->underline [m]
-  (zipmap (map #(keyword (clojure.string/replace (name %) " " "_")) (keys m))
-          (vals m)))
 
-(defn remove-close-parenthesis [m]
-  (zipmap (map #(keyword (clojure.string/replace (name %) ")" "")) (keys m))
-          (vals m)))
+(defn market-info->last-refreshed-dt
+  [meta-data]
+  (when-let [latest-refreshed-dt (or (:3._Last_Refreshed meta-data)
+                                     (:5._Last_Refreshed meta-data)
+                                     (:6._Last_Refreshed meta-data))]
+    (-> latest-refreshed-dt
+        (clojure.string/split #" ")
+        first
+        keyword)))
 
-(defn remove-open-parenthesis [m]
-  (zipmap (map #(keyword (clojure.string/replace (name %) "(" "")) (keys m))
-          (vals m)))
+(defn format-historic-price
+  [price-historic]
+  (->> price-historic
+       (reduce #(let [val->keyword (-> %2 val str-space->keyword-underline remove-keyword-parenthesis)]
+                  (assoc %1 (key %2) (bigdec (or (:4._close val->keyword)
+                                                 (:4a._close_BRL val->keyword))))) {})
+       (into (sorted-map))))
 
-(defn remove-keyword-parenthesis
-  [m]
-  (-> m
-      remove-close-parenthesis
-      remove-open-parenthesis))
+(defn formatted-data
+  [{:keys [Meta_Data Time_Series_Daily Time_Series_FX_Daily
+           Time_Series_Digital_Currency_Daily]}]
+  (let [meta-data (str-space->keyword-underline Meta_Data)
+        time-series (str-space->keyword-underline (or Time_Series_Daily
+                                                      Time_Series_Digital_Currency_Daily
+                                                      Time_Series_FX_Daily))]
+    (when-let [latest-refreshed-dt (market-info->last-refreshed-dt meta-data)]
+      (let [latest-refreshed-price (-> time-series
+                                       latest-refreshed-dt
+                                       str-space->keyword-underline
+                                       remove-keyword-parenthesis)
+            closed-price (bigdec (or (:4._close latest-refreshed-price)
+                                     (:4a._close_BRL latest-refreshed-price)))
+            price-historic (format-historic-price time-series)]
+        {:price      closed-price
+         :date       latest-refreshed-dt
+         :updated-at (aux.t/get-current-millis)
+         :historic   price-historic}))))
 
 (defn response->internal
   [body]
   (-> body
       (json/parse-string true)
-      (keyword-space->underline)
-      (remove-keyword-parenthesis)))
-
-
+      str-space->keyword-underline
+      remove-keyword-parenthesis
+      formatted-data))
 
 (comment
   (get abev-result ":Meta Data")
-  (def formatted-data
-    (let [mains (-> abev-result despace remove-parenteses-b remove-parenteses-a)
-          meta-data (despace (:Meta_Data mains))
-          time-serie (despace (:Time_Series_Daily mains))]
-      {:meta-data   meta-data
-       :time-series time-serie}))
-
-  (def last-price
-    (let [latest-refreshed-dt (-> formatted-data :meta-data :3._Last_Refreshed keyword)
-          latest-refreshed-price (-> formatted-data :time-series latest-refreshed-dt despace :4._close bigdec)]
-      {:price latest-refreshed-price
-       :date  latest-refreshed-dt}))
   )

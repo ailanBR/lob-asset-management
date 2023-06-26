@@ -1,8 +1,7 @@
 (ns lob-asset-management.aux.time
   (:require [java-time.api :as jt]
             [clj-time.coerce :as coerce]
-            [clj-time.core :as t]
-            [java-time.format :as f]))
+            [clj-time.core :as t]))
 
 (defn get-current-millis
   ([]
@@ -23,6 +22,8 @@
     (keyword (first dt-split))))
 
 (defn subtract-days
+  "Receive a date keyword and the number of days to be subtracted
+  date example :2023-06-21"
   [dt days]
   (let [c-dt (coerce/to-date-time (name dt))]
     (-> c-dt

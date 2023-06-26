@@ -182,7 +182,7 @@
         position-value (* (or position-current-price average-price) quantity)]
     (when (and (> average-price 0M)
                (not position-current-price)
-               (not (contains? #{:LINX3 :DEFI11 :USDT :SULA3 :BSEV3} ticket)))
+               (not (contains? #{:LINX3 :DEFI11 :USDT :SULA3 :BSEV3 :SULA11} ticket)))
       (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
     position-value))
 
@@ -194,7 +194,9 @@
             ;(format "%.2f" position-value)
            (let [position-value (get-position-value assets usd-last-price portfolio-row)
                  profit-loss (l.p/position-profit-loss-value position-value total-cost)]
-             (when (and (> average-price 0M) (<= position-value 0M) (not (contains? #{:SULA3 :BSEV3} ticket)))
+             (when (and (> average-price 0M)
+                        (<= position-value 0M)
+                        (not (contains? #{:SULA3 :BSEV3 :SULA11} ticket)))
                (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
              (assoc portfolio-row
                :portfolio/total-last-value position-value

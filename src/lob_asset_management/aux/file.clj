@@ -11,14 +11,12 @@
       (edn/read-string (slurp in)))))
 
 (defn edn->file [data file-path]
-  ;TODO Avoid the necessity of an existent folder
   (io/make-parents file-path)
   (with-open [out (io/writer file-path)]
     (binding [*out* out]
       (clojure.pprint/pprint data))))
 
 (defn edn->file-table [data file-path]
-  ;TODO Avoid the necessity of an existent folder
   (io/make-parents file-path)
   (with-open [out (io/writer file-path)]
     (binding [*out* out]

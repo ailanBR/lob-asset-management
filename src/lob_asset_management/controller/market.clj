@@ -4,36 +4,13 @@
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.adapter.asset :as a.a]
-            [lob-asset-management.aux.time :as aux.t]))
-
-(defn keyword-space->underline [m]
-  (zipmap (map #(keyword (clojure.string/replace (name %) " " "_")) (keys m))
-          (vals m)))
-
-(defn remove-close-parenthesis [m]
-  (zipmap (map #(keyword (clojure.string/replace (name %) ")" "")) (keys m))
-          (vals m)))
-
-(defn remove-open-parenthesis [m]
-  (zipmap (map #(keyword (clojure.string/replace (name %) "(" "")) (keys m))
-          (vals m)))
-
-(defn remove-keyword-parenthesis
-  [m]
-  (-> m
-      remove-close-parenthesis
-      remove-open-parenthesis))
-
-(defn formatted-data
-  [{:keys [Meta_Data Time_Series_Daily Time_Series_Digital_Currency_Daily] :as result}]
-  (let [meta-data (keyword-space->underline Meta_Data)
-        time-series (keyword-space->underline (or Time_Series_Daily Time_Series_Digital_Currency_Daily))]
-    {:meta-data   meta-data
-     :time-series time-series}))
+            [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.aux.util :refer [str-space->keyword-underline
+                                                   remove-keyword-parenthesis]]))
 
 (defn format-historic-price
   [price-historic]
-  (reduce #(let [val->keyword (-> %2 val keyword-space->underline remove-keyword-parenthesis)]
+  (reduce #(let [val->keyword (-> %2 val str-space->keyword-underline remove-keyword-parenthesis)]
              (assoc %1 (key %2) (bigdec (or (:4._close val->keyword)
                                              (:4a._close_BRL val->keyword)))))
           {}
@@ -55,7 +32,7 @@
     (if-let [latest-refreshed-dt (market-info->last-refreshed-dt formatted-data)]
       (let [latest-refreshed-price (-> time-series
                                        latest-refreshed-dt
-                                       keyword-space->underline
+                                       str-space->keyword-underline
                                        remove-keyword-parenthesis)
             closed-price (bigdec (or (:4._close latest-refreshed-price)
                                      (:4a._close_BRL latest-refreshed-price)))
@@ -69,20 +46,20 @@
 
 (defn get-stock-market-price
   [asset]
-  (log/info "[get-stock-market-price] started")
+  ;(log/info "[get-stock-market-price] started")
   (if-let [market-info (io.http/get-daily-adjusted-prices asset)]
-    (let [formatted-data (formatted-data market-info)
-          last-price (last-price formatted-data)]
-      last-price)
+    market-info
+    ;(let [last-price (last-price market-info)]
+    ;  last-price)
     (log/error "[get-stock-market-price] Something was wrong in get market data")))
 
 (defn get-crypto-market-price
   [crypto-ticket]
-  (log/info "[get-crypto-market-price] started")
+  ;(log/info "[get-crypto-market-price] started")
   (if-let [market-info (io.http/get-crypto-price crypto-ticket)]
-    (let [formatted-data (formatted-data market-info)
-          last-price (last-price formatted-data)]
-      last-price)
+    market-info
+    ;(let [last-price (last-price market-info)]
+    ;  last-price)
     (log/error "[get-crypto-market-price] Something was wrong in get market data")))
 
 (defn in-ticket->out-ticket
@@ -185,8 +162,9 @@
     (log/warn "[MARKET-UPDATING] No asset to be updated")))
 
 (comment
-  (def aux-market-info (io.http/get-daily-adjusted-prices "CAN"))
   (def market-formated (get-stock-market-price "ABEV3.SA"))
+  (get-stock-market-price "ABEV3.SA")
+  (get-crypto-market-price "BTC")
 
   (def company-overview (io.http/get-company-overview "ABEV3.SA"))
 
