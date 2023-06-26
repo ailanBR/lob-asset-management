@@ -7,11 +7,9 @@
             [lob-asset-management.controller.release :as c.r]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
-            [lob-asset-management.relevant :refer [configurations]]
             [java-time.api :as t]
             [clojure.tools.logging :as log]
-            [clojure.tools.cli :refer [parse-opts]]
-            [lob-asset-management.io.storage :as io.s]
+            [clojure.tools.cli :as t.cli]
             [lob-asset-management.controller.telegram-bot :as t.bot]))
 
 (def cli-options
@@ -48,7 +46,7 @@
   should exit (with an error message, and optional ok status), or a map
   indicating the action the program should take and the options provided."
   [args]
-  (let [{:keys [options arguments errors summary]} (parse-opts args cli-options)]
+  (let [{:keys [options arguments errors summary]} (t.cli/parse-opts args cli-options)]
     (cond
       (:help options) ; help => exit OK with usage summary
       {:exit-message (usage summary) :ok? true}
@@ -81,23 +79,28 @@
       (-> msg :update_id inc set-id!))
     (t.bot/auto-message bot time interval)))
 
+(defn get-market-info
+  [forex-usd stock-window current-time]
+  (let [assets (io.f-in/get-file-by-entity :asset)
+        portfolio (io.f-in/get-file-by-entity :portfolio)
+        current-hour (.getHour current-time)
+        day-of-week (aux.t/day-of-week current-time)]
+    (c.m/reset-retry-attempts assets)
+    (if (contains? stock-window current-hour)
+      (when (c.m/update-asset-market-price assets day-of-week)
+        (-> (a.p/update-portfolio portfolio assets forex-usd)
+            (io.f-out/upsert)))
+      (log/info "[Stock window " (t/local-date-time) "] Out of the configured " stock-window))))
+
 (defn start-processing
   [stock-window interval bot]
   (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)
-        assets (io.f-in/get-file-by-entity :asset)
-        portfolio (io.f-in/get-file-by-entity :portfolio)
         update-target-hour 1
-        current-time (t/local-date-time)
-        current-hour (.getHour current-time)
-        day-of-week (aux.t/day-of-week current-time)]
+        current-time (t/local-date-time)]
     (check-telegram-messages bot interval current-time)
     (if (c.f/less-updated-than-target forex-usd update-target-hour)
       (c.f/update-usd-price)
-      (if (contains? stock-window current-hour)
-        (when (c.m/update-asset-market-price assets day-of-week)
-          (-> (a.p/update-portfolio portfolio assets forex-usd)
-              (io.f-out/upsert)))
-        (log/info "[Stock window " (t/local-date-time) "] Out of the configured " stock-window)))))
+      (get-market-info forex-usd stock-window current-time))))
 
 (defn poller [f-name f interval window]
   (let [run-forest-run (atom true)]
@@ -184,24 +187,25 @@
          ))
   ;=========================================
   (def oi (->> (io.f-in/get-file-by-entity :transaction)
-               (filter #(or (= :B3SA33 (:transaction.asset/ticket %))))
-               ;(filter #(= :bonificaçãoemativos (:transaction/operation-type %)))
+               (filter #(or (= :KNRI11 (:transaction.asset/ticket %))))
+               ;(filter #(or (= :B3SA33 (:transaction.asset/ticket %))))
+               (filter #(= :buy (:transaction/operation-type %)))
                ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
                ;(sort-by :transaction/exchange)
                (sort-by :transaction/created-at)
                ;(sort-by :transaction.asset/ticket)
                ))
-  (clojure.pprint/pprint oi)
+  (clojure.pprint/print-table [:transaction/created-at :transaction/quantity :transaction/id] oi)
   ;:transaction/quantity is the new quantity!
   ;to the change in the portfolio/consolidation process
   ;
   (def oi-p (->> (io.f-in/get-file-by-entity :portfolio)
-               (filter #(or (= :OIBR3 (:portfolio/ticket %))
-                            (= :OIBR1 (:portfolio/ticket %))))))
-  (clojure.pprint/pprint oi-p)
+                 ;(filter #(or (= :crypto (:portfolio/category %))
+                 ;             ;(= :finance (:portfolio/category %))
+                 ;             ))
+                 ))
+  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/total-last-value] oi-p)
   ;373.0 -> 37.3M
   ;if (= :grupamento (:transaction/operation-type %))
   ;Get the factor (/ 373.0 37.3M) => 10.0
-  ;
-  ;
 )
