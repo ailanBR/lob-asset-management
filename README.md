@@ -14,20 +14,65 @@ Read a XLSX document and turn in EDN entities:
 ### Asset
 #### Asset information
 
-- Price
-- Profit/Loss
-- Portfolio percentage1
-- Purchase quantity media
+Unique entity by `:asset/ticket `
+
+```Clojure 
+:asset/ticket 
+:asset/tax-number
+:asset/id
+:asset.market-price/price
+:asset.market-price/price-date
+:asset/category
+:asset.market-price/updated-at
+:asset.market-price/historic 
+:asset/name
+:asset/type
+```
+
+### Transactions
+#### Transactions information
+
+Financial movements, convert all movements from XLSX documents to EDN
+
+```Clojure 
+:transaction/operation-type
+:transaction/operation-total
+:transaction/currency
+:transaction/average-price
+:transaction.asset/ticket
+:transaction/id
+:transaction/processed-at
+:transaction/quantity
+:transaction/exchange
+:transaction/created-at
+```
 
 ### Portfolio
 #### Portfolio information
 
-- Average price
-- Total cost
-- Profit from dividend's
-- Allocation percentage
+The consolidation of transactions grouped by `:transaction.asset/ticket`
 
+```Clojure 
+:portfolio/transaction-ids
+:portfolio/quantity
+:portfolio/percentage
+:portfolio/sell-profit
+:portfolio/total-cost
+:portfolio/dividend
+:portfolio/total-last-value
+:portfolio/category
+:portfolio/exchanges
+:portfolio/average-price
+:portfolio/ticket
+:portfolio.profit-loss/percentage 
+:portfolio.profit-loss/value
+```
 ### Portfolio Configuration [TODO]
+
+## How allow Telegram Bot
+
+1. [Obtain Your Bot Token](https://core.telegram.org/bots/tutorial#obtain-your-bot-token)
+2. Set the key as `telegram-bot-key` environment variable
 
 Provide where asset need to be purchase and how much
 
