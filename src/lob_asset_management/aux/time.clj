@@ -25,7 +25,8 @@
   "Receive a date keyword and the number of days to be subtracted
   date example :2023-06-21"
   [dt days]
-  (let [c-dt (coerce/to-date-time (name dt))]
-    (-> c-dt
-        (t/minus (t/days days))
-        clj-date->date-keyword)))
+  (when dt
+    (let [c-dt (coerce/to-date-time (name dt))]
+      (-> c-dt
+          (t/minus (t/days days))
+          clj-date->date-keyword))))

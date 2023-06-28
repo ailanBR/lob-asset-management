@@ -11,10 +11,11 @@
             [java-time.api :as t]
             [clojure.tools.logging :as log]
             [clojure.tools.cli :as t.cli]
-            [lob-asset-management.controller.telegram-bot :as t.bot]))
+            [lob-asset-management.controller.telegram-bot :as t.bot :refer [bot]]))
 
 (defn start []
-  (mount/start #'lob-asset-management.relevant/config))
+  (mount/start #'lob-asset-management.relevant/config
+               #'lob-asset-management.controller.telegram-bot/bot))
 
 (def cli-options
   [["-y" "--year Year" "Year of the release"
@@ -94,10 +95,10 @@
       (when (c.m/update-asset-market-price assets day-of-week)
         (-> (a.p/update-portfolio portfolio assets forex-usd)
             (io.f-out/upsert)))
-      (log/info "[Stock window " (t/local-date-time) "] Out of the configured " stock-window))))
+      (log/info "[Stock window hour [" current-hour "] Out of the configured " stock-window))))
 
 (defn start-processing
-  [stock-window interval bot]
+  [stock-window interval]
   (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)
         update-target-hour 1
         current-time (t/local-date-time)]
@@ -128,10 +129,9 @@
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (case action
-        "start" (let [bot (t.bot/mybot)
-                      interval 13000
+        "start" (let [interval 13000
                       stop-loop (poller "Main"
-                                        #(start-processing #{19 20 21 22} interval bot)
+                                        #(start-processing #{19 20 21 22} interval)
                                         13000
                                         #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
                   (println "Press enter to stop...")
