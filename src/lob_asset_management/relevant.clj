@@ -1,6 +1,7 @@
 (ns lob-asset-management.relevant
-  (:require [lob-asset-management.aux.file :refer [file->edn]]
-            [cheshire.core :refer :all]))
+  (:require [cheshire.core :refer :all]
+            [lob-asset-management.aux.file :refer [file->edn]]
+            [mount.core :as mount :refer [defstate]]))
 
 (def secrets (file->edn "./resources/secrets.edn"))
 
@@ -14,7 +15,8 @@
 
 (def asset-more-info (file->edn "./resources/asset_fixed_info.edn"))
 
-(def configurations (file->edn "./resources/config.edn"))
+(defstate config
+          :start (file->edn "./resources/config.edn"))
 
 (comment
   (read-secrets)

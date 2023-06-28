@@ -6,7 +6,7 @@
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.models.file :as m.f]
-            [lob-asset-management.relevant :refer [configurations]]))
+            [lob-asset-management.relevant :refer [config]]))
 
 (defn process-assets
   [movements]
@@ -58,7 +58,7 @@
 
 (defn process-folders
   []
-  (when-let [movements (->> (:releases configurations)
+  (when-let [movements (->> (:releases config)
                           (map #(-> % first val process-folder))
                           (apply concat))]
     (process-movement movements)))

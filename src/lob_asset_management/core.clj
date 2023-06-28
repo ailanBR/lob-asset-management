@@ -7,10 +7,14 @@
             [lob-asset-management.controller.release :as c.r]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
+            [mount.core :as mount :refer [defstate]]
             [java-time.api :as t]
             [clojure.tools.logging :as log]
             [clojure.tools.cli :as t.cli]
             [lob-asset-management.controller.telegram-bot :as t.bot]))
+
+(defn start []
+  (mount/start #'lob-asset-management.relevant/config))
 
 (def cli-options
   [["-y" "--year Year" "Year of the release"
@@ -119,6 +123,7 @@
     (fn [] (reset! run-forest-run false))))
 
 (defn -main [& args]
+  (start)
   (let [{:keys [action options exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)

@@ -11,10 +11,9 @@ Read a XLSX document and turn in EDN entities:
  - Transaction
  - Portfolio
 
-### Asset
-#### Asset information
+#### Asset
 
-Unique entity by `:asset/ticket `
+Register all unique `:asset/ticket` from movements and use `resources/asset_fixed_info.edn` to complement information
 
 ```Clojure 
 :asset/ticket 
@@ -29,8 +28,7 @@ Unique entity by `:asset/ticket `
 :asset/type
 ```
 
-### Transactions
-#### Transactions information
+#### Transactions
 
 Financial movements, convert all movements from XLSX documents to EDN
 
@@ -47,8 +45,7 @@ Financial movements, convert all movements from XLSX documents to EDN
 :transaction/created-at
 ```
 
-### Portfolio
-#### Portfolio information
+#### Portfolio
 
 The consolidation of transactions grouped by `:transaction.asset/ticket`
 

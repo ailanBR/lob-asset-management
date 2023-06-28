@@ -12,6 +12,7 @@
                  [environ "1.2.0"]
                  ;[log4j "2.17.2"]
                  [nubank/matcher-combinators "3.8.4"]
+                 [mount "0.1.17"]
                  [org.clojure/clojure "1.10.3"]
                  [org.clojure/tools.cli "1.0.219"]
                  [org.clojure/tools.logging "1.2.4"]

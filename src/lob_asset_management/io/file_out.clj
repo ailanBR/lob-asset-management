@@ -5,19 +5,19 @@
             [lob-asset-management.aux.file :refer [edn->file edn->file-table] :as aux.f]
             [schema.core :as s]
             [lob-asset-management.models.file :as m.f]
-            [lob-asset-management.relevant :refer [configurations]])
+            [lob-asset-management.relevant :refer [config]])
   (:import (clojure.lang PersistentArrayMap PersistentVector ArraySeq LazySeq)))
 
 (s/defn file-full-path [file-keyword :- m.f/file-name]
   (let [file-name (name file-keyword)
-        root-directory (:out-data-path configurations)]
+        root-directory (:out-data-path config)]
     (str root-directory file-name "/" file-name ".edn")))
 
 (defn create-backup [file-keyword]
   (let [file-name (name file-keyword)
         source-path (file-full-path file-keyword)
         source-file (io/file source-path)
-        root-directory (:out-data-path configurations)
+        root-directory (:out-data-path config)
         target-path (str root-directory file-name "/bkp/" file-name  "_" (t/local-date-time)  ".edn")
         target-file (io/file target-path)]
     (when (aux.f/file-exists? source-file)
@@ -70,7 +70,7 @@
 
 (defn income-tax-file
   [data year]
-  (let [root-directory (:out-data-path configurations)
+  (let [root-directory (:out-data-path config)
         file-path (str root-directory "income-tax/" year "/income-tax.edn")]
     (edn->file-table data file-path)))
 
