@@ -5,12 +5,12 @@
             [dk.ative.docjure.spreadsheet :as xlsx]
             [lob-asset-management.aux.file :as aux.f :refer [file->edn]]
             [lob-asset-management.models.file :as m.f]
-            [lob-asset-management.relevant :refer [configurations]]
+            [lob-asset-management.relevant :refer [config]]
             [schema.core :as s]))
 
 (defn read-xlsx-by-file-path
   ([file-path]
-   (read-xlsx-by-file-path file-path (-> configurations :releases first :b3-release)))
+   (read-xlsx-by-file-path file-path (-> config :releases first :b3-release)))
   ([file-path {:keys [sheet columns] :as file-config}]
    ;(println "file-path=>" file-path)
    ;(println "config=>" file-config)
@@ -24,14 +24,14 @@
 
 (defn read-xlsx-by-file-name
   ([file-name]
-   (let [{:keys [release-folder] :as xlsx-config} (-> configurations :releases first :b3-release)]
+   (let [{:keys [release-folder] :as xlsx-config} (-> config :releases first :b3-release)]
      (read-xlsx-by-file-name file-name release-folder xlsx-config)))
   ([file-name file-folder xlsx-config]
    (let [file-path (str file-folder file-name)]
      (read-xlsx-by-file-path file-path xlsx-config))))
 
 (defn file-full-path [file-name]
-  (let [root-directory (:out-data-path configurations)]
+  (let [root-directory (:out-data-path config)]
     (str root-directory file-name "/" file-name ".edn")))
 
 (s/defn get-file-by-entity
@@ -41,7 +41,7 @@
 
 (defn read-b3-folder
   ([]
-   (read-b3-folder (-> configurations :releases first :b3-release :release-folder )))
+   (read-b3-folder (-> config :releases first :b3-release :release-folder )))
   ([b3-folder]
    (->> b3-folder
         io/file
@@ -53,7 +53,7 @@
 
 (defn get-folder-files
   ([]
-   (get-folder-files (-> configurations :releases first :b3-release :release-folder )))
+   (get-folder-files (-> config :releases first :b3-release :release-folder )))
   ([folder]
    (->> folder
         io/file

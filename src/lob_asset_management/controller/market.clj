@@ -47,21 +47,15 @@
 
 (defn get-stock-market-price
   [asset]
-  ;(log/info "[get-stock-market-price] started")
   (if-let [market-info (io.http/get-daily-adjusted-prices asset)]
     market-info
-    ;(let [last-price (last-price market-info)]
-    ;  last-price)
-    (log/error "[get-stock-market-price] Something was wrong in get market data")))
+    (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data"))))
 
 (defn get-crypto-market-price
   [crypto-ticket]
-  ;(log/info "[get-crypto-market-price] started")
   (if-let [market-info (io.http/get-crypto-price crypto-ticket)]
     market-info
-    ;(let [last-price (last-price market-info)]
-    ;  last-price)
-    (log/error "[get-crypto-market-price] Something was wrong in get market data")))
+    (throw (ex-info :message "[get-crypto-market-price] Something was wrong in get market data"))))
 
 (defn in-ticket->out-ticket
   [{:asset/keys [ticket type]}]
