@@ -66,6 +66,15 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
 ```
 ### Portfolio Configuration [TODO]
 
+1. Throw Asset type (StockBR StockEUA Crypto) by configuration
+   1. Current situation gain/loss focusing in the lowest profit (Configuration first)
+2. Throw Categories allocation
+   1. To compare current allocation percentage with configured allocation
+3. Throw Category assets balance allocation 
+   1. Maintain close the asset distribution
+   2. Verify the current gain/loss focusing in assets with loss
+   3. Identify the best asset (Classify assets) / Determined asset configured allocation (throw category)
+
 ## How allow Telegram Bot
 
 1. [Obtain Your Bot Token](https://core.telegram.org/bots/tutorial#obtain-your-bot-token)

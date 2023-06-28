@@ -115,7 +115,7 @@
 (defn past-price-date
   [price-date historic to-subtract]
   (let [subtracted-date (aux.t/subtract-days price-date to-subtract)]
-    (when (subtracted-date historic)
+    (when (and subtracted-date (not (nil? (subtracted-date historic))))
       {:past-date  subtracted-date
        :past-price (subtracted-date historic)})))
 
@@ -126,11 +126,10 @@
   (when historic
     (let [to-subtract days
           {:keys [past-date past-price]} (first (for [x (range 0 10)
-                                                      :let [subtracted-date (aux.t/subtract-days price-date (+ x to-subtract))
-                                                            past-price (subtracted-date historic)]
+                                                      :let [past-price (past-price-date price-date historic (+ x to-subtract))]
                                                       :when past-price]
-                                                  {:past-date  subtracted-date
-                                                   :past-price past-price}))
+                                                  past-price
+                                                  ))
           diff-amount (- price past-price)
           diff-percentage (if (and (> price 0M) (not= diff-amount 0M))
                             (* 100 (with-precision 4 (/ diff-amount price)))
@@ -151,9 +150,9 @@
   ([assets days]
    (println days)
    (->> assets
+        (remove #(contains? #{:GNDI3 :HAPV3 :BIDI11 :SULA3} (:asset/ticket %)))
         (map #(compare-past-price-asset % days))
         (remove nil?)
-        (remove #(contains? #{:HAPV3 :BIDI11 :SULA11 :SULA3} (:ticket %)))
         (sort-by :diff-percentage >))))
 
 (comment
@@ -175,29 +174,12 @@
   (let [{:asset.market-price/keys [price price-date historic]
          :asset/keys [type]} (first assets)
         to-subtract 1
-        ;day-of-week (-> price-date
-        ;                (aux.t/subtract-days to-subtract)
-        ;                aux.t/day-of-week)
-        ;subtract-days (if (= type :crypto)
-        ;                to-subtract
-        ;                (condp = day-of-week
-        ;                  7 (+ to-subtract 2)
-        ;                  6 (+ to-subtract 1)
-        ;                  to-subtract))
-        ;d1-dt (aux.t/subtract-days price-date subtract-days)
-        ;d1-price (d1-dt historic)
         {:keys [past-date past-price]} (first (for [x [0 1 2 3 4]
                                                     :let [subtracted-date (aux.t/subtract-days price-date (+ x to-subtract))
                                                           past-price (subtracted-date historic)]
                                                     :when past-price]
                                                 {:past-date  subtracted-date
                                                  :past-price past-price}))
-        ;d1-price (or (past-price-date price-date historic to-subtract)
-        ;             (past-price-date price-date historic (+ 1 to-subtract))
-        ;             (past-price-date price-date historic (+ 2 to-subtract))
-        ;             (past-price-date price-date historic (+ 3 to-subtract))
-        ;             (past-price-date price-date historic (+ 4 to-subtract)))
-        ;d1-dt (aux.t/subtract-days price-date 1)
         diff-amount (- price past-price)
         diff-percentage (if (and (> price 0M) (not= diff-amount 0M))
                           (* 100 (with-precision 4 (/ diff-amount price)))
