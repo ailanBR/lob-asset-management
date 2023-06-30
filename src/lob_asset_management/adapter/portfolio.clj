@@ -9,11 +9,11 @@
 
 (defmethod update-quantity :buy
   [c-qt t-qt _]
-  (+ (safe-dob c-qt) t-qt))
+  (+ (safe-dob c-qt) (max t-qt (- t-qt))))
 
-(defmethod update-quantity :sell                            ;TODO: throw exception when c-qt = 0
+(defmethod update-quantity :sell
   [c-qt t-qt _]
-  (- (safe-dob c-qt) t-qt))
+  (- (safe-dob c-qt) (max t-qt (- t-qt))))
 
 (defmulti updated-total-cost (fn [_ {:transaction/keys [operation-type]}] (keyword operation-type)))
 
