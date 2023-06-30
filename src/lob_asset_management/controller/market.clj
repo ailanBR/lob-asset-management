@@ -77,17 +77,19 @@
     current-date :asset.market-price/price-date :as asset}
    asset-id
    {:keys [price updated-at date historic]}]
-  (if (and (= id asset-id)
-           ;(not (= current-price price))
-           ;(not (= current-date date))
-           )
-    (let [updated-historic (merge (:asset.market-price/historic asset) historic)]
-      (-> asset
-          (assoc :asset.market-price/price price
-                 :asset.market-price/updated-at updated-at
-                 :asset.market-price/price-date date
-                 :asset.market-price/historic updated-historic)
-          (dissoc :asset.market-price/retry-attempts)))
+  (if (and (= id asset-id))
+    (let [new-price? (and (not (= current-price price)) (not (= current-date date)))
+          updated-historic (merge (:asset.market-price/historic asset) historic)]
+      (if new-price?
+        (-> asset
+            (assoc :asset.market-price/price price
+                   :asset.market-price/updated-at updated-at
+                   :asset.market-price/price-date date
+                   :asset.market-price/historic updated-historic)
+            (dissoc :asset.market-price/retry-attempts))
+        (-> asset
+            (assoc :asset.market-price/updated-at updated-at)
+            (dissoc :asset.market-price/retry-attempts))))
     asset))
 
 (defn update-assets
