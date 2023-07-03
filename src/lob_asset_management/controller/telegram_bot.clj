@@ -101,7 +101,7 @@
 
   ([mybot offset]
    (let [resp (tbot/get-updates mybot {:offset offset
-                                     :timeout (:timeout config)})]
+                                       :timeout (:timeout config)})]
      (if (contains? resp :error)
        (log/error "tbot/get-updates error:" (:error resp))
        resp))))

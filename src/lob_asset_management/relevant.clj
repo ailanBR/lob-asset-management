@@ -5,18 +5,25 @@
 
 (def secrets (file->edn "./resources/secrets.edn"))
 
-(def alpha-key (:alpha-vantage-key secrets))
-(def telegram-key (:telegram-bot-key secrets))
-(def telegram-personal-chat (:personal-chat secrets))
-(def google-app-credential
+#_(def alpha-key (:alpha-vantage-key secrets))
+#_(def telegram-key (:telegram-bot-key secrets))
+#_(def telegram-personal-chat (:personal-chat secrets))
+#_(def google-app-credential
   (-> secrets
       :google_application_credentials
       parse-string))
 
+(defn get-secrets
+  []
+  (file->edn "./resources/secrets.edn"))
+
 (def asset-more-info (file->edn "./resources/asset_fixed_info.edn"))
 
-(defstate config
-          :start (file->edn "./resources/config.edn"))
+(defstate config :start (file->edn "./resources/config.edn"))
+(defstate alpha-key :start (:alpha-vantage-key (get-secrets)))
+(defstate telegram-key :start (:telegram-bot-key (get-secrets)))
+(defstate telegram-personal-chat :start (:personal-chat (get-secrets)))
+
 
 (comment
   (read-secrets)

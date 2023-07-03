@@ -15,6 +15,9 @@
 
 (defn start []
   (mount/start #'lob-asset-management.relevant/config
+               #'lob-asset-management.relevant/alpha-key
+               #'lob-asset-management.relevant/telegram-key
+               #'lob-asset-management.relevant/telegram-personal-chat
                #'lob-asset-management.controller.telegram-bot/bot))
 
 (def cli-options
