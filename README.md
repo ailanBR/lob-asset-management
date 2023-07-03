@@ -105,6 +105,28 @@ Provide where asset need to be purchase and how much
 ## FIXME
 
 1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
+
+   - Two new Event [Movement] (:incorporation-sell / :incorporation)
+   
+   - Create new entity `global event`
+   ```Clojure
+   [{:transaction-date  "21/06/2022"
+     :unit-price        "0,00"      ;All position value
+     :quantity          0           ;All position value
+     :exchange          "INTER DISTRIBUIDORA DE TITULOS E VALORES MOBILIARIOS LTDA"
+     :product           "BIDI11 - BANCO INTER S/A"
+     :operation-total   "0,00"      ;All position value
+     :currency          "BRL"
+     :movement-type     "Incorporação venda"}
+    {:transaction-date  "21/06/2022"
+     :unit-price        "44,64"
+     :quantity          4
+     :exchange          "INTER DISTRIBUIDORA DE TITULOS E VALORES MOBILIARIOS LTDA"
+     :product           "INBR32 - INTER CO INC"
+     :operation-total   "178,57"
+     :currency          "BRL"
+     :movement-type     "Incorporação"}]
+   ```
 2. Set telegram key as environment variable
 
 ## License
