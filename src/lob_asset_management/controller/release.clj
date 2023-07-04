@@ -50,18 +50,18 @@
     :crypto "105 - Brasil"
     "105 - Brasil"))
 
-(defn get-lest-year-price
+(defn get-last-year-price
   [year historic]
-  (or ((-> year (str "-12-31") keyword) historic)
-      ((-> year (str "-12-30") keyword) historic)
-      ((-> year (str "-12-29") keyword) historic)
-      ((-> year (str "-12-28") keyword) historic)
-      0M))
+  (let [price-date (-> year (+ 1) (str "-01-01") keyword)
+        {:keys [past-price]} (first (for [x [1 2 3 4]
+                                          :let [subtracted-date (aux.t/subtract-days price-date x)
+                                                past-price (subtracted-date historic)]
+                                          :when past-price]
+                                      {:past-date  subtracted-date
+                                       :past-price past-price}))]
+    (or past-price 0M)))
 
 (defn generate-irpf-release
-  ;TODO : Adjust last-year-price to
-  ; 1. get from API if necessary
-  ; 2. get the last year price (Ex. for 2023)
   [{:keys [ticket average-price quantity]}
    assets
    {brl->usd-historic :forex-usd/historic}
@@ -69,8 +69,8 @@
   (let [{:asset/keys [tax-number type]
          asset-name :asset/name
          historic :asset.market-price/historic} (first (filter #(= (:asset/ticket %) ticket) assets))
-        last-year-price (get-lest-year-price year historic)
-        last-year-usd-price (get-lest-year-price year brl->usd-historic)
+        last-year-price (get-last-year-price year historic)
+        last-year-usd-price (get-last-year-price year brl->usd-historic)
         year-total-invested (if (= :stockEUA type)
                               (* (* quantity last-year-price) last-year-usd-price)
                               (* quantity last-year-price))]
@@ -148,7 +148,6 @@
    (let [assets (io.f-in/get-file-by-entity :asset)]
      (compare-past-day-price-assets assets days)))
   ([assets days]
-   (println days)
    (->> assets
         (remove #(contains? #{:GNDI3 :HAPV3 :BIDI11 :SULA3} (:asset/ticket %)))
         (map #(compare-past-price-asset % days))

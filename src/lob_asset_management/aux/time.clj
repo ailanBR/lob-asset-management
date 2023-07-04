@@ -30,3 +30,7 @@
       (-> c-dt
           (t/minus (t/days days))
           clj-date->date-keyword))))
+
+(defn date-time-str
+  []
+  (-> (jt/local-date-time) str))
