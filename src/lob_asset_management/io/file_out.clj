@@ -74,6 +74,12 @@
         file-path (str root-directory "income-tax/" year "/income-tax.edn")]
     (edn->file-table data file-path)))
 
+(defn metric-file
+  [data]
+  (let [root-directory (:out-data-path config)
+        file-path (str root-directory "metric/metric.edn")]
+    (edn->file data file-path)))
+
 (comment
   (def assets [{:asset/ticket :ABEV4} {:asset/ticket :SULA11}])
 

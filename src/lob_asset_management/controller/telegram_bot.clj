@@ -25,13 +25,13 @@
    (let [portfolio-table (a.t/portfolio-table-message portfolio)]
      (send-message portfolio-table mybot))))
 
-(defn send-asset-daily-price-change                         ;TODO: Consider portfolio average price
+(defn send-asset-daily-price-change
   [mybot]
   (let [result-release (c.r/compare-past-day-price-assets 1)
         result-message (a.t/asset-daily-change-message result-release)]
     (send-message result-message mybot)))
 
-(defn send-asset-price-change                               ;TODO: Consider portfolio average price
+(defn send-asset-price-change
   [mybot]
   (let [assets (io.file-in/get-file-by-entity :asset)
         day (c.r/compare-past-day-price-assets assets 1)

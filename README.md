@@ -100,6 +100,8 @@ Provide where asset need to be purchase and how much
 3. [Documentation] Document the transaction types and what happening
 4. [Http_in] Find another option for Alpha API / Web Scraping
 5. [Market] Count API calls
+   1. [x] Log API calls
+   2. [ ] Count API calls per period
 6. Consider subscription events
 
 ## FIXME

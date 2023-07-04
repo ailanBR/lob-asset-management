@@ -2,16 +2,23 @@
   (:require [clj-http.client :as http]
             [lob-asset-management.relevant :refer [alpha-key]]
             [lob-asset-management.adapter.alpha-vantage-api :as a.ava]
+            [lob-asset-management.controller.metric :as c.metric]
             [schema.core :as s]))
+
+(defn- http-get
+  [endpoint query-params]
+  (let [result (http/get endpoint query-params)]
+    (c.metric/add-api-call {:url endpoint :params query-params})
+    result))
 
 (defn get-daily-adjusted-prices
   ([symbol]
    (get-daily-adjusted-prices symbol alpha-key))
   ([symbol api-key]
-   (let [{:keys [status body]} (http/get "https://www.alphavantage.co/query"
-                                         {:query-params {:function "TIME_SERIES_DAILY_ADJUSTED"
-                                                         :symbol   symbol
-                                                         :apikey   api-key}})]
+   (let [{:keys [status body]} (http-get "https://www.alphavantage.co/query"
+                                    {:query-params {:function "TIME_SERIES_DAILY_ADJUSTED"
+                                                    :symbol   symbol
+                                                    :apikey   api-key}})]
      (if (= status 200)
        (a.ava/response->internal body)
        (throw (ex-info "Failed to get stock price information"
@@ -21,7 +28,7 @@
   ([symbol]
    (get-company-overview symbol alpha-key))
   ([symbol api-key]
-   (let [{:keys [status body]} (http/get "https://www.alphavantage.co/query"
+   (let [{:keys [status body]} (http-get "https://www.alphavantage.co/query"
                                          {:query-params {:function "OVERVIEW"
                                                          :symbol   symbol
                                                          :apikey   api-key}})]
@@ -37,7 +44,7 @@
    (get-forex-brl->usd output-size alpha-key))
   ([output-size  :- s/Keyword
     api-key  :- s/Str]
-   (let [{:keys [status body]} (http/get "https://www.alphavantage.co/query"
+   (let [{:keys [status body]} (http-get "https://www.alphavantage.co/query"
                                          {:query-params {:function "FX_DAILY"
                                                          :from_symbol "USD"
                                                          :to_symbol   "BRL"
@@ -53,7 +60,7 @@
    (get-crypto-price crypto-ticket alpha-key))
   ([crypto-ticket  :- s/Keyword
     api-key  :- s/Str]
-   (let [{:keys [status body]} (http/get "https://www.alphavantage.co/query"
+   (let [{:keys [status body]} (http-get "https://www.alphavantage.co/query"
                                          {:query-params {:function "DIGITAL_CURRENCY_DAILY"
                                                          :symbol   (name crypto-ticket)
                                                          :market   "BRL"
