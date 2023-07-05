@@ -103,6 +103,7 @@ Provide where asset need to be purchase and how much
    1. [x] Log API calls
    2. [ ] Count API calls per period
 6. Consider subscription events
+7. Get asset information
 
 ## FIXME
 

@@ -1,6 +1,5 @@
 (ns lob-asset-management.adapter.telegram
-  (:require [lob-asset-management.logic.portfolio :as l.p]
-            [lob-asset-management.models.asset :as a.m]))
+  (:require [lob-asset-management.logic.portfolio :as l.p]))
 
 (defn portfolio-table-message
   [portfolio]
@@ -157,3 +156,9 @@
    "Se eu te surpreendi, cê me subestimou - Nova Sorte, Felipe Ret"
    "Os iluminados caminham nas trevas"
    "Não quero ser um rei \nNão quero ser um zé\nSó quero minha moeda \nE a minha de fé\n - That is my way, Edi Rock "])
+
+(defn alpha-api-calls-message [{:keys [today total daily-limit]}]
+  (str "<b>\uD83C\uDF10 Total Alpha API Calls \uD83C\uDF10</b>\n"
+       "Total calls today => " today "\n"
+       "Limit of " daily-limit " daily calls\n\n"
+       "Total calls ever => " total))

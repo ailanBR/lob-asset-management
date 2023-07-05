@@ -114,6 +114,10 @@ All notable changes to this project will be documented in this file. This change
 ### 2023-06-02
 - Get crypto market price
 
+### 2023-07-05
+- Count Alpha API calls
+- Telegram message with API calls
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 
