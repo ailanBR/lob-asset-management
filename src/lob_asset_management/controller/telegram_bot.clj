@@ -3,6 +3,7 @@
             [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.adapter.telegram :as a.t]
             [lob-asset-management.controller.release :as c.r]
+            [lob-asset-management.controller.metric :as c.m]
             [lob-asset-management.io.file-in :as io.file-in]
             [lob-asset-management.relevant :refer [telegram-key telegram-personal-chat]]
             [telegrambot-lib.core :as tbot]
@@ -92,6 +93,11 @@
   [mybot]
   (send-message (nth a.t/phrases (rand-int (count a.t/phrases))) mybot))
 
+(defn send-alpha-api-calls
+  [mybot]
+  (let [calls (c.m/total-api-calls)]
+    (send-message (a.t/alpha-api-calls-message calls) mybot)))
+
 (def config {:timeout 10}) ;the bot api timeout is in seconds
 
 (defn poll-updates
@@ -135,6 +141,7 @@
       "/dividend" (send-invalid-command mybot)
       "/assets" (send-assets-message mybot)
       "/prices" (send-asset-price-change mybot)
+      "/alpha-api" (send-alpha-api-calls mybot)
       (send-invalid-command mybot))))
 
 (comment

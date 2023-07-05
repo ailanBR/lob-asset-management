@@ -31,6 +31,14 @@
           (t/minus (t/days days))
           clj-date->date-keyword))))
 
-(defn date-time-str
+(defn current-date-time
   []
-  (-> (jt/local-date-time) str))
+  (jt/local-date-time))
+
+(defn current-datetime->str
+  []
+  (str (current-date-time)))
+
+(defn current-date->keyword
+  []
+  (clj-date->date-keyword (current-date-time)))
