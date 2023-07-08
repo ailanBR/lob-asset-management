@@ -63,6 +63,16 @@
                           (apply concat))]
     (process-movement movements)))
 
+(defn update-assets
+  [assets]
+  (let [db-assets (io.f-in/get-file-by-entity :asset)
+        updated-assets (a.a/update-assets assets db-assets)]
+    (when (not= db-assets updated-assets)
+      (log/info "[PROCESS ASSETS] New assets to be registered")
+      (io.f-out/upsert updated-assets)
+      updated-assets)))
+
+
 #_(defn process-b3-folder
   []
   (when-let [folder-files (io.f-in/get-folder-files)]

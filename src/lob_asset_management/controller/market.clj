@@ -7,7 +7,9 @@
             [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.aux.util :refer [str-space->keyword-underline
                                                    remove-keyword-parenthesis]]
-            [lob-asset-management.logic.asset :as l.a]))
+            [lob-asset-management.logic.asset :as l.a]
+            [lob-asset-management.controller.process-file :as c.p]
+            ))
 
 (defn format-historic-price
   [price-historic]
@@ -47,29 +49,23 @@
 
 (defn get-stock-market-price
   [asset]
-  (if-let [market-info (io.http/get-daily-adjusted-prices asset)]
+  (if-let [market-info (-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices)]
     market-info
     (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data"))))
 
-(defn get-crypto-market-price
-  [crypto-ticket]
-  (if-let [market-info (io.http/get-crypto-price crypto-ticket)]
+(defn get-crypto-market-price                               ;TODO : verify if the asset have historic and isn't in a retry flow to determine what api call
+  [asset]
+  (if-let [market-info (-> asset a.a/in-ticket->out-crypto-id io.http/get-crypto-price-real-time)
+           ;market-info (-> asset a.a/in-ticket->out-ticket io.http/get-crypto-price)
+           ]
     market-info
     (throw (ex-info :message "[get-crypto-market-price] Something was wrong in get market data"))))
 
-(defn in-ticket->out-ticket
-  [{:asset/keys [ticket type]}]
-  (let [asset-name (name ticket)]
-    (if (or (= type :stockBR) (= type :fii))
-      (str asset-name ".SA")
-      asset-name)))
-
 (defn get-market-price
   [{:asset/keys [type] :as asset}]
-  (let [less-updated-asset-ticket (in-ticket->out-ticket asset)]
-    (if (= type :crypto)
-      (get-crypto-market-price less-updated-asset-ticket)
-      (get-stock-market-price less-updated-asset-ticket))))
+  (if (= type :crypto)
+    (get-crypto-market-price asset)
+    (get-stock-market-price asset)))
 
 (defn update-asset
   [{:asset/keys [id]
@@ -142,6 +138,8 @@
    (if-let [assets (io.f-in/get-file-by-entity :asset)]
      (update-asset-market-price assets 1)
      (log/error "[MARKET-UPDATING] update-asset-market-price - can't get assets")))
+  ([assets]
+   (update-asset-market-price assets 1))
   ([assets day-of-week]
    (if-let [{:asset/keys [ticket] :as less-updated-asset
              :asset.market-price/keys [retry-attempts]} (less-updated-asset assets day-of-week)]
@@ -150,7 +148,7 @@
            (let [market-last-price (get-market-price less-updated-asset)
                  updated-assets (update-assets assets less-updated-asset market-last-price)]
              (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
-             (io.f-out/upsert updated-assets)
+             (c.p/update-assets updated-assets)
              updated-assets))
        (catch Exception e
          (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
@@ -191,4 +189,11 @@
   (def as (io.f-in/get-file-by-entity :asset))
 
   (def ap (get-asset-market-price as))
+
+  (->> :asset
+       (io.f-in/get-file-by-entity )
+       (filter #(= :BTC (:asset/ticket %)))
+       update-asset-market-price
+       )
+
   )

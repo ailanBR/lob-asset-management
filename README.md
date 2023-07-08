@@ -99,11 +99,11 @@ Provide where asset need to be purchase and how much
    1. Function to read stored file and add one row
 3. [Documentation] Document the transaction types and what happening
 4. [Http_in] Find another option for Alpha API / Web Scraping
-5. [Market] Count API calls
-   1. [x] Log API calls
-   2. [ ] Count API calls per period
+   1. [X] Coingecko for crypto 
 6. Consider subscription events
 7. Get asset information
+8. Get crypto price in a different windows with real time api coingecko
+9. Auto clean of backup files
 
 ## FIXME
 

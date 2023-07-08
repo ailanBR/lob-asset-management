@@ -4,7 +4,6 @@
             [lob-asset-management.aux.util :refer [remove-keyword-parenthesis
                                                    str-space->keyword-underline]]))
 
-
 (defn market-info->last-refreshed-dt
   [meta-data]
   (when-let [latest-refreshed-dt (or (:3._Last_Refreshed meta-data)
@@ -23,7 +22,44 @@
                                                  (:4a._close_BRL val->keyword))))) {})
        (into (sorted-map))))
 
-(defn formatted-data
+
+(defmulti formatted-data
+          (fn [{:keys [Meta_Data]}]
+            (if Meta_Data
+              :alpha-api
+              :real-time-crypto)))
+
+(defmethod formatted-data :alpha-api
+  [{:keys [Meta_Data Time_Series_Daily Time_Series_FX_Daily
+           Time_Series_Digital_Currency_Daily]}]
+  (let [meta-data (str-space->keyword-underline Meta_Data)
+        time-series (str-space->keyword-underline (or Time_Series_Daily
+                                                      Time_Series_Digital_Currency_Daily
+                                                      Time_Series_FX_Daily))]
+    (when-let [latest-refreshed-dt (market-info->last-refreshed-dt meta-data)]
+      (let [latest-refreshed-price (-> time-series
+                                       latest-refreshed-dt
+                                       str-space->keyword-underline
+                                       remove-keyword-parenthesis)
+            closed-price (bigdec (or (:4._close latest-refreshed-price)
+                                     (:4a._close_BRL latest-refreshed-price)))
+            price-historic (format-historic-price time-series)]
+        {:price      closed-price
+         :date       latest-refreshed-dt
+         :updated-at (aux.t/get-current-millis)
+         :historic   price-historic}))))
+
+(defmethod formatted-data :real-time-crypto
+  [data]
+  (let [price (-> data first second vals first bigdec)
+        today-date (aux.t/current-date->keyword)
+        historic {today-date price}]
+    {:price      price
+     :date       today-date
+     :updated-at (aux.t/get-current-millis)
+     :historic   historic}))
+
+#_(defn formatted-data
   [{:keys [Meta_Data Time_Series_Daily Time_Series_FX_Daily
            Time_Series_Digital_Currency_Daily]}]
   (let [meta-data (str-space->keyword-underline Meta_Data)
