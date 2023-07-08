@@ -7,6 +7,29 @@
             [lob-asset-management.aux.util :refer [assoc-if]])
   (:import (java.util UUID)))
 
+(defn in-ticket->out-ticket
+  [{:asset/keys [ticket type]}]
+  (let [asset-name (name ticket)]
+    (if (or (= type :stockBR) (= type :fii))
+      (str asset-name ".SA")
+      asset-name)))
+
+(defn in-ticket->out-crypto-id
+  [{:asset/keys [ticket type]}]
+  (when (= type :crypto)
+    (condp = ticket
+      :BTC :bitcoin
+      :ETH :ethereum
+      :ALGO :algorand
+      :BNB :binancecoin
+      :CAKE :pancakeswap-token
+      :LUNA :terra-luna-2
+      :FANTOM :fantom
+      :BUSD :binance-usd
+      :MATIC :matic-network
+      :STX :blockstack
+      :USDT :tether)))
+
 (defn allowed-ticket-get-market-info?
   [ticket]
   (let [{:keys [alpha-vantage-allowed?]} (get asset-more-info ticket)]
@@ -88,8 +111,16 @@
                                   (contains? #{:fii :stockBR} asset-type)) (format-br-tax tax-number))}))
 
 (defn remove-already-exist-asset
-  [db-data assets]
-  (remove #(l.a/already-exist-asset? (:asset/ticket %) db-data) assets))
+  [assets-keep asset-filtered]
+  (remove #(l.a/already-exist-asset? (:asset/ticket %) assets-keep) asset-filtered))
+
+(defn update-assets
+  [assets db-assets]
+  (->> []
+       (or db-assets)
+       (remove-already-exist-asset assets)
+       (concat (or assets []))
+       (sort-by :asset/name)))
 
 (defn movements->assets
   ([mov]
@@ -108,6 +139,7 @@
                "read assets [" (count mov-assets) "] "
                "result [" (count new-assets) "]")
      new-assets)))
+
 
 (defn remove-disabled-ticket
   [assets]

@@ -118,6 +118,9 @@ All notable changes to this project will be documented in this file. This change
 - Count Alpha API calls
 - Telegram message with API calls
 
+### 2023-07-07
+- Add Coingecko API for real time crypto prices
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 

@@ -20,6 +20,8 @@
                #'lob-asset-management.relevant/telegram-personal-chat
                #'lob-asset-management.controller.telegram-bot/bot))
 
+(start)                                                     ;for develop purpose
+
 (def cli-options
   [["-y" "--year Year" "Year of the release"
     :default 2022

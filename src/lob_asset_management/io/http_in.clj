@@ -70,6 +70,19 @@
        (throw (ex-info "Failed to get crypto price"
                        {:status (:status status)}))))))
 
+(s/defn get-crypto-price-real-time
+  "Coingecko API
+
+  Limit of 10-30 calls/minute"
+  [crypto-ticket]
+  (let [crypto-id (name crypto-ticket)
+        {:keys [status body]} (http-get (format "https://api.coingecko.com/api/v3/simple/price?ids=%s&vs_currencies=BRL" crypto-id)
+                                        {:query-params {:ids crypto-id :vs_currencies "BRL"}})]
+    (if (= status 200)
+      (a.ava/response->internal body)
+      (throw (ex-info "Failed to get real time crypto price"
+                      {:status (:status status)})))))
+
 (comment
   (get-daily-adjusted-prices "CAN")
   (def abev-result (get-daily-adjusted-prices "CAN"))
@@ -78,5 +91,9 @@
   (get abev-result ":Meta Data")
 
   (def usd (get-forex-brl->usd))
+
+
+  (get-crypto-price-real-time :bitcoin)
+
 
   )
