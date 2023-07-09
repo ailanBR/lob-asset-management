@@ -53,11 +53,11 @@
     market-info
     (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data"))))
 
-(defn get-crypto-market-price                               ;TODO : verify if the asset have historic and isn't in a retry flow to determine what api call
-  [asset]
-  (if-let [market-info (-> asset a.a/in-ticket->out-crypto-id io.http/get-crypto-price-real-time)
-           ;market-info (-> asset a.a/in-ticket->out-ticket io.http/get-crypto-price)
-           ]
+(defn get-crypto-market-price
+  [{:asset.market-price/keys [historic] :as asset}]
+  (if-let [market-info (if historic
+                         (-> asset a.a/in-ticket->out-crypto-id io.http/get-crypto-price-real-time)
+                         (-> asset a.a/in-ticket->out-ticket io.http/get-crypto-price))]
     market-info
     (throw (ex-info :message "[get-crypto-market-price] Something was wrong in get market data"))))
 
@@ -156,7 +156,7 @@
                (do
                  (log/info (str "Already retry [" (or retry-attempts 0) "], new attempt after 5sec"))
                  (let [updated-assets (update-assets-retry-attempt assets less-updated-asset)]
-                   (io.f-out/upsert updated-assets)
+                   (c.p/update-assets updated-assets)
                    (Thread/sleep 5000)
                    (update-asset-market-price updated-assets day-of-week)))
                (log/info (str "Retry limit archived"))))))
@@ -192,7 +192,7 @@
 
   (->> :asset
        (io.f-in/get-file-by-entity )
-       (filter #(= :BTC (:asset/ticket %)))
+       (filter #(= :STX (:asset/ticket %)))
        update-asset-market-price
        )
 

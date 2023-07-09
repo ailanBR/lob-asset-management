@@ -1,7 +1,7 @@
 (ns lob-asset-management.models.asset
   (:require [schema.core :as s]))
 
-(def crypto-list #{:BTC :ETH :CAKE :BNB :ALGO :LUNA :FANTOM :BUSD :MATIC :USDT})
+(def crypto-list #{:BTC :ETH :CAKE :BNB :ALGO :LUNA :FANTOM :BUSD :MATIC :USDT :STX})
 (def fii-list #{:ALZR11 :HGBS11 :KNRI11 :RECR11})
 (def etf-list #{:DEFI11})
 (def bdr-list #{:NUBR33 :INBR31})

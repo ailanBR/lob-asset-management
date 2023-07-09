@@ -76,7 +76,7 @@
   Limit of 10-30 calls/minute"
   [crypto-ticket]
   (let [crypto-id (name crypto-ticket)
-        {:keys [status body]} (http-get (format "https://api.coingecko.com/api/v3/simple/price?ids=%s&vs_currencies=BRL" crypto-id)
+        {:keys [status body]} (http-get "https://api.coingecko.com/api/v3/simple/price"
                                         {:query-params {:ids crypto-id :vs_currencies "BRL"}})]
     (if (= status 200)
       (a.ava/response->internal body)
@@ -93,7 +93,7 @@
   (def usd (get-forex-brl->usd))
 
 
-  (get-crypto-price-real-time :bitcoin)
+  (get-crypto-price-real-time :blockstack)
 
 
   )
