@@ -210,9 +210,9 @@
   ;to the change in the portfolio/consolidation process
   ;
   (def oi-p (->> (io.f-in/get-file-by-entity :portfolio)
-                 ;(filter #(or (= :crypto (:portfolio/category %))
-                 ;             ;(= :finance (:portfolio/category %))
-                 ;             ))
+                 (filter #(or (= :crypto (:portfolio/category %))
+                              ;(= :finance (:portfolio/category %))
+                              ))
                  ))
   (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/total-last-value] oi-p)
   ;373.0 -> 37.3M
