@@ -100,9 +100,9 @@ Provide where asset need to be purchase and how much
 3. [Documentation] Document the transaction types and what happening
 4. [Http_in] Find another option for Alpha API / Web Scraping
    1. [X] Coingecko for crypto 
+   2. [ ] Web Scraping for Stock information
 6. Consider subscription events
 7. Get asset information
-8. Get crypto price in a different windows with real time api coingecko
 9. Auto clean of backup files
 
 ## FIXME
@@ -112,6 +112,13 @@ Provide where asset need to be purchase and how much
    - Two new Event [Movement] (:incorporation-sell / :incorporation)
    
    - Create new entity `global event`
+     - Create a factor of conversion => Move the quantity and price to the new position
+       - HOW? 
+         - **New asset quantity => Depends on the factor** => BIDI11 -> INBR32 = 2 -> 1 => "/2 "
+         - **The new asset operation-total** = from cost => BIDI11 operation-total = INBR32 operation-total
+         - **The new asset unit-price** = operation-total / quantity
+         - From-To => New Field [:incorporated-by] ? What field [:movement-type "Incorporação INBR32"]
+       - 
    ```Clojure
    [{:transaction-date  "21/06/2022"
      :unit-price        "0,00"      ;All position value

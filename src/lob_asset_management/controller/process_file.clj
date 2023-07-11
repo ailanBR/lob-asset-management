@@ -72,6 +72,14 @@
       (io.f-out/upsert updated-assets)
       updated-assets)))
 
+(defn update-portfolio-representation
+  [portfolio forex-usd]
+  (let [assets (io.f-in/get-file-by-entity :asset)
+        updated-portfolio (a.p/update-portfolio portfolio assets forex-usd)]
+    (when (not= updated-portfolio portfolio)
+      (log/info "[PROCESS PORTFOLIO] New portfolio info to be registered")
+      (io.f-out/upsert updated-portfolio)
+      updated-portfolio)))
 
 #_(defn process-b3-folder
   []
