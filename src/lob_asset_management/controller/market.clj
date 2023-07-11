@@ -148,8 +148,7 @@
            (let [market-last-price (get-market-price less-updated-asset)
                  updated-assets (update-assets assets less-updated-asset market-last-price)]
              (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
-             (c.p/update-assets updated-assets)
-             updated-assets))
+             (c.p/update-assets updated-assets)))
        (catch Exception e
          (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
              (if (< (or retry-attempts 0) 3)
@@ -161,6 +160,16 @@
                    (update-asset-market-price updated-assets day-of-week)))
                (log/info (str "Retry limit archived"))))))
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
+
+(defn update-crypto-market-price
+  ([]
+   (if-let [assets (io.f-in/get-file-by-entity :asset)]
+     (update-crypto-market-price assets)
+     (log/error "[MARKET-UPDATING] update-asset-market-price - can't get assets")))
+  ([assets]
+   (->> assets
+        (filter #(= :crypto (:asset/type %)))
+        update-asset-market-price)))
 
 #_(defn get-asset-market-price
   "Receive a list of assets and return the list updated without read or write data"

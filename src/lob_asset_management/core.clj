@@ -98,9 +98,9 @@
     (c.m/reset-retry-attempts assets)
     (if (contains? stock-window current-hour)
       (when (c.m/update-asset-market-price assets day-of-week)
-        (-> (a.p/update-portfolio portfolio assets forex-usd)
-            (io.f-out/upsert)))
-      (log/info "[Stock window hour [" current-hour "] Out of the configured " stock-window))))
+        (c.p/update-portfolio-representation portfolio forex-usd))
+      (when (c.m/update-crypto-market-price assets)
+        (c.p/update-portfolio-representation portfolio forex-usd)))))
 
 (defn start-processing
   [stock-window interval]
