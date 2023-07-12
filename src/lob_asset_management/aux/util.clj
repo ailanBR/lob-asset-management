@@ -33,3 +33,7 @@
   (-> m
       remove-close-parenthesis
       remove-open-parenthesis))
+
+(defn abs
+  [num]
+  (max num (- num)))

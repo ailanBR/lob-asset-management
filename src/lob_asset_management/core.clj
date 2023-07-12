@@ -136,7 +136,7 @@
       (case action
         "start" (let [interval 13000
                       stop-loop (poller "Main"
-                                        #(start-processing #{19 20 21 22} interval)
+                                        #(start-processing #{19 20 21 22 23 0 1} interval)
                                         13000
                                         #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
                   (println "Press enter to stop...")
@@ -162,10 +162,10 @@
          ))
 
   (clojure.pprint/print-table
-    [:transaction/created-at :transaction/operation-type :transaction/quantity ]
+    [:transaction/created-at :transaction/operation-type :transaction/quantity]
     (->> (io.f-in/get-file-by-entity :transaction)
          ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
-         (filter #(or (= :B3SA3 (:transaction.asset/ticket %))))
+         (filter #(or (= :S3TE11 (:transaction.asset/ticket %))))
          ;(remove #(contains?
          ;           #{:buy :sell :JCP :income :dividend :waste :grupamento}
          ;           (:transaction/operation-type %)))
@@ -177,6 +177,7 @@
          ))
   ;=========================================
   (def in (lob-asset-management.relevant/incorporation-movements))
+
   (c.p/process-movement in)
 
 

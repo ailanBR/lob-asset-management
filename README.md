@@ -60,6 +60,7 @@ Financial movements, convert all movements from XLSX documents to EDN
 :JCP
 :income ;Dividend from Reit assets
 :bonificaçãoemativos ;Bonus in asset, increase the asset quantity
+:incorporation ;Come from incorporation_movement file in source folder
 ;;;;IGNORED
 :fraçãoemativos ;IGNORED [No considerable values]
 :compra ;IGNORED [Government Bound]
@@ -77,6 +78,24 @@ Financial movements, convert all movements from XLSX documents to EDN
 :incorporação ;IGNORED
 :atualização  ;IGNORED
 ```
+
+##### Incorporation event
+
+Incorporation events needs to be registered in the file `resources/incorporation_movement` fallowing this format :
+
+```Clojure
+[{:transaction-date "21/06/2022" ;Date of the incorporation
+  :unit-price       "0,00"       ;Will be all position value when processed
+  :quantity         0            ;Will be all position value when processed
+  :exchange         "INTER DISTRIBUIDORA DE TITULOS E VALORES MOBILIARIOS LTDA"
+  :product          "BIDI11 - BANCO INTER S/A" ;The acquired company ticket
+  :operation-total  "0,00"       ;Will be all position value when processed
+  :currency         "BRL"        ;BRL or USD
+  :movement-type    "Incorporation" ;Turn in transaction/operation-type 
+  :incorporated-by  "INBR32"     ;The new asset owner
+  :factor           "/2"         ;operator can be "*" or "/" and fallowing by the denominator 
+  }]
+``` 
 
 #### Portfolio
 
@@ -129,7 +148,10 @@ Provide where asset need to be purchase and how much
       1. Solution works for read/write entities in terminal
       2. ~~The problem is only **maybe** in the in-data files~~
 2. Add a way to manual insert information (Front-end proj?)
-   1. Function to read stored file and add one row
+   1. [ ] Function to read stored file and add one row 
+      1. [X] Asset   //update-assets
+      2. [ ] Transaction
+      3. [X] Portfolio //update-portfolio-representation
 4. [Http_in] Find another option for Alpha API / Web Scraping
    1. [X] Coingecko for crypto 
    2. [ ] Web Scraping for Stock information
@@ -139,37 +161,7 @@ Provide where asset need to be purchase and how much
 
 ## FIXME
 
-1. Consider incorporation's in the portfolio process (BIDI11 / HAPV3 / LINX3)
-
-   - Two new Event [Movement] (:incorporation-sell / :incorporation)
-   
-   - Create new entity `global event`
-     - Create a factor of conversion => Move the quantity and price to the new position
-       - HOW? 
-         - **New asset quantity => Depends on the factor** => BIDI11 -> INBR32 = 2 -> 1 => "/2 "
-         - **The new asset operation-total** = from cost => BIDI11 operation-total = INBR32 operation-total
-         - **The new asset unit-price** = operation-total / quantity
-         - From-To => New Field [:incorporated-by] ? What field [:movement-type "Incorporação INBR32"]
-       - 
-   ```Clojure
-   [{:transaction-date  "21/06/2022"
-     :unit-price        "0,00"      ;All position value
-     :quantity          0           ;All position value
-     :exchange          "INTER DISTRIBUIDORA DE TITULOS E VALORES MOBILIARIOS LTDA"
-     :product           "BIDI11 - BANCO INTER S/A"
-     :operation-total   "0,00"      ;All position value
-     :currency          "BRL"
-     :movement-type     "Incorporação venda"}
-    {:transaction-date  "21/06/2022"
-     :unit-price        "44,64"
-     :quantity          4
-     :exchange          "INTER DISTRIBUIDORA DE TITULOS E VALORES MOBILIARIOS LTDA"
-     :product           "INBR32 - INTER CO INC"
-     :operation-total   "178,57"
-     :currency          "BRL"
-     :movement-type     "Incorporação"}]
-   ```
-2. Set telegram key as environment variable
+1. Set telegram key as environment variable
 
 ## License
 

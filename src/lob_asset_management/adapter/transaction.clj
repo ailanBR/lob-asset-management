@@ -86,9 +86,10 @@
 (defn movement-factor->transaction-factor
   "Ex : '/2'"
   [factor]
-  (let [factor' (clojure.string/split factor #"")]
-    {:operator    (first factor')
-     :denominator (-> factor' second safe-number->bigdec)}))
+  (when factor
+    (let [factor' (clojure.string/split factor #"")]
+      {:operator    (first factor')
+       :denominator (-> factor' second safe-number->bigdec)})))
 
 (s/defn movements->transaction :- m.t/Transaction
   [{:keys [transaction-date unit-price quantity exchange product operation-total currency

@@ -79,22 +79,23 @@
          (get-part-string digits 8 12) "-"
          (get-part-string digits 12 14))))
 
-(s/defn movement-ticket->asset-ticket  :- s/Keyword
-  [xlsx-ticket :- s/Str]
-  (let [xlsx-ticket-split-first (-> xlsx-ticket
-                                    (clojure.string/split #"-")
-                                    first
-                                    clojure.string/trimr)
-        cdb-ticket? (= "CDB" xlsx-ticket-split-first)
-        xlsx-ticket' (if cdb-ticket? xlsx-ticket xlsx-ticket-split-first)]
-    (-> xlsx-ticket'
-        (clojure.string/replace #" " "-")
-        (clojure.string/replace #"S/A" "SA")
-        (clojure.string/replace #"---" "-")
-        (clojure.string/replace #"--" "-")
-        clojure.string/lower-case
-        clojure.string/upper-case
-        keyword)))
+(defn movement-ticket->asset-ticket
+  [xlsx-ticket ]
+  (when xlsx-ticket
+    (let [xlsx-ticket-split-first (-> xlsx-ticket
+                                      (clojure.string/split #"-")
+                                      first
+                                      clojure.string/trimr)
+          cdb-ticket? (= "CDB" xlsx-ticket-split-first)
+          xlsx-ticket' (if cdb-ticket? xlsx-ticket xlsx-ticket-split-first)]
+      (-> xlsx-ticket'
+          (clojure.string/replace #" " "-")
+          (clojure.string/replace #"S/A" "SA")
+          (clojure.string/replace #"---" "-")
+          (clojure.string/replace #"--" "-")
+          clojure.string/lower-case
+          clojure.string/upper-case
+          keyword))))
 
 (s/defn movements->asset :- m.a/Asset
   [{:keys [product]}]
@@ -204,5 +205,5 @@
 
   (get-less-market-price-updated assets-file {:min-updated-hours 1
                                               :quantity 1
-                                              :day-of-week 7})
+                                              :day-of-week 1})
   )
