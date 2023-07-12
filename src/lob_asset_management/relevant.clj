@@ -19,6 +19,10 @@
 
 (def asset-more-info (file->edn "./resources/asset_fixed_info.edn"))
 
+(defn incorporation-movements
+  []
+  (file->edn "./resources/incorporation_movement.edn"))
+
 (defstate config :start (file->edn "./resources/config.edn"))
 (defstate alpha-key :start (:alpha-vantage-key (get-secrets)))
 (defstate telegram-key :start (:telegram-bot-key (get-secrets)))

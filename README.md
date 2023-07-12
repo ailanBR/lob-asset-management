@@ -45,6 +45,39 @@ Financial movements, convert all movements from XLSX documents to EDN
 :transaction/created-at
 ```
 
+##### Operation Types
+```Clojure
+:sell ;=> (and (= type"Debito")
+      ;        (or (= movement-type "Transferência - Liquidação")
+      ;            (= movement-type "COMPRA / VENDA")))
+:buy  ;=> (and (= type "Credito")
+      ;        (or (= movement-type "Transferência - Liquidação")
+      ;            (= movement-type "COMPRA / VENDA")))
+:desdobro ; Multiply the asset quantity
+:grupamento ; Group the asset quantity
+:waste ;Fraction of the asset was sold
+:dividend
+:JCP
+:income ;Dividend from Reit assets
+:bonificaçãoemativos ;Bonus in asset, increase the asset quantity
+;;;;IGNORED
+:fraçãoemativos ;IGNORED [No considerable values]
+:compra ;IGNORED [Government Bound]
+:transferência  ;IGNORED
+:solicitaçãodesubscrição ;IGNORED
+:cessãodedireitos-solicitada  ;IGNORED
+:direitodesubscrição  ;IGNORED
+:cessãodedireitos ;IGNORED
+:direitosdesubscrição-excercído ;IGNORED
+:direitosdesubscrição-nãoexercido ;IGNORED
+:recibodesubscrição ;IGNORED
+:compraporliquides  ;IGNORED
+:vencimento ;IGNORED
+:resgate  ;IGNORED
+:incorporação ;IGNORED
+:atualização  ;IGNORED
+```
+
 #### Portfolio
 
 The consolidation of transactions grouped by `:transaction.asset/ticket`
@@ -97,7 +130,6 @@ Provide where asset need to be purchase and how much
       2. ~~The problem is only **maybe** in the in-data files~~
 2. Add a way to manual insert information (Front-end proj?)
    1. Function to read stored file and add one row
-3. [Documentation] Document the transaction types and what happening
 4. [Http_in] Find another option for Alpha API / Web Scraping
    1. [X] Coingecko for crypto 
    2. [ ] Web Scraping for Stock information

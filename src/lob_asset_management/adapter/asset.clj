@@ -171,7 +171,8 @@
   (assoc-if {:quantity          1
              :min-updated-hours 1
              :type              #{:stockBR :fii :stockEUA :crypto}
-             :day-of-week       1} args))
+             :day-of-week       1}
+            args))
 
 (defn get-less-market-price-updated
   "Return the less updated asset
