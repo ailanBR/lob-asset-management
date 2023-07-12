@@ -6,7 +6,7 @@
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.models.file :as m.f]
-            [lob-asset-management.relevant :refer [config]]))
+            [lob-asset-management.relevant :refer [config incorporation-movements]]))
 
 (defn process-assets
   [movements]
@@ -41,13 +41,17 @@
 
 (defn process-movement
   [movements]
-  (let [assets (process-assets movements)
-        transactions (process-transactions movements)
+  (let [incorporation (incorporation-movements)
+        movements' (concat (or incorporation) movements)
+        assets (process-assets movements')
+        transactions (process-transactions movements')
         portfolio (process-portfolio transactions)]
+    ;movements'
     (log/info (str "Updates\n"
                    (count assets) " - Assets\n"
                    (count transactions) " - Transactions\n"
-                   (count portfolio) " - Portfolio\n"))))
+                   (count portfolio) " - Portfolio\n"))
+    ))
 
 (defn process-folder
   [{:keys [release-folder] :as config-folder}]
