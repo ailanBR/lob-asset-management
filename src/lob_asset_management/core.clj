@@ -160,27 +160,7 @@
                       (contains? (:portfolio/exchanges %) :inter)))
          (sort-by :portfolio/ticket)
          ))
-  ;;Market data poller
 
-  ;INTERVAL CONFIG POLLING ALPHA VANTAGE
-  ;LIMIT : 5 API requests per minute and 500 requests per day
-  ;15000 => 15sec => 4 Request per minute
-  ; 13 Min to do 50 requests
-  ;18000 => 18sec => 3 Request per minute
-  ; 15 Min to do 50 requests
-  ;20000 => 20sec => 3 Request per minute
-  ; 17 Min to do 50 requests
-  ;- Create an internal
-  ;  Only request in business hours and market is open
-  ;  seg ~ sex / 10:00	16:55
-  ; Per hours => 8 Group Requests (50) => 400 Requests
-  ; #(10 12 14 16 18) => 5 Group Requests (50) => 250 Requests
-  ; #(10 11 12 13 14 15 16 17 18) => 9 Group Requests (50) => 450 Requests
-  ;
-  ;V1 Choice /Only BR data
-  ; INTERVAL => 15seg
-  ; WHEN => #(10 11 12 13 14 15 16 17 18)
-  ;:transaction/quantity :transaction/average-price :transaction/quantity :transaction/average-price
   (clojure.pprint/print-table
     [:transaction/created-at :transaction/operation-type :transaction/quantity ]
     (->> (io.f-in/get-file-by-entity :transaction)
@@ -196,26 +176,8 @@
          ;(sort-by :transaction.asset/ticket)
          ))
   ;=========================================
-  (def oi (->> (io.f-in/get-file-by-entity :transaction)
-               (filter #(or (= :KNRI11 (:transaction.asset/ticket %))))
-               ;(filter #(or (= :B3SA33 (:transaction.asset/ticket %))))
-               (filter #(= :buy (:transaction/operation-type %)))
-               ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
-               ;(sort-by :transaction/exchange)
-               (sort-by :transaction/created-at)
-               ;(sort-by :transaction.asset/ticket)
-               ))
-  (clojure.pprint/print-table [:transaction/created-at :transaction/quantity :transaction/id] oi)
-  ;:transaction/quantity is the new quantity!
-  ;to the change in the portfolio/consolidation process
-  ;
-  (def oi-p (->> (io.f-in/get-file-by-entity :portfolio)
-                 (filter #(or (= :crypto (:portfolio/category %))
-                              ;(= :finance (:portfolio/category %))
-                              ))
-                 ))
-  (clojure.pprint/print-table [:portfolio/ticket :portfolio/quantity :portfolio/total-last-value] oi-p)
-  ;373.0 -> 37.3M
-  ;if (= :grupamento (:transaction/operation-type %))
-  ;Get the factor (/ 373.0 37.3M) => 10.0
+  (def in (lob-asset-management.relevant/incorporation-movements))
+  (c.p/process-movement in)
+
+
 )

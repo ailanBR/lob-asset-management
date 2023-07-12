@@ -7,6 +7,34 @@
                               :binance
                               :other))
 
+(def operation-types #{:buy
+                       :transferência
+                       :dividend
+                       :JCP
+                       :income
+                       :solicitaçãodesubscrição
+                       :cessãodedireitos-solicitada
+                       :direitodesubscrição
+                       :cessãodedireitos
+                       :direitosdesubscrição-excercído
+                       :direitosdesubscrição-nãoexercido
+                       :recibodesubscrição
+                       :desdobro
+                       :sell
+                       :bonificaçãoemativo
+                       :compraporliquides
+                       :vencimento
+                       :bonificaçãoemativos
+                       :fraçãoemativos
+                       :resgate
+                       :incorporação
+                       :waste
+                       :atualização
+                       :grupamento
+                       :compra})
+
+(s/defschema OperationType (apply s/enum operation-types))
+
 (s/defschema Transaction
   {:transaction/id                s/Str
    :transaction/created-at        s/Str

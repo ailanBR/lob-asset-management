@@ -5,6 +5,7 @@
             [lob-asset-management.models.transaction :as m.t]
             [lob-asset-management.adapter.asset :as a.a]
             [java-time.api :as t]
+            [lob-asset-management.aux.util :as aux.u]
             [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.logic.transaction :as l.t]))
 
@@ -82,8 +83,16 @@
       (* usd-price price)
       (log/error (str "[TRANSACTION] Don't find USD price for date " price-date)))))
 
+(defn movement-factor->transaction-factor
+  "Ex : '/2'"
+  [factor]
+  (let [factor' (clojure.string/split factor #"")]
+    {:transaction.factor/operator    (first factor')
+     :transaction.factor/denominator (second factor')}))
+
 (s/defn movements->transaction :- m.t/Transaction
-  [{:keys [transaction-date unit-price quantity exchange product operation-total currency] :as movement}
+  [{:keys [transaction-date unit-price quantity exchange product operation-total currency
+           incorporated-by factor] :as movement}
    {brl->usd-historic :forex-usd/historic}]
   (let [operation-type (movement-type->transaction-type movement)
         ticket (a.a/movement-ticket->asset-ticket product)
@@ -97,16 +106,19 @@
                            (brl-price operation-total-bigdec transaction-date brl->usd-historic)
                            operation-total-bigdec)]
     ;(println "[TRANSACTION] Row => " movement)
-    {:transaction/id              (gen-transaction-id movement)
-     :transaction/created-at      (mov-date->transaction-created-at (str transaction-date))
-     :transaction.asset/ticket    ticket
-     :transaction/average-price   (safe-number->bigdec unit-price')
-     :transaction/quantity        (safe-number->bigdec quantity)
-     :transaction/exchange        (movement-exchange->transaction-exchange exchange)
-     :transaction/operation-type  operation-type
-     :transaction/processed-at    (-> (t/local-date-time) str)
-     :transaction/operation-total (safe-number->bigdec operation-total')
-     :transaction/currency        currency'}))
+    (aux.u/assoc-if
+      {:transaction/id              (gen-transaction-id movement)
+       :transaction/created-at      (mov-date->transaction-created-at (str transaction-date))
+       :transaction.asset/ticket    ticket
+       :transaction/average-price   (safe-number->bigdec unit-price')
+       :transaction/quantity        (safe-number->bigdec quantity)
+       :transaction/exchange        (movement-exchange->transaction-exchange exchange)
+       :transaction/operation-type  operation-type
+       :transaction/processed-at    (-> (t/local-date-time) str)
+       :transaction/operation-total (safe-number->bigdec operation-total')
+       :transaction/currency        currency'}
+      :transaction/incorporated-by (a.a/movement-ticket->asset-ticket incorporated-by)
+      :transaction/factor          (movement-factor->transaction-factor factor))))
 
 (defn remove-already-exist-transaction
   [db-data transactions]
