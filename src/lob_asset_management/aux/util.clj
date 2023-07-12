@@ -16,12 +16,6 @@
          updated-map))
      (throw (ex-info :invalid-args "this function needs a pair key value")))))
 
-(defn aa
-  [map & args]
-  (println args)
-  (-> args (into (sorted-map)) println)
-  args)
-
 (defn str-space->keyword-underline [m]
   (zipmap (map #(keyword (clojure.string/replace (name %) " " "_")) (keys m))
           (vals m)))
