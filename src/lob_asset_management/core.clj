@@ -3,7 +3,8 @@
             [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.controller.forex :as c.f]
             [lob-asset-management.controller.market :as c.m]
-            [lob-asset-management.controller.process-file :as c.p]
+            [lob-asset-management.controller.process-file :as c.p-f]
+            [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.controller.release :as c.r]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
@@ -143,18 +144,18 @@
                   (read-line)
                   (future-cancel (stop-loop))
                   @(stop-loop))
-        "read"    (c.p/process-folders)
+        "read"    (c.p-f/process-folders)
         "release" (c.r/irpf-release (:year options))
         "telegram" (t.bot/send-portfolio-table (t.bot/mybot))))))
 
 (comment
   (schema.core/set-fn-validation! true)
 
-  (c.p/delete-all-files)
-  (c.p/process-folders)
+  (c.p-f/delete-all-files)
+  (c.p-f/process-folders)
 
   (clojure.pprint/print-table
-    [:portfolio/ticket :portfolio/quantity]
+    [:portfolio/ticket :portfolio/quantity :portfolio/average-price :portfolio/total-cost]
     (->> (io.f-in/get-file-by-entity :portfolio)
          (filter #(or (contains? (:portfolio/exchanges %) :nu)
                       (contains? (:portfolio/exchanges %) :inter)))
@@ -178,7 +179,7 @@
   ;=========================================
   (def in (lob-asset-management.relevant/incorporation-movements))
 
-  (c.p/process-movement in)
+  (c.p-f/process-movement in)
 
 
 )
