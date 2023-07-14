@@ -2,6 +2,7 @@
   (:require [clojure.tools.logging :as log]
             [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.adapter.telegram :as a.t]
+            [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.controller.release :as c.r]
             [lob-asset-management.controller.metric :as c.m]
             [lob-asset-management.io.file-in :as io.file-in]
@@ -59,7 +60,7 @@
 (defn send-category-portfolio
   [mybot]
   (let [portfolio (io.file-in/get-file-by-entity :portfolio)
-        portfolio-category (a.p/get-category-representation portfolio)]
+        portfolio-category (c.p/get-category-representation portfolio)]
     (send-message (a.t/category-portfolio-message portfolio-category) mybot)))
 
 (defn send-total-overview

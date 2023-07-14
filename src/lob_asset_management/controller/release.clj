@@ -1,5 +1,6 @@
 (ns lob-asset-management.controller.release
   (:require [lob-asset-management.adapter.portfolio :as a.p]
+            [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.aux.time :as aux.t]))
@@ -99,7 +100,9 @@
         forex-usd (io.f-in/get-file-by-entity :forex-usd)
         assets (io.f-in/get-file-by-entity :asset)
         portfolio-release (-> filtered-transactions
-                              (a.p/transactions->portfolio assets forex-usd)
+                              (c.p/process-transaction {:assets assets
+                                                        :forex-usd forex-usd
+                                                        :db-update false})
                               (a.p/portfolio-list->irpf-release))
         assets (io.f-in/get-file-by-entity :asset)
         forex-usd (io.f-in/get-file-by-entity :forex-usd)

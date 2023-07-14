@@ -124,6 +124,11 @@ All notable changes to this project will be documented in this file. This change
 ### 2023-07-12
 - Process global incorporation event
 
+### 2023-07-13
+- Refactor portfolio process
+  + Portfolio Controller
+  + Portfolio Database
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 
