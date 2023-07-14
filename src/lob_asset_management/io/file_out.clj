@@ -2,23 +2,29 @@
   (:require [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [java-time.api :as t]
-            [lob-asset-management.aux.file :refer [edn->file edn->file-table] :as aux.f]
+            [lob-asset-management.aux.file :refer [edn->file edn->file-table file-delete] :as aux.f]
             [schema.core :as s]
             [lob-asset-management.models.file :as m.f]
             [lob-asset-management.relevant :refer [config]])
   (:import (clojure.lang PersistentArrayMap PersistentVector ArraySeq LazySeq)))
 
-(s/defn file-full-path [file-keyword :- m.f/file-name]
+(s/defn file-full-path
+  [file-keyword :- m.f/file-name]
   (let [file-name (name file-keyword)
         root-directory (:out-data-path config)]
     (str root-directory file-name "/" file-name ".edn")))
 
-(defn create-backup [file-keyword]
+(defn backup-folder
+  [file-name]
+  (str (:out-data-path config) file-name "/bkp/"))
+
+(defn create-backup
+  [file-keyword]
   (let [file-name (name file-keyword)
         source-path (file-full-path file-keyword)
         source-file (io/file source-path)
-        root-directory (:out-data-path config)
-        target-path (str root-directory file-name "/bkp/" file-name  "_" (t/local-date-time)  ".edn")
+        root-directory' (:out-data-path config)
+        target-path (str root-directory' file-name "/bkp/" file-name  "_" (t/local-date-time)  ".edn")
         target-file (io/file target-path)]
     (when (aux.f/file-exists? source-file)
       (with-open [in (clojure.java.io/input-stream source-file)
@@ -43,17 +49,20 @@
       :else
       (throw (AssertionError. (str "Wrong input in defmulti. Received [" (type data) "] Necessary [clojure.lang.PersistentVector]"))))))
 
-(defmethod upsert :transaction [data]
+(defmethod upsert :transaction
+  [data]
   ;(create-backup :transaction)
   (let [file-path (file-full-path :transaction)]
     (edn->file data file-path)))
 
-(defmethod upsert :asset [data]
+(defmethod upsert :asset
+  [data]
   (create-backup :asset)
   (let [file-path (file-full-path :asset)]
     (edn->file data file-path)))
 
-(defmethod upsert :portfolio [data]
+(defmethod upsert :portfolio
+  [data]
   ;(create-backup :portfolio)
   (let [file-path (file-full-path :portfolio)]
     (edn->file data file-path)))
@@ -79,6 +88,10 @@
   (let [root-directory (:out-data-path config)
         file-path (str root-directory "metric/metric.edn")]
     (edn->file data file-path)))
+
+(defn delete-file
+  [file-path]
+  (file-delete file-path))
 
 (comment
   (def assets [{:asset/ticket :ABEV4} {:asset/ticket :SULA11}])

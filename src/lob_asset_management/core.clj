@@ -109,6 +109,7 @@
         update-target-hour 1
         current-time (t/local-date-time)]
     (check-telegram-messages bot interval current-time)
+    (c.p-f/backup-cleanup :asset)
     (if (c.f/less-updated-than-target forex-usd update-target-hour)
       (c.f/update-usd-price)
       (get-market-info forex-usd stock-window current-time))))

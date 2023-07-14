@@ -132,6 +132,7 @@ All notable changes to this project will be documented in this file. This change
 ### 2023-07-14
 - Consider incorporation in portfolio process
 - Fix db.portfolio/upsert!
+- Backup cleanup
 
 ## [0.1.1] - 2023-03-25
 ### Changed

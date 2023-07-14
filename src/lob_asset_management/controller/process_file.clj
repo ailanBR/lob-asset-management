@@ -3,6 +3,7 @@
             [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.adapter.transaction :as a.t]
             [lob-asset-management.adapter.portfolio :as a.p]
+            [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.io.file-out :as io.f-out]
@@ -105,6 +106,29 @@
                                              (conj already-read)
                                              (apply concat)
                                              (to-array))})))))
+
+(defn backup-cleanup
+  [file-keyword]
+  (let [file-name (name file-keyword)
+        backup-path (io.f-out/backup-folder file-name)
+        files (io.f-in/get-folder-files backup-path)]
+    (when (and (not (nil? files))
+               (not (empty? files)))
+      (let [files-timestamp (map #(let [created-timestamp (-> %
+                                                              (clojure.string/split #"/")
+                                                              last
+                                                              (clojure.string/split #"_")
+                                                              last
+                                                              (clojure.string/split #".edn")
+                                                              first
+                                                              aux.t/get-current-millis)]
+                                    {:path %
+                                     :created-timestamp created-timestamp})
+                                 files)
+            files-to-delete (filter #(aux.t/less-updated-than-target? 10 (:created-timestamp %))
+                                    files-timestamp)]
+        (when (and files-to-delete (not (empty? files-to-delete)))
+          (map #(io.f-out/delete-file (:path %)) files-to-delete))))))
 
 (defn delete-all-files
   []

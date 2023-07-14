@@ -42,3 +42,9 @@
 (defn current-date->keyword
   []
   (clj-date->date-keyword (current-date-time)))
+
+(defn less-updated-than-target?
+  [target-hours updated-at]
+  (or (nil? updated-at)
+      (< updated-at
+         (get-current-millis (jt/minus (jt/local-date-time) (jt/hours target-hours))))))
