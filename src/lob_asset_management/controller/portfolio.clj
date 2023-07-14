@@ -5,11 +5,74 @@
             [lob-asset-management.logic.portfolio :as l.p]
             [lob-asset-management.db.portfolio :as db.p]))
 
+;;TODO : Do all together
+;; 1. Identify incorporation event
+;; 2. Get new asset transactions
+;; 3. Concat with current transactions
+;;  3.1 Loop for new until get no more
+;; 4. Process
+;; [DONE]
+;; --- Remove duplicated
+;; 1. Group by ticket
+;; 2. Get ids
+;; 4. Reprocess
+
+(defn formatted-transactions
+  [transactions]
+  (let [allowed-operations #{:buy :sell :JCP :income :dividend :waste :grupamento
+                             :desdobro :bonificaçãoemativos :incorporation :resgate}]
+    (->> transactions
+         (l.p/filter-operation allowed-operations)
+         (l.p/remove-fixed-income)
+         (sort-by :transaction/created-at))))
+
+(defn get-related-transactions
+  [ticket all-transactions]
+  (filter #(= ticket (:transaction.asset/ticket %)) all-transactions))
+
+(defn get-incorporation-events
+  [transactions all-transactions]
+  (let [incorporation-tickets (->> transactions (map :transaction/incorporated-by) (remove nil?))
+        transaction-ids (->> transactions (map :transaction/id) set)
+        new-transactions (->> incorporation-tickets
+                              (map #(get-related-transactions % all-transactions))
+                              (remove #(contains? transaction-ids (:transaction/id %)))
+                              first)]
+    (if new-transactions
+      (let [transaction-ids (->> transactions
+                                 (concat new-transactions)
+                                 (map :transaction/id)
+                                 distinct
+                                 (remove nil?))
+            new-transactions (->> transaction-ids
+                                  (map (fn [id]
+                                         (filter #(= id (:transaction/id %)) all-transactions)))
+                                  (remove nil?)
+                                  (apply concat))]
+        new-transactions)
+      transactions)))
+
+(defn get-incorporation-events-tree
+  [transactions]
+  (let [transactions-atom (atom transactions)
+        continue (atom true)
+        all-transactions (io.f-in/get-file-by-entity :transaction)]
+    (while @continue
+      (let [related-transactions (get-incorporation-events @transactions-atom all-transactions)]
+        (if (not= (count related-transactions) (count @transactions-atom))
+          (reset! transactions-atom related-transactions)
+          (reset! continue false))))
+    (formatted-transactions @transactions-atom)))
+
 (defn consolidate-grouped-transactions
   [[_ transactions]]
-  (->> transactions
-       (sort-by :transaction/created-at)
-       (reduce #(a.p/transaction->portfolio %1 %2) {})))
+  (let [incorporation (->> transactions (map :transaction/incorporated-by) (remove nil?))
+        transactions' (if (empty? incorporation)
+                        transactions
+                        (get-incorporation-events-tree transactions))]
+    (->> transactions'
+         (sort-by :transaction/created-at)
+         (reduce #(a.p/transaction->portfolio %1 %2) {}))))
 
 (defn get-position-value
   [assets usd-last-price {:portfolio/keys [average-price ticket quantity]}]
@@ -23,7 +86,7 @@
         position-value (* (or position-current-price average-price) quantity)]
     (when (and (> average-price 0M)
                (not position-current-price)
-               (not (contains? #{:LINX3 :DEFI11 :USDT :SULA3 :BSEV3 :SULA11} ticket)))
+               (not (contains? #{:LINX3 :DEFI11 :USDT :SULA3 :BSEV3 :SULA11 :S3TE11} ticket)))
       (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
     position-value))
 
@@ -45,21 +108,15 @@
                :portfolio.profit-loss/value profit-loss
                :portfolio.profit-loss/percentage (l.p/position-profit-loss-percentage total-cost profit-loss)))) portfolio)))
 
-
 (defn transactions->portfolio
   [transactions assets forex-usd]
   (log/info "[PORTFOLIO] Processing adapter...")
-  (let [allowed-operations #{:buy :sell :JCP :income :dividend :waste :grupamento
-                             :desdobro :bonificaçãoemativos :incorporation :resgate}
-        portfolio (->> transactions
-                       (l.p/filter-operation allowed-operations)
-                       (l.p/remove-fixed-income)
-                       (sort-by :transaction/created-at)
-                       (group-by :transaction.asset/ticket)
-                       (map consolidate-grouped-transactions)
-                       (set-portfolio-representation assets forex-usd)
-                       (sort-by :portfolio/percentage >))]
-    portfolio))
+    (->> transactions
+         formatted-transactions
+         (group-by :transaction.asset/ticket)
+         (map consolidate-grouped-transactions)
+         (set-portfolio-representation assets forex-usd)
+         (sort-by :portfolio/percentage >)))
 
 (defn process-transaction
   "Process list of transactions
@@ -117,3 +174,13 @@
        (group-by :portfolio/category)
        (map consolidate-categories)
        (set-category-representation)))
+
+(comment
+  ;Lets test
+  ;TODO: Step 2 => Remove duplicated by ticket
+  (def transactions (io.f-in/get-file-by-entity :transaction))
+  (process-transaction transactions {:db-update false :ticket :GNDI3}) ;OK
+  (process-transaction transactions {:db-update false :ticket :BIDI11}) ;OK
+  (process-transaction transactions {:db-update false})
+
+  )

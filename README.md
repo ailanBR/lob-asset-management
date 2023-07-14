@@ -158,7 +158,6 @@ Provide where asset need to be purchase and how much
 6. Consider subscription events
 7. Get asset information
 9. Auto clean of backup files
-10. Process portfolio by asset
 
 ## FIXME
 

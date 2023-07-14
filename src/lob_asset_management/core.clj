@@ -166,7 +166,7 @@
     [:transaction/created-at :transaction/operation-type :transaction/quantity]
     (->> (io.f-in/get-file-by-entity :transaction)
          ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
-         (filter #(or (= :S3TE11 (:transaction.asset/ticket %))))
+         (filter #(or (= :GNDI3 (:transaction.asset/ticket %))))
          ;(remove #(contains?
          ;           #{:buy :sell :JCP :income :dividend :waste :grupamento}
          ;           (:transaction/operation-type %)))
