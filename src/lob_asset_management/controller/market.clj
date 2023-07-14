@@ -7,7 +7,6 @@
             [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.aux.util :refer [str-space->keyword-underline
                                                    remove-keyword-parenthesis]]
-            [lob-asset-management.logic.asset :as l.a]
             [lob-asset-management.controller.process-file :as c.p]
             ))
 
@@ -126,7 +125,7 @@
        (let [update-fn (fn [{:asset.market-price/keys [retry-attempts updated-at] :as asset}]
                          (if (and retry-attempts
                                   updated-at
-                                  (l.a/less-updated-than-target? 6 updated-at))
+                                  (aux.t/less-updated-than-target? 6 updated-at))
                            (dissoc asset :asset.market-price/retry-attempts)
                            asset))]
          (->> assets

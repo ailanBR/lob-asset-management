@@ -1,6 +1,5 @@
 (ns lob-asset-management.core
-  (:require [lob-asset-management.adapter.portfolio :as a.p]
-            [lob-asset-management.aux.time :as aux.t]
+  (:require [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.controller.forex :as c.f]
             [lob-asset-management.controller.market :as c.m]
             [lob-asset-management.controller.process-file :as c.p-f]
@@ -160,8 +159,7 @@
     (->> (io.f-in/get-file-by-entity :portfolio)
          (filter #(or (contains? (:portfolio/exchanges %) :nu)
                       (contains? (:portfolio/exchanges %) :inter)))
-         (sort-by :portfolio/ticket)
-         ))
+         (sort-by :portfolio/ticket)))
 
   (clojure.pprint/print-table
     [:transaction/created-at :transaction/operation-type :transaction/quantity]
