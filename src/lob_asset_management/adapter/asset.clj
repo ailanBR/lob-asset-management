@@ -4,7 +4,8 @@
             [lob-asset-management.models.asset :as m.a]
             [lob-asset-management.logic.asset :as l.a]
             [lob-asset-management.relevant :refer [asset-more-info]]
-            [lob-asset-management.aux.util :refer [assoc-if]])
+            [lob-asset-management.aux.util :refer [assoc-if]]
+            [lob-asset-management.aux.time :as aux.t])
   (:import (java.util UUID)))
 
 (defn in-ticket->out-ticket
@@ -159,7 +160,7 @@
 
 (defn filter-less-updated-than-target?                      ;TODO: Receive milliseconds instead target-hours
   [target-hours assets]
-  (filter #(l.a/less-updated-than-target? target-hours (:asset.market-price/updated-at %))
+  (filter #(aux.t/less-updated-than-target? target-hours (:asset.market-price/updated-at %))
           assets))
 
 (defn remove-limit-attempts

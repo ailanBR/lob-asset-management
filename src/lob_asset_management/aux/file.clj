@@ -21,3 +21,7 @@
   (with-open [out (io/writer file-path)]
     (binding [*out* out]
       (clojure.pprint/print-table data))))
+
+(defn file-delete
+  [file-path]
+  (io/delete-file file-path))
