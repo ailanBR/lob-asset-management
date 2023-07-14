@@ -84,12 +84,12 @@
       (log/error (str "[TRANSACTION] Don't find USD price for date " price-date)))))
 
 (defn movement-factor->transaction-factor
-  "Ex : '/2'"
+  "Ex : '/-2'"
   [factor]
   (when factor
-    (let [factor' (clojure.string/split factor #"")]
+    (let [factor' (clojure.string/split factor #"-")]
       {:operator    (first factor')
-       :denominator (-> factor' second safe-number->bigdec)})))
+       :denominator (-> factor' second bigdec)})))
 
 (s/defn movements->transaction :- m.t/Transaction
   [{:keys [transaction-date unit-price quantity exchange product operation-total currency

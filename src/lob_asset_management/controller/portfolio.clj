@@ -94,10 +94,11 @@
   [assets {usd-last-price :forex-usd/price} portfolio]
   (let [total-portfolio (reduce #(+ %1 (:portfolio/total-cost %2)) 0M portfolio)]
     (when (not usd-last-price) (log/error (str "[PORTFOLIO] Don't find last USD price")))
-    (map (fn [{:portfolio/keys [total-cost average-price ticket] :as portfolio-row}]
+    (map (fn [{:portfolio/keys [total-cost average-price ticket dividend] :as portfolio-row}]
            ;(format "%.2f" position-value)
            (let [position-value (get-position-value assets usd-last-price portfolio-row)
-                 profit-loss (l.p/position-profit-loss-value position-value total-cost)]
+                 profit-loss (l.p/position-profit-loss-value position-value total-cost)
+                 profit-loss-with-dividend (+ profit-loss dividend)]
              (when (and (> average-price 0M)
                         (<= position-value 0M)
                         (not (contains? #{:SULA3 :BSEV3 :SULA11} ticket)))
@@ -105,8 +106,27 @@
              (assoc portfolio-row
                :portfolio/total-last-value position-value
                :portfolio/percentage (l.p/position-percentage total-portfolio position-value)
-               :portfolio.profit-loss/value profit-loss
-               :portfolio.profit-loss/percentage (l.p/position-profit-loss-percentage total-cost profit-loss)))) portfolio)))
+               :portfolio.profit-loss/value profit-loss-with-dividend
+               :portfolio.profit-loss/percentage (l.p/position-profit-loss-percentage total-cost profit-loss-with-dividend)))) portfolio)))
+
+(defn remove-duplicated
+  [portfolio]
+  (let [dup-treatment (->> portfolio
+                           (group-by :portfolio/ticket)
+                           (filter #(> (count (second %)) 1))
+                           (map (fn [p]
+                                  (->> p
+                                       second
+                                       (remove #(not (= :incorporated (:portfolio/status %))))
+                                       first)))) ;TODO: Validate more than 1 incorporated event for the same asset
+        ; [Maybe add new field 'last-transaction-at' and get the most updated, considering that the process made before get all incorporation]
+        dup-tickets (map :portfolio/ticket dup-treatment)
+        portfolio-without-dup (reduce (fn [p ticket]
+                                        (remove #(= ticket (:portfolio/ticket %)) p)
+                                        )
+                                      portfolio dup-tickets)
+        portfolio' (concat portfolio-without-dup dup-treatment)]
+    portfolio'))
 
 (defn transactions->portfolio
   [transactions assets forex-usd]
@@ -115,6 +135,7 @@
          formatted-transactions
          (group-by :transaction.asset/ticket)
          (map consolidate-grouped-transactions)
+         remove-duplicated
          (set-portfolio-representation assets forex-usd)
          (sort-by :portfolio/percentage >)))
 
@@ -182,5 +203,9 @@
   (process-transaction transactions {:db-update false :ticket :GNDI3}) ;OK
   (process-transaction transactions {:db-update false :ticket :BIDI11}) ;OK
   (process-transaction transactions {:db-update false})
+
+  (def portfolio (io.f-in/get-file-by-entity :portfolio))
+  (remove-duplicated portfolio)
+
 
   )

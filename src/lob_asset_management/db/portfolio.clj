@@ -20,7 +20,7 @@
          (or db-data)
          (remove-already-exist-asset portfolio)
          (concat (or portfolio []))
-         (sort-by :portfolio/ticket)
+         (sort-by :portfolio/percentage >)
          io.f-out/upsert)))
 
 (defn overwrite!

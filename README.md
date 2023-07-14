@@ -157,7 +157,6 @@ Provide where asset need to be purchase and how much
    2. [ ] Web Scraping for Stock information
 6. Consider subscription events
 7. Get asset information
-9. Auto clean of backup files
 
 ## FIXME
 
