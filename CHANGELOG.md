@@ -134,6 +134,9 @@ All notable changes to this project will be documented in this file. This change
 - Fix db.portfolio/upsert!
 - Backup cleanup
 
+### 2023-07-18
+- Throw and treat alpha api limit exeption
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 
