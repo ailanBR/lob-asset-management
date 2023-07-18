@@ -105,12 +105,12 @@
 (defn start-processing
   [stock-window interval]
   (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)
-        update-target-hour 1
+        update-target-hour 3
         current-time (t/local-date-time)]
     (check-telegram-messages bot interval current-time)
     (c.p-f/backup-cleanup :asset)
     (if (c.f/less-updated-than-target forex-usd update-target-hour)
-      (c.f/update-usd-price)
+      (c.f/update-usd-price forex-usd update-target-hour)
       (get-market-info forex-usd stock-window current-time))))
 
 (defn poller [f-name f interval window]
@@ -137,7 +137,7 @@
       (case action
         "start" (let [interval 13000
                       stop-loop (poller "Main"
-                                        #(start-processing #{19 20 21 22 23 0 1} interval)
+                                        #(start-processing #{21 22 23} interval)
                                         13000
                                         #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
                   (println "Press enter to stop...")
@@ -179,6 +179,19 @@
   (def in (lob-asset-management.relevant/incorporation-movements))
 
   (c.p-f/process-movement in)
+
+  (def m (io.f-in/get-file-by-entity :metric))
+  (def tm (filter #(and (= "https://www.alphavantage.co/query" (-> % :endpoint :url))
+                        (= :2023-07-17 (aux.t/clj-date->date-keyword (:when %))))
+                  (:metric/api-call m)))
+
+
+  (def c (atom 0))
+  (map #(let [f (-> % :endpoint :params :query-params :function)
+              s (-> % :endpoint :params :query-params :symbol)]
+          (swap! c inc)
+          {:x (str "[" @c "]" f " - " (or s ""))}) tm)
+
 
 
 )

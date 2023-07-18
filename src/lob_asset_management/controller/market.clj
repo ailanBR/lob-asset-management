@@ -1,5 +1,6 @@
 (ns lob-asset-management.controller.market
   (:require [clojure.tools.logging :as log]
+            [java-time.api :as t]
             [lob-asset-management.io.http_in :as io.http]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
@@ -132,6 +133,21 @@
               (map update-fn)
               io.f-out/upsert))))))
 
+(defn update-asset-updated-at
+  [{:asset/keys [id] :as asset}
+   asset-id]
+  (if (= id asset-id)
+    (assoc asset :asset.market-price/updated-at (aux.t/get-current-millis
+                                                  (t/plus (t/local-date-time) (t/hours 5))))
+    asset))
+
+(defn update-assets-updated-at
+  [assets
+   {less-updated-asset-id :asset/id}]
+  (let [updated-assets (map #(update-asset-updated-at % less-updated-asset-id)
+                            assets)]
+    updated-assets))
+
 (defn update-asset-market-price
   ([]
    (if-let [assets (io.f-in/get-file-by-entity :asset)]
@@ -149,15 +165,20 @@
              (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
              (c.p/update-assets updated-assets)))
        (catch Exception e
-         (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
-             (if (< (or retry-attempts 0) 3)
-               (do
-                 (log/info (str "Already retry [" (or retry-attempts 0) "], new attempt after 5sec"))
-                 (let [updated-assets (update-assets-retry-attempt assets less-updated-asset)]
-                   (c.p/update-assets updated-assets)
-                   (Thread/sleep 5000)
-                   (update-asset-market-price updated-assets day-of-week)))
-               (log/info (str "Retry limit archived"))))))
+         (let [causes (-> e ex-data :causes)]
+           (if (contains? causes :alpha-api-limit)
+             (let [updated-assets (update-assets-updated-at assets less-updated-asset)]
+               (log/error "[MARKET-UPDATING] Alpha API limit have reached")
+               (c.p/update-assets updated-assets)))
+           (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
+               (if (< (or retry-attempts 0) 3)
+                 (do
+                   (log/info (str "Already retry [" (or retry-attempts 0) "], new attempt after 5sec"))
+                   (let [updated-assets (update-assets-retry-attempt assets less-updated-asset)]
+                     (c.p/update-assets updated-assets)
+                     (Thread/sleep 5000)
+                     (update-asset-market-price updated-assets day-of-week)))
+                 (log/info (str "Retry limit archived")))))))
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
 
 (defn update-crypto-market-price

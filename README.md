@@ -132,11 +132,12 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
 1. [Obtain Your Bot Token](https://core.telegram.org/bots/tutorial#obtain-your-bot-token)
 2. Set the key as `telegram-bot-key` environment variable
 
-Provide where asset need to be purchase and how much
-
 ## TODO
 
-1. Store data on cloud
+1. Provide where asset need to be purchase and how much `high`
+   1. Classify asset
+   2. Set category necessary percentage allocation
+2. Store data on cloud `Medium`
    1. [ ] AWS
       1. ~~Thinking about the item 4. maybe we can use S3 only for the in-data files~~
    2. [ ] Firebase (Doing)
@@ -147,20 +148,20 @@ Provide where asset need to be purchase and how much
    3. [ ] Do nothing
       1. Solution works for read/write entities in terminal
       2. ~~The problem is only **maybe** in the in-data files~~
-2. Add a way to manual insert information (Front-end proj?)
+3. Add a way to manual insert information (Front-end proj?) `Medium`
    1. [ ] Function to read stored file and add one row 
       1. [X] Asset   //update-assets
       2. [ ] Transaction
       3. [X] Portfolio //update-portfolio-representation
-4. [Http_in] Find another option for Alpha API / Web Scraping
+4. [Http_in] Find another option for Alpha API / Web Scraping `Medium`
    1. [X] Coingecko for crypto 
    2. [ ] Web Scraping for Stock information
-6. Consider subscription events
-7. Get asset information
+5. Consider subscription events `Low`
+6. Get asset information `Very low`
 
 ## FIXME
 
-1. Set telegram key as environment variable
+1. Set telegram key as environment variable `Very low`
 
 ## License
 
