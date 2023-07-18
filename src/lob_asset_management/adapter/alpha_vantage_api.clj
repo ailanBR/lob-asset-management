@@ -24,10 +24,11 @@
 
 
 (defmulti formatted-data
-          (fn [{:keys [Meta_Data]}]
-            (if Meta_Data
-              :alpha-api
-              :real-time-crypto)))
+          (fn [{:keys [Meta_Data Information]}]
+            (cond
+              Meta_Data :alpha-api
+              Information :alpha-limit
+              :else :real-time-crypto)))
 
 (defmethod formatted-data :alpha-api
   [{:keys [Meta_Data Time_Series_Daily Time_Series_FX_Daily
@@ -58,6 +59,10 @@
      :date       today-date
      :updated-at (aux.t/get-current-millis)
      :historic   historic}))
+
+(defmethod formatted-data :alpha-limit
+  [_]
+  (throw (ex-info "Alpha API limit have reached" {:causes #{:alpha-api-limit}})))
 
 #_(defn formatted-data
   [{:keys [Meta_Data Time_Series_Daily Time_Series_FX_Daily
