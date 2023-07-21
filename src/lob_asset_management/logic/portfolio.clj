@@ -40,13 +40,6 @@
       calculated-total
       operation-total)))
 
-(defn sell-total-cost
-  [average-price quantity portfolio-quantity portfolio-average-price]
-  (let [tt-t (* average-price quantity)
-        tt-c (* (safe-dob portfolio-quantity) (safe-dob portfolio-average-price))]
-    (- tt-t tt-c)))
-
-
 (defn transaction-total-and-portfolio-cost
   [portfolio-quantity
    portfolio-average-price

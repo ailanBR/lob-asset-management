@@ -129,17 +129,18 @@
                (contains? db-data-tickets (:transaction/id %))) transactions)))
 
 (defn movements->transactions
-  [mov db-data forex-usd]
-  (log/info "[TRANSACTION] Processing adapter...current transactions [" (count db-data) "]")
+  [mov _ forex-usd]
+  (log/info "[TRANSACTION] Processing adapter...current transactions [" (count mov) "]")
   (let [mov-transactions (->> mov
                               (map #(movements->transaction % forex-usd))
                               (group-by :transaction/id)
                               (map #(->> % val (sort-by :transaction/processed-at) last)))
-        new-transactions (->> mov-transactions
-                              (remove-already-exist-transaction db-data)
-                              (concat (or db-data []))
-                              (sort-by :transaction.asset/ticket))]
+        ;new-transactions (->> mov-transactions
+        ;                      (remove-already-exist-transaction db-data)
+        ;                      (concat (or db-data []))
+        ;                      (sort-by :transaction.asset/ticket))
+        ]
     (log/info "[TRANSACTION] Concluded adapter... "
               "read transactions[" (count mov-transactions) "] "
-              "result [" (count new-transactions) "]")
-    new-transactions))
+              "result [" (count mov-transactions) "]")
+    mov-transactions))

@@ -1,8 +1,13 @@
 (ns lob-asset-management.db.portfolio
-  (:require [lob-asset-management.io.file-in :as io.f-in]
+  (:require [clojure.tools.logging :as log]
+            [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]))
 
-(defn already-exist-asset?
+(defn get-all
+  []
+  (io.f-in/get-file-by-entity :portfolio))
+
+(defn already-exist?
   [ticket db-data]
   (if (empty? db-data)
     false
@@ -11,17 +16,24 @@
 
 (defn remove-already-exist-asset
   [assets-keep asset-filtered]
-  (remove #(already-exist-asset? (:portfolio/ticket %) assets-keep) asset-filtered))
+  (remove #(already-exist? (:portfolio/ticket %) assets-keep) asset-filtered))
+
+(defn maybe-upsert
+  [db-data portfolio]
+  (when (not= db-data portfolio)
+    (log/info "[UPDATE PORTFOLIO] New portfolio record to be registered")
+    (io.f-out/upsert portfolio)
+    portfolio))
 
 (defn update!
   [portfolio]
-  (let [db-data (io.f-in/get-file-by-entity :portfolio)]
+  (let [db-data (get-all)]
     (->> []
          (or db-data)
          (remove-already-exist-asset portfolio)
          (concat (or portfolio []))
          (sort-by :portfolio/percentage >)
-         io.f-out/upsert)))
+         (maybe-upsert db-data))))
 
 (defn overwrite!
   [portfolio]

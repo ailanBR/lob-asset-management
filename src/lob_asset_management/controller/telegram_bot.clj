@@ -5,6 +5,8 @@
             [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.controller.release :as c.r]
             [lob-asset-management.controller.metric :as c.m]
+            [lob-asset-management.db.asset :as db.a]
+            [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.io.file-in :as io.file-in]
             [lob-asset-management.relevant :refer [telegram-key telegram-personal-chat]]
             [telegrambot-lib.core :as tbot]
@@ -22,7 +24,7 @@
 
 (defn send-portfolio-table
   ([mybot]
-   (send-portfolio-table mybot (io.file-in/get-file-by-entity :portfolio)))
+   (send-portfolio-table mybot (db.p/get-all)))
   ([mybot portfolio]
    (let [portfolio-table (a.t/portfolio-table-message portfolio)]
      (send-message portfolio-table mybot))))
@@ -35,7 +37,7 @@
 
 (defn send-asset-price-change
   [mybot]
-  (let [assets (io.file-in/get-file-by-entity :asset)
+  (let [assets (db.a/get-all)
         day (c.r/compare-past-day-price-assets assets 1)
         day' (map (fn [{:keys [ticket last-price diff-percentage]}]
                     {:ticket              ticket
@@ -59,13 +61,13 @@
 
 (defn send-category-portfolio
   [mybot]
-  (let [portfolio (io.file-in/get-file-by-entity :portfolio)
+  (let [portfolio (db.p/get-all)
         portfolio-category (c.p/get-category-representation portfolio)]
     (send-message (a.t/category-portfolio-message portfolio-category) mybot)))
 
 (defn send-total-overview
   [mybot]
-  (let [portfolio (io.file-in/get-file-by-entity :portfolio)
+  (let [portfolio (db.p/get-all)
         portfolio-total (a.p/get-total portfolio)
         brl-total (->> portfolio
                        (filter #(or (contains? (:portfolio/exchanges %) :nu)
@@ -87,7 +89,7 @@
 
 (defn send-assets-message
   [mybot]
-  (let [portfolio (io.file-in/get-file-by-entity :portfolio)]
+  (let [portfolio (db.p/get-all)]
     (send-message (a.t/assets-table-message portfolio) mybot)))
 
 (defn send-invalid-command

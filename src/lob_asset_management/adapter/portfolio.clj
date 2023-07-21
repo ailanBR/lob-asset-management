@@ -297,10 +297,10 @@
                :total/current           total-current})) {} portfolio))
 
 (comment
-  (def t (lob-asset-management.io.file-in/get-file-by-entity :transaction))
-  (def a (lob-asset-management.io.file-in/get-file-by-entity :asset))
+  (def t (lob-asset-management.db.transaction/get-all))
+  (def a (lob-asset-management.db.asset/get-all))
   (def f (lob-asset-management.io.file-in/get-file-by-entity :forex-usd))
-  (def assets (lob-asset-management.io.file-in/get-file-by-entity :asset))
+  (def assets (lob-asset-management.db.asset/get-all))
   (def asset (first assets))
 
   (defn past-price-date
@@ -349,7 +349,7 @@
 
   (def usd-last-price (:forex-usd/price usd-price))
 
-  (def portfolio (lob-asset-management.io.file-in/get-file-by-entity :portfolio))
+  (def portfolio (lob-asset-management.db.portfolio/get-all))
   (def portfolio-row (first portfolio))
   (def p-v (get-position-value assets usd-last-price portfolio-row))
   )

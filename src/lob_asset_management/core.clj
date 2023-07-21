@@ -5,9 +5,10 @@
             [lob-asset-management.controller.process-file :as c.p-f]
             [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.controller.release :as c.r]
+            [lob-asset-management.db.asset :as db.a]
+            [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.io.file-in :as io.f-in]
-            [lob-asset-management.io.file-out :as io.f-out]
-            [mount.core :as mount :refer [defstate]]
+            [mount.core :as mount]
             [java-time.api :as t]
             [clojure.tools.logging :as log]
             [clojure.tools.cli :as t.cli]
@@ -81,7 +82,7 @@
   (reset! update-id id))
 
 (defn check-telegram-messages
-  [bot interval time]
+  [interval time]
   (let [updates (t.bot/poll-updates bot @update-id)
         messages (:result updates)]
     (doseq [msg messages]
@@ -91,8 +92,8 @@
 
 (defn get-market-info
   [forex-usd stock-window current-time]
-  (let [assets (io.f-in/get-file-by-entity :asset)
-        portfolio (io.f-in/get-file-by-entity :portfolio)
+  (let [assets (db.a/get-all)
+        portfolio (db.p/get-all)
         current-hour (.getHour current-time)
         day-of-week (aux.t/day-of-week current-time)]
     (c.m/reset-retry-attempts assets)
@@ -107,7 +108,7 @@
   (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)
         update-target-hour 3
         current-time (t/local-date-time)]
-    (check-telegram-messages bot interval current-time)
+    (check-telegram-messages interval current-time)
     (c.p-f/backup-cleanup :asset)
     (if (c.f/less-updated-than-target forex-usd update-target-hour)
       (c.f/update-usd-price forex-usd update-target-hour)
@@ -155,24 +156,24 @@
   (c.p-f/process-folders)
 
   (clojure.pprint/print-table
-    [:portfolio/ticket :portfolio/quantity :portfolio/average-price :portfolio/total-cost]
-    (->> (io.f-in/get-file-by-entity :portfolio)
-         (filter #(or (contains? (:portfolio/exchanges %) :nu)
-                      (contains? (:portfolio/exchanges %) :inter)))
+    [:portfolio/ticket :portfolio/quantity :portfolio/total-last-value]
+    (->> (db.p/get-all)
+         ;(filter #(or (contains? (:portfolio/exchanges %) :nu)
+         ;             (contains? (:portfolio/exchanges %) :inter)))
          (sort-by :portfolio/ticket)))
 
   (clojure.pprint/print-table
     [:transaction/created-at :transaction/operation-type :transaction/quantity]
-    (->> (io.f-in/get-file-by-entity :transaction)
+    (->> (lob-asset-management.db.transaction/get-all)
          ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
-         (filter #(or (= :GNDI3 (:transaction.asset/ticket %))))
+         (filter #(or (= :BTC (:transaction.asset/ticket %))))
          ;(remove #(contains?
          ;           #{:buy :sell :JCP :income :dividend :waste :grupamento}
          ;           (:transaction/operation-type %)))
          ;(filter #(or (= :ROMI3 (:transaction.asset/ticket %))))
          ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
          ;(sort-by :transaction/exchange)
-         (sort-by :transaction/created-at)
+         (sort-by :transaction.asset/ticket)
          ;(sort-by :transaction.asset/ticket)
          ))
   ;=========================================
@@ -193,5 +194,6 @@
           {:x (str "[" @c "]" f " - " (or s ""))}) tm)
 
 
-
+  (c.m/update-crypto-market-price)
+  (c.p/update-portfolio-representation (db.p/get-all) (io.f-in/get-file-by-entity :forex-usd))
 )
