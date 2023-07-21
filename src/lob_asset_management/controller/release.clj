@@ -1,6 +1,8 @@
 (ns lob-asset-management.controller.release
   (:require [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.controller.portfolio :as c.p]
+            [lob-asset-management.db.asset :as db.a]
+            [lob-asset-management.db.transaction :as db.t]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.aux.time :as aux.t]))
@@ -92,19 +94,19 @@
   - last year price
   - price in the end of the year"
   [year]
-  (let [transactions (io.f-in/get-file-by-entity :transaction)
+  (let [transactions (db.t/get-all)
         next-year-first-date (-> year str Integer/parseInt (+ 1) (str "01" "01") Integer/parseInt)
         filtered-transactions (->> transactions
                                    (sort-by :transaction/created-at)
                                    (filter #(< (:transaction/created-at %) next-year-first-date)))
         forex-usd (io.f-in/get-file-by-entity :forex-usd)
-        assets (io.f-in/get-file-by-entity :asset)
+        assets (db.a/get-all)
         portfolio-release (-> filtered-transactions
                               (c.p/process-transaction {:assets assets
                                                         :forex-usd forex-usd
                                                         :db-update false})
                               (a.p/portfolio-list->irpf-release))
-        assets (io.f-in/get-file-by-entity :asset)
+        assets (db.a/get-all)
         forex-usd (io.f-in/get-file-by-entity :forex-usd)
         income-tax-release (->> portfolio-release
                                 (map #(generate-irpf-release % assets forex-usd year))
@@ -148,7 +150,7 @@
   ([]
    (compare-past-day-price-assets 1))
   ([days]
-   (let [assets (io.f-in/get-file-by-entity :asset)]
+   (let [assets (db.a/get-all)]
      (compare-past-day-price-assets assets days)))
   ([assets days]
    (->> assets
@@ -160,7 +162,7 @@
 (comment
   (clojure.pprint/print-table (->> (irpf-release 2022) (sort-by :code)))
 
-  (->> (io.f-in/get-file-by-entity :transaction)
+  (->> (db.t/get-all)
       (sort-by :transaction/created-at))
 
   (irpf-release 2022)

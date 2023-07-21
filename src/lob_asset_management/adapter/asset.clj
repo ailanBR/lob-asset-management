@@ -114,7 +114,7 @@
 
 (defn remove-already-exist-asset
   [assets-keep asset-filtered]
-  (remove #(l.a/already-exist-asset? (:asset/ticket %) assets-keep) asset-filtered))
+  (remove #(l.a/already-exist? (:asset/ticket %) assets-keep) asset-filtered))
 
 (defn update-assets
   [assets db-assets]
@@ -200,7 +200,7 @@
         nil)))
 
 (comment
-  (def assets-file (lob-asset-management.io.file-in/get-file-by-entity :asset))
+  (def assets-file (lob-asset-management.db.transaction/get-file-by-entity :asset))
 
   (clojure.pprint/print-table assets-file)
 

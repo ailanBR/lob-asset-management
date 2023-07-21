@@ -137,6 +137,11 @@ All notable changes to this project will be documented in this file. This change
 ### 2023-07-18
 - Throw and treat alpha api limit exeption
 
+### 2023-07-20
+- Add transaction DB
+- Add asset DB
+- Changed all read on [transaction, asset, portfolio] direct from io.f-in to db
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 

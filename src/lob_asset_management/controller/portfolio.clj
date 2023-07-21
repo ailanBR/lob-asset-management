@@ -3,7 +3,9 @@
             [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.logic.portfolio :as l.p]
-            [lob-asset-management.db.portfolio :as db.p]))
+            [lob-asset-management.db.asset :as db.a]
+            [lob-asset-management.db.portfolio :as db.p]
+            [lob-asset-management.db.transaction :as db.t]))
 
 ;;TODO : Do all together
 ;; 1. Identify incorporation event
@@ -56,7 +58,7 @@
   [transactions]
   (let [transactions-atom (atom transactions)
         continue (atom true)
-        all-transactions (io.f-in/get-file-by-entity :transaction)]
+        all-transactions (db.t/get-all)]
     (while @continue
       (let [related-transactions (get-incorporation-events @transactions-atom all-transactions)]
         (if (not= (count related-transactions) (count @transactions-atom))
@@ -156,7 +158,7 @@
     (let [forex-usd (or (-> args first :forex-usd)
                         (io.f-in/get-file-by-entity :forex-usd))
           assets (or (-> args first :assets)
-                     (io.f-in/get-file-by-entity :asset))
+                     (db.a/get-all))
           portfolio (transactions->portfolio asset-transactions assets forex-usd)]
       (when (-> args first :db-update)
         (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")
@@ -166,7 +168,7 @@
 
 (defn update-portfolio-representation
   [portfolio forex-usd]
-  (let [assets (io.f-in/get-file-by-entity :asset)
+  (let [assets (db.a/get-all)
         updated-portfolio (->> portfolio
                                (set-portfolio-representation assets forex-usd)
                                (sort-by :portfolio/percentage >))]
@@ -199,12 +201,12 @@
 (comment
   ;Lets test
   ;TODO: Step 2 => Remove duplicated by ticket
-  (def transactions (io.f-in/get-file-by-entity :transaction))
+  (def transactions (db.t/get-all))
   (process-transaction transactions {:db-update false :ticket :GNDI3}) ;OK
   (process-transaction transactions {:db-update false :ticket :BIDI11}) ;OK
   (process-transaction transactions {:db-update false})
 
-  (def portfolio (io.f-in/get-file-by-entity :portfolio))
+  (def portfolio (db.p/get-all))
   (remove-duplicated portfolio)
 
 

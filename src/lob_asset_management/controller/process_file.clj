@@ -5,16 +5,19 @@
             [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.controller.portfolio :as c.p]
+            [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.portfolio :as db.p]
+            [lob-asset-management.db.transaction :as db.t]
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.io.file-in :as io.f-in]
+            [lob-asset-management.logic.asset :as l.a]
             [lob-asset-management.models.file :as m.f]
             [lob-asset-management.relevant :refer [config incorporation-movements]]))
 
 (defn process-assets
   [movements]
   (log/info "[PROCESS ASSETS] Started")
-  (let [db-assets (io.f-in/get-file-by-entity :asset)
+  (let [db-assets (db.a/get-all)
         assets (a.a/movements->assets movements db-assets)]
     (when (not= db-assets assets)
       (log/info "[PROCESS ASSETS] New assets to be registered")
@@ -24,20 +27,17 @@
 (defn process-transactions
   [movements]
   (log/info "[PROCESS TRANSACTIONS] Started")
-  (let [db-transactions (io.f-in/get-file-by-entity :transaction)
+  (let [                                                    ;db-transactions (db.t/get-all)
         usd-price (io.f-in/get-file-by-entity :forex-usd)
-        transactions (a.t/movements->transactions movements db-transactions usd-price)]
-    (when (not= db-transactions transactions)
-      (log/info "[PROCESS TRANSACTIONS] New transactions to be registered")
-      (io.f-out/upsert transactions)
-      transactions)))
+        transactions (a.t/movements->transactions movements nil usd-price)]
+    (db.t/update! transactions)))
 
 #_(defn process-portfolio
     "Changed by c.p/process-transaction"
     [transactions]
     (when transactions
       (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)
-            assets (io.f-in/get-file-by-entity :asset)
+            assets (db.a/get-all)
             portfolio (a.p/transactions->portfolio transactions assets forex-usd)]
         (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")
         (db.p/overwrite portfolio)
@@ -70,15 +70,6 @@
                           (map #(-> % first val process-folder))
                           (apply concat))]
     (process-movement movements)))
-
-(defn update-assets
-  [assets]
-  (let [db-assets (io.f-in/get-file-by-entity :asset)
-        updated-assets (a.a/update-assets assets db-assets)]
-    (when (not= db-assets updated-assets)
-      (log/info "[PROCESS ASSETS] New assets to be registered")
-      (io.f-out/upsert updated-assets)
-      updated-assets)))
 
 #_(defn process-b3-folder
   []
@@ -143,11 +134,11 @@
 
   (def cm (process-folders))
 
-  (let [t (->> (io.f-in/get-file-by-entity :transaction)
+  (let [t (->> (db.t/get-all)
                ;(filter #(= :BBAS3 (:transaction.asset/ticket %)))
 
                )
-        p (lob-asset-management.controller.portfolio/process-transaction (io.f-in/get-file-by-entity :transaction))
+        p (lob-asset-management.controller.portfolio/process-transaction (db.t/get-all))
         ;(process-portfolio t)
         ]
     (clojure.pprint/pprint p)

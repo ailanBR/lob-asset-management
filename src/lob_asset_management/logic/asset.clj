@@ -6,7 +6,7 @@
        (filter #(= name (:asset/name %)))
        first))
 
-(defn already-exist-asset?
+(defn already-exist?
   [ticket db-data]
   (if (empty? db-data)
     false

@@ -148,16 +148,12 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    3. [ ] Do nothing
       1. Solution works for read/write entities in terminal
       2. ~~The problem is only **maybe** in the in-data files~~
-3. Add a way to manual insert information (Front-end proj?) `Medium`
-   1. [ ] Function to read stored file and add one row 
-      1. [X] Asset   //update-assets
-      2. [ ] Transaction
-      3. [X] Portfolio //update-portfolio-representation
 4. [Http_in] Find another option for Alpha API / Web Scraping `Medium`
    1. [X] Coingecko for crypto 
    2. [ ] Web Scraping for Stock information
 5. Consider subscription events `Low`
 6. Get asset information `Very low`
+7. Create forex DB `Medium`
 
 ## FIXME
 

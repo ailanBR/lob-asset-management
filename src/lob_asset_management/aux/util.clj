@@ -10,7 +10,8 @@
          (let [pair-args (atom (-> args vec))
                temp-map (atom updated-map)]
            (while (> (count @pair-args) 0)
-             (swap! temp-map #(assoc % (first @pair-args) (first (rest @pair-args))))
+             (when (or (first (rest @pair-args)) (not (empty? (first (rest @pair-args)))))
+               (swap! temp-map #(assoc-if % {(first @pair-args) (first (rest @pair-args))})))
              (swap! pair-args #(-> % rest rest vec)))
            @temp-map)
          updated-map))
