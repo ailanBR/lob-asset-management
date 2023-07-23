@@ -6,6 +6,7 @@
             [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.db.asset :as db.a]
+            [lob-asset-management.db.forex :as db.f]
             [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.db.transaction :as db.t]
             [lob-asset-management.io.file-out :as io.f-out]
@@ -28,7 +29,7 @@
   [movements]
   (log/info "[PROCESS TRANSACTIONS] Started")
   (let [                                                    ;db-transactions (db.t/get-all)
-        usd-price (io.f-in/get-file-by-entity :forex-usd)
+        usd-price (db.f/get-all)
         transactions (a.t/movements->transactions movements nil usd-price)]
     (db.t/update! transactions)))
 
@@ -36,7 +37,7 @@
     "Changed by c.p/process-transaction"
     [transactions]
     (when transactions
-      (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)
+      (let [forex-usd (db.f/get-all)
             assets (db.a/get-all)
             portfolio (a.p/transactions->portfolio transactions assets forex-usd)]
         (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")

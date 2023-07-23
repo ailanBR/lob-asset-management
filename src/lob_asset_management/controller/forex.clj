@@ -1,10 +1,11 @@
 (ns lob-asset-management.controller.forex
   (:require [clojure.tools.logging :as log]
+            [java-time.api :as t]
+            [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.db.forex :as db.f]
             [lob-asset-management.io.http_in :as io.http]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
-            [java-time.api :as t]
-            [lob-asset-management.aux.time :as aux.t]
             [schema.core :as s]))
 
 (s/defn get-usd-price
@@ -37,7 +38,7 @@
 
 (defn update-usd-price
   ([]
-   (update-usd-price (io.f-in/get-file-by-entity :forex-usd) 3))
+   (update-usd-price (db.f/get-all) 3))
   ([forex-usd]
    (update-usd-price forex-usd 3))
   ([forex-usd update-target-hour]
@@ -59,5 +60,5 @@
 
 (comment
   (get-usd-price :compact)
-  (update-usd-price (io.f-in/get-file-by-entity :forex-usd) 1)
+  (update-usd-price (db.f/get-all) 1)
   )

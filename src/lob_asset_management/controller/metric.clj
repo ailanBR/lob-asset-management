@@ -1,5 +1,6 @@
 (ns lob-asset-management.controller.metric
-  (:require [lob-asset-management.aux.time :as aux.t]
+  (:require [clojure.tools.logging :as log]
+            [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]))
 
@@ -12,7 +13,10 @@
                        (concat (or api-call []))
                        (assoc metric :metric/api-call))
         ]
-    (io.f-out/metric-file api-call')))
+    (try
+      (io.f-out/metric-file api-call')
+      (catch Exception e
+        (log/error "[METRICS] Error when writing metric information")))))
 
 (defn total-api-calls
   ([]

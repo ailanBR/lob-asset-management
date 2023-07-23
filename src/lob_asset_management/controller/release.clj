@@ -2,6 +2,7 @@
   (:require [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.db.asset :as db.a]
+            [lob-asset-management.db.forex :as db.f]
             [lob-asset-management.db.transaction :as db.t]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
@@ -99,7 +100,7 @@
         filtered-transactions (->> transactions
                                    (sort-by :transaction/created-at)
                                    (filter #(< (:transaction/created-at %) next-year-first-date)))
-        forex-usd (io.f-in/get-file-by-entity :forex-usd)
+        forex-usd (db.f/get-all)
         assets (db.a/get-all)
         portfolio-release (-> filtered-transactions
                               (c.p/process-transaction {:assets assets
@@ -107,7 +108,7 @@
                                                         :db-update false})
                               (a.p/portfolio-list->irpf-release))
         assets (db.a/get-all)
-        forex-usd (io.f-in/get-file-by-entity :forex-usd)
+        forex-usd (db.f/get-all)
         income-tax-release (->> portfolio-release
                                 (map #(generate-irpf-release % assets forex-usd year))
                                 (sort-by :year-total-invested)
