@@ -1,6 +1,7 @@
 (ns lob-asset-management.controller.portfolio
   (:require [clojure.tools.logging :as log]
             [lob-asset-management.adapter.portfolio :as a.p]
+            [lob-asset-management.db.forex :as db.f]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.logic.portfolio :as l.p]
             [lob-asset-management.db.asset :as db.a]
@@ -156,7 +157,7 @@
                                             (:transaction.asset/ticket %)) transactions)
                                 transactions)]
     (let [forex-usd (or (-> args first :forex-usd)
-                        (io.f-in/get-file-by-entity :forex-usd))
+                        (db.f/get-all))
           assets (or (-> args first :assets)
                      (db.a/get-all))
           portfolio (transactions->portfolio asset-transactions assets forex-usd)]

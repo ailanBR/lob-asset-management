@@ -6,6 +6,7 @@
             [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.controller.release :as c.r]
             [lob-asset-management.db.asset :as db.a]
+            [lob-asset-management.db.forex :as db.f]
             [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.io.file-in :as io.f-in]
             [mount.core :as mount]
@@ -105,7 +106,7 @@
 
 (defn start-processing
   [stock-window interval]
-  (let [forex-usd (io.f-in/get-file-by-entity :forex-usd)
+  (let [forex-usd (db.f/get-all)
         update-target-hour 3
         current-time (t/local-date-time)]
     (check-telegram-messages interval current-time)
@@ -138,7 +139,7 @@
       (case action
         "start" (let [interval 13000
                       stop-loop (poller "Main"
-                                        #(start-processing #{21 22 23} interval)
+                                        #(start-processing #{1 2 } interval)
                                         13000
                                         #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
                   (println "Press enter to stop...")
@@ -193,7 +194,6 @@
           (swap! c inc)
           {:x (str "[" @c "]" f " - " (or s ""))}) tm)
 
-
   (c.m/update-crypto-market-price)
-  (c.p/update-portfolio-representation (db.p/get-all) (io.f-in/get-file-by-entity :forex-usd))
+  (c.p/update-portfolio-representation (db.p/get-all) (db.f/get-all))
 )
