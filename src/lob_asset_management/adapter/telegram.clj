@@ -162,3 +162,12 @@
        "Total calls today => " today "\n"
        "Limit of " daily-limit " daily calls\n\n"
        "Total calls ever => " total))
+
+(defn commands-message
+  [commands]
+  (reduce #(str %1
+                (format "%-10s" (->> %2 first name (str "/")))
+                " - "
+                (-> %2 second :desc)
+                "\n")
+          "" commands))
