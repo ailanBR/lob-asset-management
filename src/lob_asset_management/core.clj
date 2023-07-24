@@ -84,7 +84,7 @@
 
 (defn check-telegram-messages
   [interval time]
-  (let [updates (t.bot/poll-updates bot @update-id)
+  (let [updates (t.bot/pull-updates bot @update-id)
         messages (:result updates)]
     (doseq [msg messages]
       (t.bot/handle-msg bot msg)
@@ -148,7 +148,7 @@
                   @(stop-loop))
         "read"    (c.p-f/process-folders)
         "release" (c.r/irpf-release (:year options))
-        "telegram" (t.bot/send-portfolio-table (t.bot/mybot))))))
+        "telegram" (t.bot/send-command (t.bot/mybot) :portfolio)))))
 
 (comment
   (schema.core/set-fn-validation! true)

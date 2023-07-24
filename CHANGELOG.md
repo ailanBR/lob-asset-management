@@ -142,6 +142,9 @@ All notable changes to this project will be documented in this file. This change
 - Add asset DB
 - Changed all read on [transaction, asset, portfolio] direct from io.f-in to db
 
+### 2023-07-24
+- Add telegram allowed commands message
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 

@@ -12,8 +12,8 @@
   [db-data assets]
   (when (not= db-data assets)
     (log/info "[UPDATE ASSET] New assets to be registered")
-    (io.f-out/upsert assets))
-  assets)
+    (io.f-out/upsert assets)
+    assets))
 
 (defn remove-already-exist
   [assets-keep asset-filtered]

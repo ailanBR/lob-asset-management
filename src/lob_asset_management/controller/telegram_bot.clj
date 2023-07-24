@@ -22,21 +22,41 @@
   ([message mybot]
    (tbot/send-message mybot telegram-personal-chat message {:parse_mode "html"})))
 
-(defn send-portfolio-table
-  ([mybot]
-   (send-portfolio-table mybot (db.p/get-all)))
-  ([mybot portfolio]
-   (let [portfolio-table (a.t/portfolio-table-message portfolio)]
-     (send-message portfolio-table mybot))))
+(defmulti send-command (fn [_ cmd] cmd))
 
-(defn send-asset-daily-price-change
-  [mybot]
+(def commands
+  {:portfolio {:fn   #(send-command % :portfolio)
+               :desc "Portfolio Table"}
+   :daily     {:fn   #(send-command % :daily)
+               :desc "D-1 price changes"}
+   :category  {:fn   #(send-command % :category)
+               :desc "Allocation by category"}
+   :total     {:fn   #(send-command % :total)
+               :desc "Total invested informations"}
+   ;:dividend  {:fn   #(send-command % :dividend)
+   ;            :desc "Total dividend received"}
+   :assets    {:fn   #(send-command % :assets)
+               :desc "Assets in portfolio"}
+   :prices    {:fn   #(send-command % :prices)
+               :desc "Total price changes"}
+   :alpha-api {:fn   #(send-command % :alpha-api)
+               :desc "Metrics about alpha api calls"}
+   :commands  {:fn   #(send-command % :commands)
+               :desc "List of allowed commands"}})
+
+(defmethod send-command :portfolio
+  [mybot _]
+  (let [portfolio-table (a.t/portfolio-table-message (db.p/get-all))]
+    (send-message portfolio-table mybot)))
+
+(defmethod send-command :daily
+  [mybot _]
   (let [result-release (c.r/compare-past-day-price-assets 1)
         result-message (a.t/asset-daily-change-message result-release)]
     (send-message result-message mybot)))
 
-(defn send-asset-price-change
-  [mybot]
+(defmethod send-command :prices
+  [mybot _]
   (let [assets (db.a/get-all)
         day (c.r/compare-past-day-price-assets assets 1)
         day' (map (fn [{:keys [ticket last-price diff-percentage]}]
@@ -59,14 +79,14 @@
         result-message (a.t/asset-price-change-message result)]
     (send-message result-message mybot)))
 
-(defn send-category-portfolio
-  [mybot]
+(defmethod send-command :category
+  [mybot _]
   (let [portfolio (db.p/get-all)
         portfolio-category (c.p/get-category-representation portfolio)]
     (send-message (a.t/category-portfolio-message portfolio-category) mybot)))
 
-(defn send-total-overview
-  [mybot]
+(defmethod send-command :total
+  [mybot _]
   (let [portfolio (db.p/get-all)
         portfolio-total (a.p/get-total portfolio)
         brl-total (->> portfolio
@@ -87,8 +107,8 @@
         a.t/total-overview-message
         (send-message mybot))))
 
-(defn send-assets-message
-  [mybot]
+(defmethod send-command :assets
+  [mybot _]
   (let [portfolio (db.p/get-all)]
     (send-message (a.t/assets-table-message portfolio) mybot)))
 
@@ -96,17 +116,21 @@
   [mybot]
   (send-message (nth a.t/phrases (rand-int (count a.t/phrases))) mybot))
 
-(defn send-alpha-api-calls
-  [mybot]
+(defmethod send-command :alpha-api
+  [mybot _]
   (let [calls (c.m/total-api-calls)]
     (send-message (a.t/alpha-api-calls-message calls) mybot)))
 
+(defmethod send-command :commands
+  [mybot _]
+  (send-message (a.t/commands-message commands) mybot))
+
 (def config {:timeout 10}) ;the bot api timeout is in seconds
 
-(defn poll-updates
+(defn pull-updates
   "Long poll for recent chat messages from Telegram."
   ([mybot]
-   (poll-updates mybot nil))
+   (pull-updates mybot nil))
 
   ([mybot offset]
    (let [resp (tbot/get-updates mybot {:offset offset
@@ -116,9 +140,9 @@
        resp))))
 
 (def auto-message-scheduled
-  [{:hour 21 :minute 00 :f send-total-overview}
-   {:hour 21 :minute 00 :f send-asset-daily-price-change}
-   {:hour 17 :minute 38 :f send-portfolio-table}])
+  [{:hour 21 :minute 00 :f #(send-command % :total)}
+   {:hour 21 :minute 00 :f #(send-command % :daily)}
+   {:hour 17 :minute 38 :f #(send-command % :portfolio)}])
 
 (defn auto-message
   [mybot time interval]
@@ -132,19 +156,14 @@
   []
   (tbot/create telegram-key))
 
+
 (defn handle-msg
   [mybot msg]
-  (let [msg-txt (-> msg :message :text)]
+  (let [msg-txt (-> msg :message :text)
+        msg-command (-> msg-txt (clojure.string/replace "/" "") keyword)]
     (log/info "[Telegram BOT] Message received " msg-txt)
-    (condp = msg-txt
-      "/portfolio" (send-portfolio-table mybot)
-      "/daily" (send-asset-daily-price-change mybot)
-      "/category" (send-category-portfolio mybot)
-      "/total" (send-total-overview mybot)
-      "/dividend" (send-invalid-command mybot)
-      "/assets" (send-assets-message mybot)
-      "/prices" (send-asset-price-change mybot)
-      "/alpha-api" (send-alpha-api-calls mybot)
+    (if-let [command-fn (-> commands msg-command :fn)]
+      (command-fn mybot)
       (send-invalid-command mybot))))
 
 (comment

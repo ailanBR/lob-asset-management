@@ -28,21 +28,9 @@
 (defn process-transactions
   [movements]
   (log/info "[PROCESS TRANSACTIONS] Started")
-  (let [                                                    ;db-transactions (db.t/get-all)
-        usd-price (db.f/get-all)
+  (let [usd-price (db.f/get-all)
         transactions (a.t/movements->transactions movements nil usd-price)]
     (db.t/update! transactions)))
-
-#_(defn process-portfolio
-    "Changed by c.p/process-transaction"
-    [transactions]
-    (when transactions
-      (let [forex-usd (db.f/get-all)
-            assets (db.a/get-all)
-            portfolio (a.p/transactions->portfolio transactions assets forex-usd)]
-        (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")
-        (db.p/overwrite portfolio)
-        portfolio)))
 
 (defn process-movement
   [movements]
