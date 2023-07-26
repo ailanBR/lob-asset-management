@@ -145,6 +145,9 @@ All notable changes to this project will be documented in this file. This change
 ### 2023-07-24
 - Add telegram allowed commands message
 
+### 2023-07-26
+- Change Alpha API function from TIME_SERIES_DAILY_ADJUSTED to TIME_SERIES_DAILY due changed to premium plan
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 

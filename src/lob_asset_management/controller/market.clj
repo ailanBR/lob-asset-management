@@ -204,7 +204,7 @@
 
 (comment
   (def market-formated (get-stock-market-price "ABEV3.SA"))
-  (get-stock-market-price "ABEV3.SA")
+  (get-stock-market-price :ABEV3)
   (get-crypto-market-price "BTC")
 
   (def company-overview (io.http/get-company-overview "ABEV3.SA"))
@@ -221,7 +221,6 @@
   (->> :asset
        (io.f-in/get-file-by-entity )
        (filter #(= :STX (:asset/ticket %)))
-       update-asset-market-price
-       )
+       update-asset-market-price)
 
   )

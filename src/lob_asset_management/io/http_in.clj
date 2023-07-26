@@ -16,7 +16,7 @@
    (get-daily-adjusted-prices symbol alpha-key))
   ([symbol api-key]
    (let [{:keys [status body]} (http-get "https://www.alphavantage.co/query"
-                                    {:query-params {:function "TIME_SERIES_DAILY_ADJUSTED"
+                                    {:query-params {:function "TIME_SERIES_DAILY"
                                                     :symbol   symbol
                                                     :apikey   api-key}})]
      (if (= status 200)
