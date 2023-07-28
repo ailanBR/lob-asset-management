@@ -92,8 +92,6 @@
 
   (def usd (get-forex-brl->usd))
 
-
   (get-crypto-price-real-time :blockstack)
-
 
   )
