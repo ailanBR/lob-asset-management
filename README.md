@@ -118,7 +118,7 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
 :portfolio.profit-loss/value
 ```
 --------------
-### Portfolio Configuration [TODO]
+### Portfolio Balance [TODO]
 
 1. Throw Asset type (StockBR StockEUA Crypto) by configuration
    1. Current situation gain/loss focusing in the lowest profit (Configuration first)
