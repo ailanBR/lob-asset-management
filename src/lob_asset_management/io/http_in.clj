@@ -15,7 +15,7 @@
   ([symbol]
    (get-daily-adjusted-prices symbol alpha-key))
   ([symbol api-key]
-   (let [{:keys [status body] :as r} (http-get "https://www.alphavantage.co/query"
+   (let [{:keys [status body]} (http-get "https://www.alphavantage.co/query"
                                     {:query-params {:function "TIME_SERIES_DAILY"
                                                     :symbol   symbol
                                                     :apikey   api-key}})]
@@ -92,8 +92,6 @@
 
   (def usd (get-forex-brl->usd))
 
-
   (get-crypto-price-real-time :blockstack)
-
 
   )

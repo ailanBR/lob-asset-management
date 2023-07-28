@@ -2,6 +2,7 @@
 
 A solution created to generate investments income tax release 
 
+--------------
 ## Usage
 ### Read XLSX movements
 
@@ -116,6 +117,7 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
 :portfolio.profit-loss/percentage 
 :portfolio.profit-loss/value
 ```
+--------------
 ### Portfolio Configuration [TODO]
 
 1. Throw Asset type (StockBR StockEUA Crypto) by configuration
@@ -127,11 +129,43 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    2. Verify the current gain/loss focusing in assets with loss
    3. Identify the best asset (Classify assets) / Determined asset configured allocation (throw category)
 
+**Rules**
+
+- Different configuration throw types (StockBR - StockEUA - Crypto)
+  - StockBR we use quantity and StockEUA/Crypto we use total money to allocate
+  - StockBR => Buy at least one asset quantity
+  - StockEUA/Crypto => Distribute the amount based in the category allocation and asset priority
+- Configure asset allowed to be purchased
+- Configure asset priority
+  - options :
+    - [ ] Fixed Percentage (ex 50)
+    - [ ] Classification range number (ex 1~5)
+    - [ ] Recent or/and total decrease in price have most priority
+    - [ ] Composition of recent/total decrease in value plus classification
+
+**Flow StockBR**
+1. Determine how much money will be allocated
+2. Buy at least one position for each allowed asset
+3. Current category allocation with the previews step X category configuration
+4. Divide the rest of the money following the reminder needs to archive the configuration by category
+5. Follow the asset priority configuration to choose the asset
+
+**Flow Stock EUA**
+1. Determine how much money will be allocated
+2. Check the current category allocation x configuration
+3. Divide the total between category to archive the goal
+4. Divide the total in category by asset fallowing asset priority configuration
+
+**Flow for Crypto**
+1. Determine how much money will be allocated
+2. Divide the total between asset priority
+
+--------------
 ## How allow Telegram Bot
 
 1. [Obtain Your Bot Token](https://core.telegram.org/bots/tutorial#obtain-your-bot-token)
 2. Set the key as `telegram-bot-key` environment variable
-
+--------------
 ## TODO
 
 1. Provide where asset need to be purchase and how much `high`
@@ -148,17 +182,17 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    3. [ ] Do nothing
       1. Solution works for read/write entities in terminal
       2. ~~The problem is only **maybe** in the in-data files~~
-4. [Http_in] Find another option for Alpha API / Web Scraping `Medium`
+3. [Http_in] Find another option for Alpha API / Web Scraping `Medium`
    1. [X] Coingecko for crypto 
    2. [ ] Web Scraping for Stock information
-5. Consider subscription events `Low`
-6. Get asset information `Very low`
-7. Create forex DB `Medium`
+4. Consider subscription events `Low`
+5. Get asset information `Very low`
+6. Create forex DB `Medium`
 
 ## FIXME
 
 1. Set telegram key as environment variable `Very low`
-
+--------------
 ## License
 
 Copyright © 2023 FIXME
