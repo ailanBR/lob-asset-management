@@ -239,8 +239,8 @@
 
   ;#6a - Get how much of the asset needs I can purchase
   (map (fn [cxc+a-r]
-         (let [n-p (:need-purchase cxc+a-r)
-               a (:needs-amount cxc+a-r)]
+         (let [n-p (:need-purchase cxc+a-r)                 ;->allowed-assets
+               a (:needs-amount cxc+a-r)]                   ;->Budget
            ;(println "")
            ;(println (:category cxc+a-r))
            (reduce (fn [cb n-a]
