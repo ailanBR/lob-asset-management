@@ -199,6 +199,98 @@
        (map consolidate-categories)
        (set-category-representation)))
 
+;Portfolio balance====================================================
+(def config {:ti        20M
+             :transport 7M
+             :cannabis  1M
+             :industry  5M
+             :energy    5M
+             :fii       19M
+             :world     4M
+             :food      6M
+             :finance   8M
+             :health    6M
+             :crypto    18M
+             :telecom   1M})
+
+(defn portfolio-category->allocation-needs
+  [config {:category/keys [name percentage]}]
+  (let [config-val (get config name)]
+    {:category           name
+     :configured         config-val
+     :current-percentage percentage
+     :diff               (- config-val percentage)
+     :needs              (if (> (- config-val percentage) 0M)
+                           (- config-val percentage)
+                           0M)}))
+
+(defn allocation-needs-percent
+  [portfolio-categories]
+  (reduce #(->> %2
+               (portfolio-category->allocation-needs config)
+               list
+               (concat %1)) [] portfolio-categories))
+
+(defn- add-amount-needs
+  [total-amount {:keys [needs] :as portfolio-category}]
+  (assoc portfolio-category
+    :budget (* total-amount (if (> needs 0M) (/ needs 100) 0M))))
+
+(defn allocation-budget
+  ;TODO: Maybe consider budget instead of amount needs
+  [portfolio portfolio-categories]
+  (let [total-amount-needed (->> portfolio (map :category/total-last-value) (reduce #(+ %1 %2) 0))]
+    (map #(add-amount-needs total-amount-needed %) portfolio-categories)))
+
+(defn add-allowed-assets
+  [{:keys [budget category] :as portfolio-category}
+   assets]
+  (if (> budget 0M)
+    (->> assets
+         (filter #(and (= category (-> % :asset/category first))
+                       (:asset.market-price/price %)
+                       (> (:asset.market-price/price %) 0M)))
+         (map (fn [{:asset/keys [ticket]
+                    :asset.market-price/keys [price]}]
+                {:ticket ticket
+                 :value  price}))
+         (assoc portfolio-category :allowed-assets))
+    portfolio-category))
+
+(defn get-assets-ticket-to-invest
+  [portfolio-categories]
+  (let [assets (db.a/get-all)]
+    (map #(add-allowed-assets % assets)) portfolio-categories))
+
+(defn add-affordable-assets
+  [{:keys [allowed-assets budget]}]
+  (reduce (fn [{:keys [budget can-buy] :as cart} {:keys [ticket value] :as asset}]
+            (when asset
+              (if (> (- budget value) 0M)
+                {:budget  (- budget value)
+                 :can-buy (concat can-buy [ticket])}
+                cart)))
+          {:budget budget :can-buy []} allowed-assets))
+
+(defn get-assets-quantity-to-invest
+  [portfolio-categories]
+  (map add-affordable-assets portfolio-categories))
+
+(defn portfolio-balance
+  []
+  (let [portfolio-category (-> (db.p/get-all) get-category-representation)]
+    (->> portfolio-category
+         (remove #(= (:category/percentage %) 0.0))
+         allocation-needs-percent
+         (allocation-budget portfolio-category)
+         get-assets-ticket-to-invest
+         get-assets-quantity-to-invest)))
+
+;TODO :
+; 1. Allow artificial increase of budget
+; 2. Change last format to include category
+; 3. Fix can-buy list
+
 (comment
   ;Lets test
   ;TODO: Step 2 => Remove duplicated by ticket
