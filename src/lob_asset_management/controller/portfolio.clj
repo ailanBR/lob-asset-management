@@ -8,17 +8,8 @@
             [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.db.transaction :as db.t]))
 
-;;TODO : Do all together
-;; 1. Identify incorporation event
-;; 2. Get new asset transactions
-;; 3. Concat with current transactions
-;;  3.1 Loop for new until get no more
-;; 4. Process
-;; [DONE]
-;; --- Remove duplicated
-;; 1. Group by ticket
-;; 2. Get ids
-;; 4. Reprocess
+
+;Portfolio processing transactions====================================================
 
 (defn formatted-transactions
   [transactions]
@@ -178,6 +169,7 @@
       (db.p/overwrite! updated-portfolio)
       updated-portfolio)))
 
+;Portfolio category====================================================
 (defn consolidate-categories
   [[_ p]]
   (reduce a.p/portfolio->category-representation {} p))
@@ -237,7 +229,7 @@
     :budget (* total-amount (if (> needs 0M) (/ needs 100) 0M))))
 
 (defn allocation-budget
-  ;TODO: Maybe consider budget instead of amount needs
+  ;TODO: Maybe consider budget instead of amount needs OR a combination of both
   [portfolio portfolio-categories]
   (let [total-amount-needed (->> portfolio (map :category/total-last-value) (reduce #(+ %1 %2) 0))]
     (map #(add-amount-needs total-amount-needed %) portfolio-categories)))
@@ -249,8 +241,9 @@
     (->> assets
          (filter #(and (= category (-> % :asset/category first))
                        (:asset.market-price/price %)
-                       (> (:asset.market-price/price %) 0M)))
-         (map (fn [{:asset/keys [ticket]
+                       (> (:asset.market-price/price %) 0M)
+                       (= (:asset/type %) :stockBR)))
+         (map (fn [{:asset/keys              [ticket]
                     :asset.market-price/keys [price]}]
                 {:ticket ticket
                  :value  price}))
@@ -260,21 +253,51 @@
 (defn get-assets-ticket-to-invest
   [portfolio-categories]
   (let [assets (db.a/get-all)]
-    (map #(add-allowed-assets % assets)) portfolio-categories))
+    (map #(add-allowed-assets % assets) portfolio-categories)))
 
-(defn add-affordable-assets
-  [{:keys [allowed-assets budget]}]
-  (reduce (fn [{:keys [budget can-buy] :as cart} {:keys [ticket value] :as asset}]
-            (when asset
-              (if (> (- budget value) 0M)
-                {:budget  (- budget value)
-                 :can-buy (concat can-buy [ticket])}
-                cart)))
-          {:budget budget :can-buy []} allowed-assets))
+(defn update-can-buy
+  [can-buy {:keys [ticket value]}]
+  (if-let [quantity' (->> can-buy
+                          (filter #(= ticket (-> % first first)))
+                          first
+                          vals
+                          first
+                          :quantity)]
+    (->> can-buy
+         (remove #(= ticket (-> % first first)))
+         (concat [{ticket {:value value :quantity (inc quantity')}}]))
+    (concat can-buy [{ticket {:value value :quantity 1}}])))
+
+(defn add-affordable-asset
+  [{:keys [budget can-buy] :as cart} {:keys [value] :as asset}]
+  (when asset
+    (if (> (- budget value) 0M)
+      (let [budget' (- budget value)
+            can-buy' (update-can-buy can-buy asset)]
+        (assoc cart
+          :budget budget'
+          :can-buy can-buy'))
+      cart)))
+
+(defn reduce-assets
+  [{:keys [budget category allowed-assets]}]
+  (let [budget+can-buy (atom {:budget budget :can-buy [] :category category})
+        continue? (atom true)
+        lowest-value-asset (->> allowed-assets (map :value) sort first)]
+    (while @continue?
+      (let [{new-budget  :budget
+             new-can-buy :can-buy :as updated-affordable}
+            (reduce add-affordable-asset @budget+can-buy allowed-assets)]
+        (when (or (= new-budget (:budget @budget+can-buy))
+                  (empty? new-can-buy)
+                  (> lowest-value-asset new-budget))
+          (reset! continue? false))
+        (reset! budget+can-buy updated-affordable)))
+    @budget+can-buy))
 
 (defn get-assets-quantity-to-invest
   [portfolio-categories]
-  (map add-affordable-assets portfolio-categories))
+  (map reduce-assets portfolio-categories))
 
 (defn portfolio-balance
   []
@@ -288,8 +311,7 @@
 
 ;TODO :
 ; 1. Allow artificial increase of budget
-; 2. Change last format to include category
-; 3. Fix can-buy list
+; 2. Move config to another location/file
 
 (comment
   ;Lets test
