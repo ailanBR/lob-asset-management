@@ -182,5 +182,9 @@
   (tbot/get-my-commands mybot)
 
   (tbot/send-message mybot telegram-personal-chat "Teste pulando 1 linha \n linha 2" {:parse_mode "MarkdownV2"})
+
+  (tbot/send-document )
+
+  (tbot/set-my-commands )
   )
 
