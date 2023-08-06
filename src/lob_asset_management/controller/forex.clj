@@ -4,8 +4,6 @@
             [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.db.forex :as db.f]
             [lob-asset-management.io.http_in :as io.http]
-            [lob-asset-management.io.file-in :as io.f-in]
-            [lob-asset-management.io.file-out :as io.f-out]
             [schema.core :as s]))
 
 (s/defn get-usd-price
@@ -49,13 +47,13 @@
              usd-last-price (get-usd-price output-size)
              updated-forex (update-forex-usd forex-usd usd-last-price)]
          (log/info "[FOREX-UPDATING] Success with size " output-size " last price" (:price usd-last-price))
-         (io.f-out/upsert updated-forex)
+         (db.f/upsert! updated-forex)
          updated-forex)
        (catch Exception e
          (let [causes (-> e ex-data :causes)]
            (when (contains? causes :alpha-api-limit)
              (let [force-updated-forex (update-forex-usd forex-usd)]
-               (io.f-out/upsert force-updated-forex))))))
+               (db.f/upsert! updated-forex))))))
      (log/warn "[FOREX-UPDATING] No usd price to be updated"))))
 
 (comment
