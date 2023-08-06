@@ -1,5 +1,10 @@
 (ns lob-asset-management.adapter.telegram
-  (:require [lob-asset-management.logic.portfolio :as l.p]))
+  (:require [clojure.string :as str]
+            [lob-asset-management.logic.portfolio :as l.p]
+            [lob-asset-management.aux.time :as t]
+            [lob-asset-management.db.telegram :as db.t]
+            [schema.core :as s])
+  (:import (java.util UUID)))
 
 (defn portfolio-table-message
   [portfolio]
@@ -70,7 +75,7 @@
        "|----------|:----------:|-------|\n"                ;-----------|
        (reduce #(str %1
                      "|"
-                     (format "%-10s" (-> %2 :category/name name clojure.string/upper-case))
+                     (format "%-10s" (-> %2 :category/name name str/upper-case))
                      "|"
                      (format "%-12s"
                              (str "R$" (format "%9s" (format "%.2f" (:category/total-last-value %2)))))
@@ -171,3 +176,16 @@
                 (-> %2 second :desc)
                 "\n")
           "" commands))
+
+(s/defn msg->category :- s/Keyword [msg] :uncategorized) ;TODO
+
+(s/defn msg-out->msg-in :- db.t/TelegramMessage
+  [msg]
+  (let [command (-> msg (str/split #" ") first (str/replace "/" "") keyword)
+        msg' (-> msg (str/split #" ") rest)]
+    {:telegram/id         (UUID/randomUUID)
+     :telegram/message    (str/join " " msg')
+     :telegram/created-at (str (t/current-date-time))
+     :telegram/category   (msg->category msg)
+     :telegram/active     true
+     :telegram/command    command}))

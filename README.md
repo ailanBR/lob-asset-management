@@ -168,9 +168,11 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
 --------------
 ## TODO
 
-1. Provide where asset need to be purchase and how much `high`
-   1. Classify asset
-   2. Set category necessary percentage allocation
+1. Provide where asset need to be purchase and how much `high
+   1. [X] v1 Get allocation needs following configuration 
+   2. [ ] v2 Consider extra budget
+   3. [ ] v3 Consider recent asset performance
+   4. [ ] vX Simulator
 2. Store data on cloud `Medium`
    1. [ ] AWS
       1. ~~Thinking about the item 4. maybe we can use S3 only for the in-data files~~
@@ -187,7 +189,6 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    2. [ ] Web Scraping for Stock information
 4. Consider subscription events `Low`
 5. Get asset information `Very low`
-6. Create forex DB `Medium`
 
 ## FIXME
 

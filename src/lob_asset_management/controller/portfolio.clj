@@ -203,7 +203,7 @@
              :finance   8M
              :health    6M
              :crypto    18M
-             :telecom   1M})
+             :telecom   0M})
 
 (defn portfolio-category->allocation-needs
   [config {:category/keys [name percentage]}]
@@ -225,13 +225,20 @@
 
 (defn- add-amount-needs
   [total-amount {:keys [needs] :as portfolio-category}]
-  (assoc portfolio-category
-    :budget (* total-amount (if (> needs 0M) (/ needs 100) 0M))))
+  (let [budget (* total-amount (if (> needs 0M) (/ needs 100) 0M))]
+    (assoc portfolio-category :budget budget)))
+
+(defn to-invest-categorized
+  [to-invest-budget]
+  {:pre [(number? to-invest-budget)]}
+  (map (fn [c]
+         {(key c) (* to-invest-budget (/ (val c) 100))}) config))
 
 (defn allocation-budget
   ;TODO: Maybe consider budget instead of amount needs OR a combination of both
-  [portfolio portfolio-categories]
-  (let [total-amount-needed (->> portfolio (map :category/total-last-value) (reduce #(+ %1 %2) 0))]
+  [portfolio to-invest-budget portfolio-categories]
+  (let [total-amount-needed (->> portfolio (map :category/total-last-value) (reduce #(+ %1 %2) 0))
+        to-invest-categorized (-> total-amount-needed (- to-invest-budget) to-invest-categorized)]
     (map #(add-amount-needs total-amount-needed %) portfolio-categories)))
 
 (defn add-allowed-assets
@@ -305,7 +312,7 @@
     (->> portfolio-category
          (remove #(= (:category/percentage %) 0.0))
          allocation-needs-percent
-         (allocation-budget portfolio-category)
+         (allocation-budget portfolio-category 0M)
          get-assets-ticket-to-invest
          get-assets-quantity-to-invest)))
 
@@ -315,7 +322,6 @@
 
 (comment
   ;Lets test
-  ;TODO: Step 2 => Remove duplicated by ticket
   (def transactions (db.t/get-all))
   (process-transaction transactions {:db-update false :ticket :GNDI3}) ;OK
   (process-transaction transactions {:db-update false :ticket :BIDI11}) ;OK
