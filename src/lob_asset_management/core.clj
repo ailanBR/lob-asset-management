@@ -139,7 +139,7 @@
       (case action
         "start" (let [interval 13000
                       stop-loop (poller "Main"
-                                        #(start-processing #{8 9 21 22 23} interval)
+                                        #(start-processing #{21 22 23} interval)
                                         13000
                                         #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
                   (println "Press enter to stop...")
@@ -155,106 +155,6 @@
 
   (c.p-f/delete-all-files)
   (c.p-f/process-folders)
-  ;=========================================
-  ;TODO : Determine how much is needed to get a pre set percentage
-  ;       By asset type!
-  ;#1 - Get current category representation
-  (def p (db.p/get-all))
-  (c.p/get-category-representation p)
-  (->> p
-       c.p/get-category-representation
-       (remove #(= (:category/percentage %) 0.0))
-       (map :category/total-last-value)
-       (reduce #(+ %1 %2) 0)
-       ;(clojure.pprint/print-table [:category/name :category/percentage])
-       )
-  (def c (->> p
-              c.p/get-category-representation
-              (remove #(= (:category/percentage %) 0.0))
-              ;(map :category/percentage)
-              ;(reduce #(+ %1 %2) 0)
-              ;(clojure.pprint/print-table [:category/name :category/percentage])
-              ))
-
-  ;#2 - Get configured allocation
-  (def conf {:ti        20M
-             :transport 7M
-             :cannabis  1M
-             :industry  5M
-             :energy    5M
-             :fii       19M
-             :world     4M
-             :food      6M
-             :finance   8M
-             :health    6M
-             :crypto    18M
-             :telecom   1M})
-
-  ;(reduce #(+ %1 (val %2)) 0 conf)
-
-  ;#3 - Get percentage allocation needs [#1 x #2]
-  ;{:category
-  ; :configured
-  ; :current-allocation
-  ; :diff
-  ; :needs }
-  (def cxc (reduce (fn [r p]
-                     (let [config-val ((:category/name p) conf)]
-                       (concat r
-                               [{:category           (:category/name p)
-                                 :configured         config-val
-                                 :current-percentage (:category/percentage p)
-                                 :diff               (- config-val (:category/percentage p))
-                                 :needs              (if (> (- config-val (:category/percentage p)) 0M)
-                                                       (- config-val (:category/percentage p))
-                                                       0M)}]))) [] c))
-
-   ;(map :needs cxc)
-  ;#4 - Get amount allocation needs
-  (def cxc-v (let [tt (->> c (map :category/total-last-value) (reduce #(+ %1 %2) 0))]
-               (map (fn [cxc-r]
-                      (assoc cxc-r
-                        :needs-amount (* tt (if (> (:needs cxc-r) 0M)
-                                              (/ (:needs cxc-r) 100)
-                                              0M)))) cxc)))
-
-  ;#5 - Get asset to be invested
-  (->> (db.a/get-all)
-      (map :asset/category))
-
-  (def cxc+a (let [assets (db.a/get-all)]
-         (map (fn [cxc-v-r]
-                (if (> (:needs-amount cxc-v-r) 0M)
-                  (let [a-ctg
-                        (filter (fn [a]
-                                  (and (= (:category cxc-v-r) (first (:asset/category a)))
-                                       (:asset.market-price/price a)
-                                       (> (:asset.market-price/price a) 0M))) assets)
-                        a-n (map (fn [a]
-                                   {:ticket (:asset/ticket a)
-                                    :value  (:asset.market-price/price a)}) a-ctg)]
-                    (assoc cxc-v-r
-                      :need-purchase a-n))
-                  cxc-v-r)) cxc-v)))
-
-  ;#6a - Get how much of the asset needs I can purchase
-  (map (fn [cxc+a-r]
-         (let [n-p (:need-purchase cxc+a-r)                 ;->allowed-assets
-               a (:needs-amount cxc+a-r)]                   ;->Budget
-           ;(println "")
-           ;(println (:category cxc+a-r))
-           (reduce (fn [cb n-a]
-                     (when n-a
-                       (println (:ticket n-a) "-" (:amount cb) "-" (:value n-a) "-" (- (:amount cb) (:value n-a)) )
-                       (if (> (- (:amount cb) (:value n-a)) 0M)
-                         {:amount (- (:amount cb) (:value n-a))
-                          :can-buy (concat (:can-buy cb) [(:ticket n-a)])}
-                         cb)))
-                   {:amount a :can-buy []} n-p))) cxc+a)
-
-  ;FIXME : result of #6a needs to be the same model of cxc+a to be reprocessed
-  ;#6b - Do until (:needs-amount cxc+a-r) can't purchase any asset
-
   ;=========================================
 
   (clojure.pprint/print-table

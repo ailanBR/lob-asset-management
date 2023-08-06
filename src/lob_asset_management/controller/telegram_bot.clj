@@ -7,10 +7,12 @@
             [lob-asset-management.controller.metric :as c.m]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.portfolio :as db.p]
-            [lob-asset-management.io.file-in :as io.file-in]
+            [lob-asset-management.db.telegram :as db.t]
             [lob-asset-management.relevant :refer [telegram-key telegram-personal-chat]]
-            [telegrambot-lib.core :as tbot]
-            [mount.core :as mount :refer [defstate]]))
+            [mount.core :refer [defstate]]
+            [telegrambot-lib.core :as tbot]))
+
+;TODO: Save command
 
 (defstate bot
           :start (tbot/create telegram-key))
@@ -22,41 +24,43 @@
   ([message mybot]
    (tbot/send-message mybot telegram-personal-chat message {:parse_mode "html"})))
 
-(defmulti send-command (fn [_ cmd] cmd))
+(defmulti send-command (fn [_ _ cmd] cmd))
 
 (def commands
-  {:portfolio {:fn   #(send-command % :portfolio)
+  {:portfolio {:fn   #(send-command %1 %2 :portfolio)
                :desc "Portfolio Table"}
-   :daily     {:fn   #(send-command % :daily)
+   :daily     {:fn   #(send-command %1 %2 :daily)
                :desc "D-1 price changes"}
-   :category  {:fn   #(send-command % :category)
+   :category  {:fn   #(send-command %1 %2 :category)
                :desc "Allocation by category"}
-   :total     {:fn   #(send-command % :total)
+   :total     {:fn   #(send-command %1 %2 :total)
                :desc "Total invested informations"}
    ;:dividend  {:fn   #(send-command % :dividend)
    ;            :desc "Total dividend received"}
-   :assets    {:fn   #(send-command % :assets)
+   :assets    {:fn   #(send-command %1 %2 :assets)
                :desc "Assets in portfolio"}
-   :prices    {:fn   #(send-command % :prices)
+   :prices    {:fn   #(send-command %1 %2 :prices)
                :desc "Total price changes"}
-   :alpha-api {:fn   #(send-command % :alpha-api)
+   :alpha-api {:fn   #(send-command %1 %2 :alpha-api)
                :desc "Metrics about alpha api calls"}
-   :commands  {:fn   #(send-command % :commands)
-               :desc "List of allowed commands"}})
+   :commands  {:fn   #(send-command %1 %2 :commands)
+               :desc "List of allowed commands"}
+   :s         {:fn   #(send-command %1 %2 :save)
+               :desc "Save anything"}})
 
 (defmethod send-command :portfolio
-  [mybot _]
+  [mybot _ _]
   (let [portfolio-table (a.t/portfolio-table-message (db.p/get-all))]
     (send-message portfolio-table mybot)))
 
 (defmethod send-command :daily
-  [mybot _]
+  [mybot _ _]
   (let [result-release (c.r/compare-past-day-price-assets 1)
         result-message (a.t/asset-daily-change-message result-release)]
     (send-message result-message mybot)))
 
 (defmethod send-command :prices
-  [mybot _]
+  [mybot _ _]
   (let [assets (db.a/get-all)
         day (c.r/compare-past-day-price-assets assets 1)
         day' (map (fn [{:keys [ticket last-price diff-percentage]}]
@@ -80,13 +84,13 @@
     (send-message result-message mybot)))
 
 (defmethod send-command :category
-  [mybot _]
+  [mybot _ _]
   (let [portfolio (db.p/get-all)
         portfolio-category (c.p/get-category-representation portfolio)]
     (send-message (a.t/category-portfolio-message portfolio-category) mybot)))
 
 (defmethod send-command :total
-  [mybot _]
+  [mybot _ _]
   (let [portfolio (db.p/get-all)
         portfolio-total (a.p/get-total portfolio)
         brl-total (->> portfolio
@@ -108,22 +112,31 @@
         (send-message mybot))))
 
 (defmethod send-command :assets
-  [mybot _]
+  [mybot _ _]
   (let [portfolio (db.p/get-all)]
     (send-message (a.t/assets-table-message portfolio) mybot)))
+
+(defmethod send-command :alpha-api
+  [mybot _ _]
+  (let [calls (c.m/total-api-calls)]
+    (send-message (a.t/alpha-api-calls-message calls) mybot)))
+
+(defmethod send-command :commands
+  [mybot _ _]
+  (send-message (a.t/commands-message commands) mybot))
+
+(defmethod send-command :save
+  [mybot msg _]
+  (db.t/insert msg)
+  (send-message "Message received \uD83E\uDDDE" mybot))
 
 (defn send-invalid-command
   [mybot]
   (send-message (nth a.t/phrases (rand-int (count a.t/phrases))) mybot))
 
-(defmethod send-command :alpha-api
-  [mybot _]
-  (let [calls (c.m/total-api-calls)]
-    (send-message (a.t/alpha-api-calls-message calls) mybot)))
-
-(defmethod send-command :commands
-  [mybot _]
-  (send-message (a.t/commands-message commands) mybot))
+(defn send-error-command
+  [mybot exception]
+  (send-message (str "Houston, we have a problem \uD83D\uDCA9 \n\n" (ex-message exception)) mybot))
 
 (def config {:timeout 10}) ;the bot api timeout is in seconds
 
@@ -156,15 +169,18 @@
   []
   (tbot/create telegram-key))
 
-
 (defn handle-msg
   [mybot msg]
-  (let [msg-txt (-> msg :message :text)
-        msg-command (-> msg-txt (clojure.string/replace "/" "") keyword)]
-    (log/info "[Telegram BOT] Message received " msg-txt)
-    (if-let [command-fn (-> commands msg-command :fn)]
-      (command-fn mybot)
-      (send-invalid-command mybot))))
+  (try
+    (when (= 772662600 (-> msg :message :from :id))
+      (let [msg-txt (-> msg :message :text)
+            {:telegram/keys [command] :as message} (a.t/msg-out->msg-in msg-txt)]
+        (log/info "[Telegram BOT] Message received " msg-txt)
+        (if-let [command-fn (-> commands command :fn)]
+          (command-fn mybot message)
+          (send-invalid-command mybot))))
+    (catch Exception e
+      (send-error-command mybot e))))
 
 (comment
   (def mybot (tbot/create telegram-key))
@@ -186,5 +202,6 @@
   (tbot/send-document )
 
   (tbot/set-my-commands )
+
   )
 

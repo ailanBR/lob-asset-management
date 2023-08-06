@@ -89,6 +89,11 @@
         file-path (str root-directory "metric/metric.edn")]
     (edn->file data file-path)))
 
+(defmethod upsert :telegram [data]
+  ;(create-backup :read-release)
+  (let [file-path (file-full-path :telegram)]
+    (edn->file data file-path)))
+
 (defn delete-file
   [file-path]
   (file-delete file-path))
