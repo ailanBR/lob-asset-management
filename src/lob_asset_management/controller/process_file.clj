@@ -2,16 +2,13 @@
   (:require [clojure.tools.logging :as log]
             [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.adapter.transaction :as a.t]
-            [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.forex :as db.f]
-            [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.db.transaction :as db.t]
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.io.file-in :as io.f-in]
-            [lob-asset-management.logic.asset :as l.a]
             [lob-asset-management.models.file :as m.f]
             [lob-asset-management.relevant :refer [config incorporation-movements]]))
 
@@ -22,7 +19,7 @@
         assets (a.a/movements->assets movements db-assets)]
     (when (not= db-assets assets)
       (log/info "[PROCESS ASSETS] New assets to be registered")
-      (io.f-out/upsert assets)
+      (db.a/update! assets)
       assets)))
 
 (defn process-transactions

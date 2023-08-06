@@ -21,9 +21,8 @@
 
 (defn update!
   [assets]
-  (let [db-data (get-all)]
-    (->> []
-         (or db-data)
+  (let [db-data (or (get-all) [])]
+    (->> db-data
          (remove-already-exist assets)
          (concat (or assets []))
          (sort-by :asset/name)

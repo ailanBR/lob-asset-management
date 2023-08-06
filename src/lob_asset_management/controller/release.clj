@@ -4,7 +4,6 @@
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.forex :as db.f]
             [lob-asset-management.db.transaction :as db.t]
-            [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.aux.time :as aux.t]))
 

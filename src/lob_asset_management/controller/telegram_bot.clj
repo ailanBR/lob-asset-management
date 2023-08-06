@@ -12,7 +12,7 @@
             [mount.core :refer [defstate]]
             [telegrambot-lib.core :as tbot]))
 
-;TODO: Save command
+;TODO: Get saved messages
 
 (defstate bot
           :start (tbot/create telegram-key))

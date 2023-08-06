@@ -2,8 +2,6 @@
   (:require [clojure.tools.logging :as log]
             [java-time.api :as t]
             [lob-asset-management.io.http_in :as io.http]
-            [lob-asset-management.io.file-in :as io.f-in]
-            [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.aux.time :as aux.t]
@@ -130,7 +128,7 @@
                            asset))]
          (->> assets
               (map update-fn)
-              io.f-out/upsert))))))
+              db.a/update!))))))
 
 (defn update-asset-updated-at
   [{:asset/keys [id] :as asset}
@@ -218,8 +216,7 @@
 
   (def ap (get-asset-market-price as))
 
-  (->> :asset
-       (io.f-in/get-file-by-entity )
+  (->> (db.a/get-all)
        (filter #(= :STX (:asset/ticket %)))
        update-asset-market-price)
 

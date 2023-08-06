@@ -2,7 +2,6 @@
   (:require [clojure.tools.logging :as log]
             [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.db.forex :as db.f]
-            [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.logic.portfolio :as l.p]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.portfolio :as db.p]
