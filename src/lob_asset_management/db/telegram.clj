@@ -14,8 +14,15 @@
   []
   (io.f-in/get-file-by-entity :telegram))
 
+(defn new-message?
+  [{:telegram/keys [message]} db-data]
+  (->> db-data
+       (filter #(= message (:telegram/message %)))
+       first))
+
 (s/defn insert
   [msg :- TelegramMessage]
   (let [db-data (or (get-all) [])
         msg' (if (map? msg) (list msg) msg)]
-    (->> msg' (concat db-data) io.f-out/upsert)))
+    (when (not (new-message? (first msg') db-data))
+      (->> msg' (concat db-data) io.f-out/upsert))))
