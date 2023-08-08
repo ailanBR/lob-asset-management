@@ -53,7 +53,7 @@
          (let [causes (-> e ex-data :causes)]
            (when (contains? causes :alpha-api-limit)
              (let [force-updated-forex (update-forex-usd forex-usd)]
-               (db.f/upsert! updated-forex))))))
+               (db.f/upsert! force-updated-forex))))))
      (log/warn "[FOREX-UPDATING] No usd price to be updated"))))
 
 (comment
