@@ -64,26 +64,6 @@
   [_]
   (throw (ex-info "Alpha API limit have reached" {:causes #{:alpha-api-limit}})))
 
-#_(defn formatted-data
-  [{:keys [Meta_Data Time_Series_Daily Time_Series_FX_Daily
-           Time_Series_Digital_Currency_Daily]}]
-  (let [meta-data (str-space->keyword-underline Meta_Data)
-        time-series (str-space->keyword-underline (or Time_Series_Daily
-                                                      Time_Series_Digital_Currency_Daily
-                                                      Time_Series_FX_Daily))]
-    (when-let [latest-refreshed-dt (market-info->last-refreshed-dt meta-data)]
-      (let [latest-refreshed-price (-> time-series
-                                       latest-refreshed-dt
-                                       str-space->keyword-underline
-                                       remove-keyword-parenthesis)
-            closed-price (bigdec (or (:4._close latest-refreshed-price)
-                                     (:4a._close_BRL latest-refreshed-price)))
-            price-historic (format-historic-price time-series)]
-        {:price      closed-price
-         :date       latest-refreshed-dt
-         :updated-at (aux.t/get-current-millis)
-         :historic   price-historic}))))
-
 (defn response->internal
   [body]
   (-> body

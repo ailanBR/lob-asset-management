@@ -26,7 +26,7 @@
   [movements]
   (log/info "[PROCESS TRANSACTIONS] Started")
   (let [usd-price (db.f/get-all)
-        transactions (a.t/movements->transactions movements nil usd-price)]
+        transactions (a.t/movements->transactions movements usd-price)]
     (db.t/update! transactions)))
 
 (defn process-movement

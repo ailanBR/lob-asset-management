@@ -5,7 +5,6 @@
   {:asset/name        "BBAS3 - BANCO DO BRASIL S/A"
    :asset/ticket      :BBAS3
    :asset/category    [:finance]
-   :asset/last-price  0.0M
    :asset/type        :stockBR})
 
 (def asset-2
