@@ -121,25 +121,13 @@
       :transaction/incorporated-by (a.a/movement-ticket->asset-ticket incorporated-by)
       :transaction/factor          (movement-factor->transaction-factor factor))))
 
-(defn remove-already-exist-transaction
-  [db-data transactions]
-  (if (empty? db-data)
-    transactions
-    (remove #(let [db-data-tickets (->> db-data (map :transaction/id) set)]
-               (contains? db-data-tickets (:transaction/id %))) transactions)))
-
 (defn movements->transactions
-  [mov _ forex-usd]
+  [mov forex-usd]
   (log/info "[TRANSACTION] Processing adapter...current transactions [" (count mov) "]")
   (let [mov-transactions (->> mov
                               (map #(movements->transaction % forex-usd))
                               (group-by :transaction/id)
-                              (map #(->> % val (sort-by :transaction/processed-at) last)))
-        ;new-transactions (->> mov-transactions
-        ;                      (remove-already-exist-transaction db-data)
-        ;                      (concat (or db-data []))
-        ;                      (sort-by :transaction.asset/ticket))
-        ]
+                              (map #(->> % val (sort-by :transaction/processed-at) last)))]
     (log/info "[TRANSACTION] Concluded adapter... "
               "read transactions[" (count mov-transactions) "] "
               "result [" (count mov-transactions) "]")

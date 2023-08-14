@@ -107,7 +107,7 @@
                                        (contains? (:portfolio/exchanges %) :pancakeswap)))
                           a.p/get-total)]
     (-> portfolio-total
-        (assoc :total/brl brl-total :total/usd usd-total :total/crypto crypto-total)
+        (merge {:total/brl brl-total :total/usd usd-total :total/crypto crypto-total})
         a.t/total-overview-message
         (send-message mybot))))
 

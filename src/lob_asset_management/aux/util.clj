@@ -38,3 +38,23 @@
 (defn abs
   [num]
   (max num (- num)))
+
+(defn get-part-string
+  [c start end]
+  (-> c
+      (clojure.string/split #"")
+      (subvec start end)
+      (clojure.string/join)))
+
+(defn format-br-tax
+  [br-tax]
+  (let [digits (-> br-tax
+                   str
+                   (clojure.string/replace "." "")
+                   (clojure.string/replace "/" "")
+                   (clojure.string/replace "-" ""))]
+    (str (get-part-string digits 0 2) "."
+         (get-part-string digits 2 5) "."
+         (get-part-string digits 5 8) "/"
+         (get-part-string digits 8 12) "-"
+         (get-part-string digits 12 14))))

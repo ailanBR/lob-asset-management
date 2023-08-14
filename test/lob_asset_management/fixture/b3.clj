@@ -13,7 +13,7 @@
    :exchange         "NU INVEST CORRETORA DE VALORES S.A."
    :quantity         26.0
    :unit-price       0.25
-   :total-price      5.53})
+   :operation-total  5.53})
 
 (def b3-movement-2
   {:type             "Credito"
@@ -23,7 +23,7 @@
    :exchange         "NU INVEST CORRETORA DE VALORES S.A."
    :quantity         1.0
    :unit-price       112.35
-   :total-price      112.35})
+   :operation-total  112.35})
 
 (def b3-movement-3
   {:type             "Credito"

@@ -24,7 +24,7 @@
   (file->edn "./resources/incorporation_movement.edn"))
 
 (defstate config :start (file->edn "./resources/config.edn"))
-(defstate alpha-key :start (:alpha-vantage-key (get-secrets)))
+(defstate alpha-key :start (System/getenv "ALPHA_KEY"))     ;(:alpha-vantage-key (get-secrets)))
 (defstate telegram-key :start (:telegram-bot-key (get-secrets)))
 (defstate telegram-personal-chat :start (:personal-chat (get-secrets)))
 
@@ -32,7 +32,7 @@
 (comment
   (read-secrets)
 
-  (println (System/getenv "ALPHA_KEY"))
+  (println (System/getenv "TELEGRAM_BOT_KEY"))
 
   (println (System/getenv "GOOGLE_APPLICATION_CREDENTIALS"))
 
@@ -40,5 +40,6 @@
 
   (let [my-var (System/getenv "TESTE_KEY")]
     (println my-var))
+
 
   )

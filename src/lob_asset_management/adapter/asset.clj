@@ -5,7 +5,8 @@
             [lob-asset-management.logic.asset :as l.a]
             [lob-asset-management.relevant :refer [asset-more-info]]
             [lob-asset-management.aux.util :refer [assoc-if]]
-            [lob-asset-management.aux.time :as aux.t])
+            [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.aux.util :as aux.u])
   (:import (java.util UUID)))
 
 (defn in-ticket->out-ticket
@@ -31,11 +32,6 @@
       :STX :blockstack
       :USDT :tether)))
 
-(defn allowed-ticket-get-market-info?
-  [ticket]
-  (let [{:keys [alpha-vantage-allowed?]} (get asset-more-info ticket)]
-    alpha-vantage-allowed?))
-
 (s/defn ticket->asset-type :- s/Keyword
   [ticket :- s/Keyword]
   (let [try-ticket->number (-> ticket
@@ -59,26 +55,6 @@
   (let [{:keys [category]} (get asset-more-info ticket)]
     (or category
         [:unknown])))
-
-(defn get-part-string
-  [c start end]
-  (-> c
-      (clojure.string/split #"")
-      (subvec start end)
-      (clojure.string/join)))
-
-(defn format-br-tax
-  [br-tax]
-  (let [digits (-> br-tax
-                   str
-                   (clojure.string/replace "." "")
-                   (clojure.string/replace "/" "")
-                   (clojure.string/replace "-" ""))]
-    (str (get-part-string digits 0 2) "."
-         (get-part-string digits 2 5) "."
-         (get-part-string digits 5 8) "/"
-         (get-part-string digits 8 12) "-"
-         (get-part-string digits 12 14))))
 
 (defn movement-ticket->asset-ticket
   [xlsx-ticket ]
@@ -110,7 +86,7 @@
      :asset/category   (or category [:unknown])
      :asset/type       (ticket->asset-type ticket)
      :asset/tax-number (when (and (not (empty? tax-number))
-                                  (contains? #{:fii :stockBR} asset-type)) (format-br-tax tax-number))}))
+                                  (contains? #{:fii :stockBR} asset-type)) (aux.u/format-br-tax tax-number))}))
 
 (defn remove-already-exist-asset
   [assets-keep asset-filtered]
@@ -153,6 +129,11 @@
    (filter-allowed-type #{:stockBR :fii :stockEUA :crypto} assets))
   ([allowed-types assets]
    (filter #(contains? allowed-types (:asset/type %)) assets)))
+
+(defn allowed-ticket-get-market-info?
+  [ticket]
+  (let [{:keys [alpha-vantage-allowed?]} (get asset-more-info ticket)]
+    alpha-vantage-allowed?))
 
 (defn filter-allowed-ticket
   [assets]

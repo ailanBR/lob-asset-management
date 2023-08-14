@@ -7,6 +7,7 @@
 (def records (io.file-in/read-b3-folder "./in-data-test/"))
 
 (deftest turn-b3-folder-into-edn
+  ;[records (io.file-in/read-b3-folder "./in-data-test/")]
   (testing "The total lines read from the xlsx is equal 6"
     (is (= (count records)
            8)))
