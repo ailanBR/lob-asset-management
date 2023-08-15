@@ -152,6 +152,9 @@ All notable changes to this project will be documented in this file. This change
 - Add bot save message
 - Add bot message from validation
 
+### 2023-08-15
+- Move telegram key to environment variable
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 
