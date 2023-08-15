@@ -190,9 +190,6 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
 4. Consider subscription events `Low`
 5. Get asset information `Very low`
 
-## FIXME
-
-1. Set telegram key as environment variable `Very low`
 --------------
 ## License
 

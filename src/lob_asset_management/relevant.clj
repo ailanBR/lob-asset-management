@@ -25,7 +25,7 @@
 
 (defstate config :start (file->edn "./resources/config.edn"))
 (defstate alpha-key :start (System/getenv "ALPHA_KEY"))     ;(:alpha-vantage-key (get-secrets)))
-(defstate telegram-key :start (:telegram-bot-key (get-secrets)))
+(defstate telegram-key :start (System/getenv "TELEGRAM_BOT_KEY")) ; (:telegram-bot-key (get-secrets)))
 (defstate telegram-personal-chat :start (:personal-chat (get-secrets)))
 
 
