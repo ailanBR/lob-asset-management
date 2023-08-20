@@ -18,14 +18,14 @@
   [assets-keep asset-filtered]
   (remove #(already-exist? (:portfolio/ticket %) assets-keep) asset-filtered))
 
-(defn maybe-upsert
+(defn maybe-upsert!
   [db-data portfolio]
   (when (not= db-data portfolio)
     (log/info "[UPDATE PORTFOLIO] New portfolio record to be registered")
     (io.f-out/upsert portfolio)
     portfolio))
 
-(defn update!
+(defn upsert!
   [portfolio]
   (let [db-data (get-all)]
     (->> []
@@ -33,7 +33,7 @@
          (remove-already-exist-asset portfolio)
          (concat (or portfolio []))
          (sort-by :portfolio/percentage >)
-         (maybe-upsert db-data))))
+         (maybe-upsert! db-data))))
 
 (defn overwrite!
   [portfolio]

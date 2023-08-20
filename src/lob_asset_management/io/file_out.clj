@@ -2,7 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.tools.logging :as log]
             [java-time.api :as t]
-            [lob-asset-management.aux.file :refer [edn->file edn->file-table file-delete] :as aux.f]
+            [lob-asset-management.aux.file :refer [edn->file edn->file-table delete] :as aux.f]
             [schema.core :as s]
             [lob-asset-management.models.file :as m.f]
             [lob-asset-management.relevant :refer [config]])

@@ -114,8 +114,7 @@
                                 (sort-by :code)
                                 (sort-by :group))]
     (io.f-out/income-tax-file income-tax-release year)
-    income-tax-release
-    ))
+    income-tax-release))
 
 (defn past-price-date
   [price-date historic to-subtract]

@@ -7,10 +7,9 @@
             [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.db.transaction :as db.t]))
 
-
 ;Portfolio processing transactions====================================================
 
-(defn formatted-transactions
+(defn allowed-transactions
   [transactions]
   (let [allowed-operations #{:buy :sell :JCP :income :dividend :waste :grupamento
                              :desdobro :bonificaçãoemativos :incorporation :resgate}]
@@ -55,7 +54,7 @@
         (if (not= (count related-transactions) (count @transactions-atom))
           (reset! transactions-atom related-transactions)
           (reset! continue false))))
-    (formatted-transactions @transactions-atom)))
+    (allowed-transactions @transactions-atom)))
 
 (defn consolidate-grouped-transactions
   [[_ transactions]]
@@ -125,7 +124,7 @@
   [transactions assets forex-usd]
   (log/info "[PORTFOLIO] Processing adapter...")
     (->> transactions
-         formatted-transactions
+         allowed-transactions
          (group-by :transaction.asset/ticket)
          (map consolidate-grouped-transactions)
          remove-duplicated
@@ -153,7 +152,7 @@
           portfolio (transactions->portfolio asset-transactions assets forex-usd)]
       (when (-> args first :db-update)
         (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")
-        (db.p/update! portfolio))
+        (db.p/upsert! portfolio))
       portfolio)
     (log/warn "[PROCESS PORTFOLIO] No new portfolio records to be registered")))
 

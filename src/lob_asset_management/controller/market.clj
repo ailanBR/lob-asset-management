@@ -128,7 +128,7 @@
                            asset))]
          (->> assets
               (map update-fn)
-              db.a/update!))))))
+              db.a/upsert!))))))
 
 (defn update-asset-updated-at
   [{:asset/keys [id] :as asset}
@@ -160,19 +160,19 @@
            (let [market-last-price (get-market-price less-updated-asset)
                  updated-assets (update-assets assets less-updated-asset market-last-price)]
              (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
-             (db.a/update! updated-assets)))
+             (db.a/upsert! updated-assets)))
        (catch Exception e
          (let [causes (-> e ex-data :causes)]
            (if (contains? causes :alpha-api-limit)
              (let [updated-assets (update-assets-updated-at assets less-updated-asset)]
                (log/error "[MARKET-UPDATING] Alpha API limit have reached")
-               (db.a/update! updated-assets)))
+               (db.a/upsert! updated-assets)))
            (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
                (if (< (or retry-attempts 0) 3)
                  (do
                    (log/info (str "Already retry [" (or retry-attempts 0) "], new attempt after 5sec"))
                    (let [updated-assets (update-assets-retry-attempt assets less-updated-asset)]
-                     (db.a/update! updated-assets)
+                     (db.a/upsert! updated-assets)
                      (Thread/sleep 5000)
                      (update-asset-market-price updated-assets day-of-week)))
                  (log/info (str "Retry limit archived")))))))
