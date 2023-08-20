@@ -1,4 +1,5 @@
-(ns lob-asset-management.aux.money)
+(ns lob-asset-management.aux.money
+  (:require [clojure.string :as string]))
 
 (defn safe-big
   [value]

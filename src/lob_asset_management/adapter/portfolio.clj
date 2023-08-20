@@ -1,6 +1,5 @@
 (ns lob-asset-management.adapter.portfolio
-  (:require [clojure.tools.logging :as log]
-            [lob-asset-management.adapter.asset :as a.a]
+  (:require [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.logic.portfolio :as l.p]
             [lob-asset-management.aux.util :refer [assoc-if abs]]
             [lob-asset-management.aux.time :as aux.t]
