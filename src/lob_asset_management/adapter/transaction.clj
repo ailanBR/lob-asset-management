@@ -7,6 +7,7 @@
             [java-time.api :as t]
             [lob-asset-management.aux.util :as aux.u]
             [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.aux.money :refer [safe-number->bigdec]]
             [lob-asset-management.logic.transaction :as l.t]))
 
 (s/defn movement-exchange->transaction-exchange :- m.t/Exchange
@@ -40,22 +41,6 @@
         (string/replace "/" "")
         (string/replace ":" ""))))
 
-(defn safe-number->bigdec
-  [num]
-  (if (number? num)
-    (bigdec num)
-    (let [formatted-input (-> num
-                              str
-                              (string/replace #"\$|R|,|\." "")
-                              (string/replace " " "")
-                              (string/replace "-" ""))]
-      (if (empty? formatted-input)
-        0M
-        (let [formatted-input-bigdec (bigdec formatted-input)
-              number-with-decimal-cases (if (>= formatted-input-bigdec 100M)
-                                          (/ formatted-input-bigdec 100)
-                                          formatted-input-bigdec)]
-          number-with-decimal-cases)))))
 
 (defn mov-date->transaction-created-at
   [date]

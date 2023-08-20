@@ -19,7 +19,7 @@
         assets (a.a/movements->assets movements db-assets)]
     (when (not= db-assets assets)
       (log/info "[PROCESS ASSETS] New assets to be registered")
-      (db.a/update! assets)
+      (db.a/upsert! assets)
       assets)))
 
 (defn process-transactions
@@ -27,7 +27,7 @@
   (log/info "[PROCESS TRANSACTIONS] Started")
   (let [usd-price (db.f/get-all)
         transactions (a.t/movements->transactions movements usd-price)]
-    (db.t/update! transactions)))
+    (db.t/upsert! transactions)))
 
 (defn process-movement
   [movements]

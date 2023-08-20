@@ -127,7 +127,7 @@
 
 (defmethod send-command :save
   [mybot msg _]
-  (db.t/insert msg)
+  (db.t/insert! msg)
   (send-message "Message received \uD83E\uDDDE" mybot))
 
 (defn send-invalid-command

@@ -8,7 +8,7 @@
   []
   (io.f-in/get-file-by-entity :asset))
 
-(defn- maybe-upsert
+(defn- maybe-upsert!
   [db-data assets]
   (when (not= db-data assets)
     (log/info "[UPDATE ASSET] New assets to be registered")
@@ -19,14 +19,14 @@
   [assets-keep asset-filtered]
   (remove #(l.a/already-exist? (:asset/ticket %) assets-keep) asset-filtered))
 
-(defn update!
+(defn upsert!
   [assets]
   (let [db-data (or (get-all) [])]
     (->> db-data
          (remove-already-exist assets)
          (concat (or assets []))
          (sort-by :asset/name)
-         (maybe-upsert db-data))))
+         (maybe-upsert! db-data))))
 
 (defn get-by-ticket
   ([ticket]

@@ -76,7 +76,6 @@
 
 (s/defn movements->asset :- m.a/Asset
   [{:keys [product]}]
-  ;(println "[ASSET] ROW " (str product))
   (let [ticket (movement-ticket->asset-ticket product)
         {:keys [name tax-number category]} (get asset-more-info ticket)
         asset-type (ticket->asset-type ticket)]
@@ -177,8 +176,7 @@
                            remove-limit-attempts
                            (sort-by :asset.market-price/updated-at)
                            (filter-less-updated-than-target? min-updated-hours))]
-    (or (take quantity filter-assets)
-        nil)))
+    (or (take quantity filter-assets) nil)))
 
 (comment
   (def assets-file (lob-asset-management.db.transaction/get-file-by-entity :asset))

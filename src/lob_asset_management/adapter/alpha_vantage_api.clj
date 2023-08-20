@@ -22,7 +22,6 @@
                                                  (:4a._close_BRL val->keyword))))) {})
        (into (sorted-map))))
 
-
 (defmulti formatted-data
           (fn [{:keys [Meta_Data Information]}]
             (cond

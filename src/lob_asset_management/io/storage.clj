@@ -5,7 +5,6 @@
              [environ.core :refer [env]]
              [cheshire.core :as json]))
 
-
 (comment
   (def auth (auth/create-token "GOOGLE_APPLICATION_CREDENTIALS"))
 

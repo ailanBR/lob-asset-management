@@ -12,14 +12,14 @@
   [to-keep to-filter]
   (remove #(l.t/already-exist? (:transaction/id %) to-keep) to-filter))
 
-(defn- maybe-upsert
+(defn- maybe-upsert!
   [db-data transactions]
   (when (not= db-data transactions)
     (log/info "[UPDATE TRANSACTION] New transactions to be registered")
     (io.f-out/upsert transactions)
     transactions))
 
-(defn update!
+(defn upsert!
   [transactions]
   (let [db-data (get-all)]
     (->> []
@@ -27,7 +27,7 @@
          (remove-already-exist transactions)
          (concat (or transactions []))
          (sort-by :transaction.asset/ticket)
-         (maybe-upsert db-data))))
+         (maybe-upsert! db-data))))
 
 (defn get-by-id
   ([id]

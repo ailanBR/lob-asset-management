@@ -8,7 +8,6 @@
 
 (s/defn get-usd-price
   [output-size :- s/Keyword]
-  ;(log/info "[get-usd-price] started")
   (if-let [forex-info (io.http/get-forex-brl->usd output-size)]
     forex-info
     (throw (ex-info "[get-usd-price] Something was wrong in get market data"

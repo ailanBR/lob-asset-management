@@ -20,7 +20,7 @@
        (filter #(= message (:telegram/message %)))
        first))
 
-(s/defn insert
+(s/defn insert!
   [msg :- TelegramMessage]
   (let [db-data (or (get-all) [])
         msg' (if (map? msg) (list msg) msg)]

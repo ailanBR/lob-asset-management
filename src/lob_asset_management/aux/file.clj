@@ -22,6 +22,6 @@
     (binding [*out* out]
       (clojure.pprint/print-table data))))
 
-(defn file-delete
+(defn delete
   [file-path]
   (io/delete-file file-path))
