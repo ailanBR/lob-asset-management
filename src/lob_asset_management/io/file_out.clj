@@ -96,7 +96,7 @@
 
 (defn delete-file
   [file-path]
-  (file-delete file-path))
+  (delete file-path))
 
 (comment
   (def assets [{:asset/ticket :ABEV4} {:asset/ticket :SULA11}])
