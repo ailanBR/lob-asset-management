@@ -46,7 +46,9 @@
    :commands  {:fn   #(send-command %1 %2 :commands)
                :desc "List of allowed commands"}
    :s         {:fn   #(send-command %1 %2 :save)
-               :desc "Save anything"}})
+               :desc "Save anything"}
+   :gs        {:fn #(send-command %1 %2 :get-saved)
+               :desc "Get saved messages"}})
 
 (defmethod send-command :portfolio
   [mybot _ _]
@@ -129,6 +131,11 @@
   [mybot msg _]
   (db.t/insert! msg)
   (send-message "Message received \uD83E\uDDDE" mybot))
+
+(defmethod send-command :get-saved
+  [mybot _ _]
+  (let [db-messages (db.t/get-all)]
+    (send-message (a.t/saved-messages db-messages) mybot)))
 
 (defn send-invalid-command
   [mybot]

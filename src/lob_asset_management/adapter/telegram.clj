@@ -1,5 +1,6 @@
 (ns lob-asset-management.adapter.telegram
   (:require [clojure.string :as str]
+            [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.logic.portfolio :as l.p]
             [lob-asset-management.aux.time :as t]
             [lob-asset-management.db.telegram :as db.t]
@@ -189,3 +190,13 @@
      :telegram/category   (msg->category msg)
      :telegram/active     true
      :telegram/command    command}))
+
+(defn saved-messages
+  [db-messages]
+  (reduce (fn [current {:telegram/keys [created-at message]}]
+            (str
+              current
+              (format "%10s" (aux.t/clj-date->date-time-str created-at))
+              " "
+              message
+              "\n")) "" db-messages))
