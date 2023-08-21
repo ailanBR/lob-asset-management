@@ -13,6 +13,7 @@
                  ;[log4j "2.17.2"]
                  [nubank/matcher-combinators "3.8.4"]
                  [mount "0.1.17"]
+                 ;[org.clj-commons/humanize "1.0"] ;https://github.com/clj-commons/humanize
                  [org.clojure/clojure "1.10.3"]
                  [org.clojure/tools.cli "1.0.219"]
                  [org.clojure/tools.logging "1.2.4"]

@@ -21,6 +21,13 @@
         dt-split (clojure.string/split dt-str #"T")]
     (keyword (first dt-split))))
 
+(defn clj-date->date-time-str
+  [dt]
+  (let [dt-str (str dt)
+        dt-split (clojure.string/split dt-str #"T")
+        hr-split (-> dt-split second (clojure.string/split #"\.") first)]
+    (str (first dt-split) " " hr-split)))
+
 (defn subtract-days
   "Receive a date keyword and the number of days to be subtracted
   date example :2023-06-21"
