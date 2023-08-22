@@ -193,10 +193,11 @@
 
 (defn saved-messages
   [db-messages]
-  (reduce (fn [current {:telegram/keys [created-at message]}]
-            (str
-              current
-              (format "%10s" (aux.t/clj-date->date-time-str created-at))
-              " "
-              message
-              "\n")) "" db-messages))
+  (reduce (fn [current {:telegram/keys [created-at message active]}]
+            (if active
+              (str current
+                   (format "%10s" (aux.t/clj-date->date-time-str created-at))
+                   " "
+                   message
+                   "\n")
+              current)) "" db-messages))

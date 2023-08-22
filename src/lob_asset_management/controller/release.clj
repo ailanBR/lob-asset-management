@@ -1,5 +1,6 @@
 (ns lob-asset-management.controller.release
-  (:require [lob-asset-management.adapter.portfolio :as a.p]
+  (:require [clojure.tools.logging :as log]
+            [lob-asset-management.adapter.portfolio :as a.p]
             [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.forex :as db.f]
@@ -118,6 +119,7 @@
 
 (defn past-price-date
   [price-date historic to-subtract]
+  (println "----" (aux.t/subtract-days price-date to-subtract) "-" ((aux.t/subtract-days price-date to-subtract) historic))
   (let [subtracted-date (aux.t/subtract-days price-date to-subtract)]
     (when (and subtracted-date (not (nil? (subtracted-date historic))))
       {:past-date  subtracted-date
@@ -127,23 +129,25 @@
   [{:asset.market-price/keys [price price-date historic]
     :asset/keys [ticket]}
    days]
+  (println ticket "-" price-date "-" (count historic))
   (when historic
     (let [to-subtract days
           {:keys [past-date past-price]} (first (for [x (range 0 10)
                                                       :let [past-price (past-price-date price-date historic (+ x to-subtract))]
                                                       :when past-price]
-                                                  past-price
-                                                  ))
-          diff-amount (- price past-price)
-          diff-percentage (if (and (> price 0M) (not= diff-amount 0M))
-                            (* 100 (with-precision 4 (/ diff-amount price)))
-                            0.0)]
-      {:ticket          ticket
-       :last-price      price
-       :last-price-date price-date
-       :past-date       past-date
-       :diff-amount     diff-amount
-       :diff-percentage diff-percentage})))
+                                                  past-price))]
+      (if past-price
+        (let [diff-amount (- price past-price)
+              diff-percentage (if (and (> price 0M) (not= diff-amount 0M))
+                                (* 100 (with-precision 4 (/ diff-amount price)))
+                                0.0)]
+          {:ticket          ticket
+           :last-price      price
+           :last-price-date price-date
+           :past-date       past-date
+           :diff-amount     diff-amount
+           :diff-percentage diff-percentage})
+        (log/error "Error getting past price [" ticket "]")))))
 
 (defn compare-past-day-price-assets
   ([]
