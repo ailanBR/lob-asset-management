@@ -83,7 +83,7 @@
     <orderEntry type="library" name="Leiningen: riddley:0.1.12" level="project" />
     <orderEntry type="library" name="Leiningen: slingshot:0.12.2" level="project" />
     <orderEntry type="library" name="Leiningen: stylefruits/gniazdo:1.2.0" level="project" />
-    <orderEntry type="library" name="Leiningen: telegrambot-lib:2.8.0" level="project" />
+    <orderEntry type="library" name="Leiningen: telegrambot-lib:2.3.0" level="project" />
     <orderEntry type="library" name="Leiningen: tigris:0.1.2" level="project" />
   </component>
 </module>
