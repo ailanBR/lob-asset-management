@@ -189,7 +189,6 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    2. [ ] Web Scraping for Stock information
 4. Consider subscription events `Low`
 5. Get asset information `Very low`
-6. Read only xlsx files
 --------------
 ## License
 

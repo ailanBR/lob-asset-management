@@ -25,3 +25,12 @@
 (defn delete
   [file-path]
   (io/delete-file file-path))
+
+(defn valid-xlsx-file?
+  [file-path]
+  (->> #"\."
+       (clojure.string/split file-path)
+       (filter #(= % "~lock"))
+       first
+       boolean
+       not))

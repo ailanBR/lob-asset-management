@@ -53,8 +53,8 @@
 (defn process-folders
   []
   (when-let [movements (->> (:releases config)
-                          (map #(-> % first val process-folder))
-                          (apply concat))]
+                            (map #(-> % first val process-folder))
+                            (apply concat))]
     (process-movement movements)))
 
 #_(defn process-b3-folder

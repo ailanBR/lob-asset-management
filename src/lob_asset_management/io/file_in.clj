@@ -1,7 +1,5 @@
 (ns lob-asset-management.io.file-in
-  (:require [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.tools.logging :as log]
+  (:require [clojure.java.io :as io]
             [dk.ative.docjure.spreadsheet :as xlsx]
             [lob-asset-management.aux.file :as aux.f :refer [file->edn]]
             [lob-asset-management.models.file :as m.f]
@@ -11,16 +9,15 @@
 (defn read-xlsx-by-file-path
   ([file-path]
    (read-xlsx-by-file-path file-path (-> config :releases first :b3-release)))
-  ([file-path {:keys [sheet columns] :as file-config}]
-   ;(println "file-path=>" file-path)
-   ;(println "config=>" file-config)
-   (->> (xlsx/load-workbook file-path)
-        (xlsx/select-sheet sheet)
-        (xlsx/select-columns columns)
-        rest
-        (filter #(and (not (nil? %))
-                      (not (nil? (get % (-> columns first val))))
-                      (not (nil? (get % (-> columns second val)))))))))
+  ([file-path {:keys [sheet columns]}]
+   (when (aux.f/valid-xlsx-file? file-path)
+     (->> (xlsx/load-workbook file-path)
+          (xlsx/select-sheet sheet)
+          (xlsx/select-columns columns)
+          rest
+          (filter #(and (not (nil? %))
+                        (not (nil? (get % (-> columns first val))))
+                        (not (nil? (get % (-> columns second val))))))))))
 
 (defn read-xlsx-by-file-name
   ([file-name]
