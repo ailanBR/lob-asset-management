@@ -1,0 +1,238 @@
+{:BBAS3  {:tax-number     "00000000000191"
+          :category [:finance]
+          :alpha-vantage-allowed? true}
+ :ALZR11 {:name     "Fundo de Investimento Imobiliário Alianza Trust Renda Imobiliária"
+          :tax-number     "28.737.771/0001-85"
+          :category [:fii :hybrid]
+          :alpha-vantage-allowed? true}
+ :ALZR13 {:name     "Fundo de Investimento Imobiliário Alianza Trust Renda Imobiliária"
+          :tax-number     "28.737.771/0001-85"
+          :category [:fii :hybrid]
+          :alpha-vantage-allowed? true}
+ :HGBS11 {:name     "Hedge Brasil Shopping"
+          :tax-number     "08.431.747/0001-06"
+          :category [:fii :shopping]
+          :alpha-vantage-allowed? true}
+ :INBR31 {:name     "Banco Inter"
+          :tax-number     "00.416.968/0001-01"
+          :category [:finance]
+          :alpha-vantage-allowed? true}
+ :INBR32 {:name     "Banco Inter"
+          :tax-number     "00.416.968/0001-01"
+          :category [:finance]
+          :alpha-vantage-allowed? true}
+ :KNRI11 {:name     "Kinea Renda Imobiliária"
+          :tax-number     "12.005.956/0001-65"
+          :category [:fii :hybrid]
+          :alpha-vantage-allowed? true}
+ :RECR11 {:name     "FUNDO DE INVESTIMENTO IMOBILIARIO – FII REC RECEBIVEIS IMOBILIARIOS"
+          :tax-number     "28152272000126"
+          :category [:fii :paper]
+          :alpha-vantage-allowed? true}
+ :RECR12 {:name     "FUNDO DE INVESTIMENTO IMOBILIARIO – FII REC RECEBIVEIS IMOBILIARIOS"
+          :tax-number     "28152272000126"
+          :category [:fii :paper]
+          :alpha-vantage-allowed? false}
+ :ABEV3  {:tax-number     "07526557000100"
+          :category [:food]
+          :alpha-vantage-allowed? true}
+ :B3SA3  {:tax-number     "09346601000125"
+          :category [:finance]
+          :alpha-vantage-allowed? true}
+ :BIDI11 {:tax-number     "00416968000101"
+          :category [:finance]
+          :alpha-vantage-allowed? false}
+ :BPAC3  {:name     "Banco BTG"
+          :tax-number     "30306294000145"
+          :category [:finance]
+          :alpha-vantage-allowed? true}
+ :BPAC11 {:name     "Banco BTG"
+          :tax-number     "30306294000145"
+          :category [:finance]
+          :alpha-vantage-allowed? true}
+ :BPAC5  {:name     "Banco BTG"
+          :tax-number     "30306294000145"
+          :category [:finance]
+          :alpha-vantage-allowed? true}
+ :CAML3  {:name     "CAMIL ALIMENTOS S.A."
+          :tax-number     "64904295000103"
+          :category [:food]
+          :alpha-vantage-allowed? true}
+ :EQTL3  {:tax-number     "03220438000173"
+          :category [:energy]
+          :alpha-vantage-allowed? true}
+ :FLRY3  {:tax-number     "60840055000131"
+          :category [:health]
+          :alpha-vantage-allowed? true}
+ :NEOE3  {:name     "Neo Energia"
+          :tax-number     "01083200000118"
+          :category [:energy]
+          :alpha-vantage-allowed? true}
+ :RAIL3  {:name     "Rumo Logística S.A."
+          :tax-number     "02.387.241/0001-60"
+          :category [:transport]
+          :alpha-vantage-allowed? true}
+ :RENT3  {:name     "Localiza"
+          :tax-number     "16670085000155"
+          :category [:transport]
+          :alpha-vantage-allowed? true}
+ :ROMI3  {:tax-number     "56720428000163"
+          :category [:industry]
+          :alpha-vantage-allowed? true}
+ :SMTO3  {:tax-number     "51466860000156"
+          :category [:food]
+          :alpha-vantage-allowed? true}
+ :SQIA3  {:name           "SINQIA"
+          :tax-number     "04065791000199"
+          :category [:ti]
+          :alpha-vantage-allowed? true}
+ :SULA11 {:tax-number     "29978814000187"
+          :category [:health]
+          :alpha-vantage-allowed? true}
+ :SULA3  {:tax-number     "29978814000187"
+          :category [:health]
+          :alpha-vantage-allowed? true}
+ :TOTS3  {:tax-number     "53113791000122"
+          :category [:ti]
+          :alpha-vantage-allowed? true}
+ :GNDI3  {:name     "NOTRE DAME INTERMÉDICA"
+          :tax-number     "19853511000184"
+          :category [:health]
+          :alpha-vantage-allowed? false}
+ :WEGE3  {:name     "WEG"
+          :tax-number     "84.429.695/0001-11"
+          :category [:industry]
+          :alpha-vantage-allowed? true}
+ :LINX3  {:tax-number     "06948969000175"
+          :category [:ti]
+          :alpha-vantage-allowed? false}
+ :DEFI11 {:name     "HASHDEX DEFI INDEX FUNDO DE ÍNDICE"
+          :tax-number     "30.056.796/0001-65"
+          :category [:crypto]
+          :alpha-vantage-allowed? false}
+ :OIBR3  {:name     "OI S.A."
+          :tax-number     "76.535.764/0001-43"
+          :category [:telecom]
+          :alpha-vantage-allowed? true}
+ :OIBR1  {:name     "OI S.A."
+          :tax-number     "76.535.764/0001-43"
+          :category [:telecom]
+          :alpha-vantage-allowed? false}
+ :HAPV3  {:name     "Hapvida"
+          :tax-number     "63.554.067/0001-98"
+          :category [:health]
+          :alpha-vantage-allowed? true}
+ :H3CO11 {:name     "Hapvida x NOTRE DAME INTERMÉDICA"
+          :tax-number     "63.554.067/0001-98"
+          :category [:health]
+          :alpha-vantage-allowed? false}
+ :H3CO3  {:name     "Hapvida x NOTRE DAME INTERMÉDICA"
+          :tax-number     "63.554.067/0001-98"
+          :category [:health]
+          :alpha-vantage-allowed? false}
+ :INHF12 {:name     "Banco Inter"
+          :tax-number     "00.416.968/0001-01"
+          :category [:finance]
+          :alpha-vantage-allowed? false}
+ :LOGN3  {:name     "LOG-IN LOGISTICA INTERMODAL"
+          :tax-number     "42.278.291/0001-24"
+          :category [:transport]
+          :alpha-vantage-allowed? true}
+ :PDTC3  {:name     "PADTEC"
+          :tax-number     "02.365.069/0001-44"
+          :category [:ti]
+          :alpha-vantage-allowed? true}
+ :STOC31 {:name "StoneCo BDR"
+          :category [:finance]
+          :alpha-vantage-allowed? true}
+ :RDOR3  {:name     "Rede D or"
+          :category [:health]
+          :alpha-vantage-allowed? true}
+ :BSEV3 {:name     "Biosev"
+         :category [:health]
+         :alpha-vantage-allowed? false}
+ :CDB    {:category [:private-bond]
+          :alpha-vantage-allowed? false}
+ :TESOURO-IPCA+-2029  {:category [:government-bond]
+                       :alpha-vantage-allowed? false}
+ :TESOURO-PREFIXADO-2026  {:category [:government-bond]
+                       :alpha-vantage-allowed? false}
+ :TESOURO-SELIC-2025  {:category [:government-bond]
+                       :alpha-vantage-allowed? false}
+ :TESOURO-SELIC-2026  {:category [:government-bond]
+                       :alpha-vantage-allowed? false}
+ :AAPL   {:category [:ti]
+          :alpha-vantage-allowed? true}
+ :ABT    {:category [:health]
+          :alpha-vantage-allowed? true}
+ :AMZN   {:category [:ti]
+          :alpha-vantage-allowed? true}
+ :BLK    {:category [:finance]
+          :alpha-vantage-allowed? true}
+ :BLOK   {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :BRK.B  {:category [:finance]
+          :alpha-vantage-allowed? true}
+ :CAN    {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :CNBS   {:category [:cannabis]
+          :alpha-vantage-allowed? true}
+ :COIN   {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :GILD   {:category [:health]
+          :alpha-vantage-allowed? true}
+ :GOOGL  {:category [:ti]
+          :alpha-vantage-allowed? true}
+ :IIPR   {:category [:cannabis]
+          :alpha-vantage-allowed? true}
+ :INDA   {:category [:world]
+          :alpha-vantage-allowed? true}
+ :ISRG   {:category [:health]
+          :alpha-vantage-allowed? true}
+ :ITW    {:category [:industry]
+          :alpha-vantage-allowed? true}
+ :JPM    {:category [:finance]
+          :alpha-vantage-allowed? true}
+ :MCHI   {:category [:world]
+          :alpha-vantage-allowed? true}
+ :MDT    {:category [:health]
+          :alpha-vantage-allowed? true}
+ :MSFT   {:category [:ti]
+          :alpha-vantage-allowed? true}
+ :SE     {:category [:ti]
+          :alpha-vantage-allowed? true}
+ :SKYY   {:category [:ti]
+          :alpha-vantage-allowed? true}
+ :TSLA   {:category [:transport]
+          :alpha-vantage-allowed? true}
+ :ARE    {:category [:fii :tijolo]
+          :alpha-vantage-allowed? true}
+ :EQIX   {:category [:fii :tijolo :ti]
+          :alpha-vantage-allowed? true}
+ :GWH    {:category [:energy]
+          :alpha-vantage-allowed? true}
+ :BTC    {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :STX    {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :BUSD   {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :MATIC  {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :USDT   {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :ETH    {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :BNB    {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :ALGO   {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :LUNA   {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :CAKE   {:category [:crypto]
+          :alpha-vantage-allowed? true}
+ :FANTOM {:category [:crypto]
+          :alpha-vantage-allowed? false}}
+
+
+

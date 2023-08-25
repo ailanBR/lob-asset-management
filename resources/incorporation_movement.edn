@@ -1,0 +1,40 @@
+[{:transaction-date "21/06/2022"
+  :unit-price       "0,00"                                  ;All position value
+  :quantity         0                                       ;All position value
+  :exchange         "INTER DISTRIBUIDORA DE TITULOS E VALORES MOBILIARIOS LTDA"
+  :product          "BIDI11 - BANCO INTER S/A"
+  :operation-total  "0,00"                                  ;All position value
+  :currency         "BRL"
+  :movement-type    "Incorporation"
+  :incorporated-by  "INBR32"
+  :factor           "/-2"}
+ {:transaction-date "15/02/2022"
+  :unit-price       "0,00"                                  ;All position value
+  :quantity         0                                       ;All position value
+  :exchange         "INTER DTVM LTDA"
+  :product          "GNDI3 - NOTRE DAME INTERMEDICA PARTICIPACOES SA"
+  :operation-total  "0,00"                                  ;All position value
+  :currency         "BRL"
+  :movement-type    "Incorporation"
+  :incorporated-by  "HAPV3"
+  :factor           "*-5"}
+ {:transaction-date "29/06/2021"
+  :unit-price       "0,00"                                  ;All position value
+  :quantity         0                                       ;All position value
+  :exchange         "INTER DTVM LTDA"
+  :product          "LINX3 - LINX S.A."
+  :operation-total  "0,00"                                  ;All position value
+  :currency         "BRL"
+  :movement-type    "Incorporation"
+  :incorporated-by  "S3TE11"
+  :factor           "*-1"}
+ {:transaction-date "24/12/2022"
+  :unit-price       "0,00"                                  ;All position value
+  :quantity         0                                       ;All position value
+  :exchange         "INTER DTVM LTDA"
+  :product          "SULA11 - SUL AMERICA S.A."
+  :operation-total  "0,00"                                  ;All position value
+  :currency         "BRL"
+  :movement-type    "Incorporation"
+  :incorporated-by  "RDOR3"
+  :factor           "*-0.765234"}]

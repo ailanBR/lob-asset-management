@@ -13,4 +13,5 @@ pom.xml.asc
 /in-data/
 /out-data/
 .idea*
-/resources/
+/resources/secrets.edn
+/resources/log4j2.xml
