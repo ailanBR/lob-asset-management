@@ -165,6 +165,7 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
 
 1. [Obtain Your Bot Token](https://core.telegram.org/bots/tutorial#obtain-your-bot-token)
 2. Set the key as `telegram-bot-key` environment variable
+
 --------------
 ## TODO
 
@@ -173,7 +174,7 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    2. [ ] v2 Consider extra budget
    3. [ ] v3 Consider recent asset performance
    4. [ ] vX Simulator
-2. Store data on cloud `Medium`
+2. Store data `Medium`
    1. [ ] AWS
       1. ~~Thinking about the item 4. maybe we can use S3 only for the in-data files~~
    2. [ ] Firebase (Doing)
