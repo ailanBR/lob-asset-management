@@ -39,6 +39,6 @@
   [portfolio]
   (io.f-out/upsert portfolio))
 
-(defn delete                                                ;TODO : useful for incorporation events
+(defn delete                                                ;useful for incorporation events
   []
   (throw (ex-info :not-implemented "implementation pending")))

@@ -119,7 +119,7 @@
 
 (defn past-price-date
   [price-date historic to-subtract]
-  (println "----" (aux.t/subtract-days price-date to-subtract) "-" ((aux.t/subtract-days price-date to-subtract) historic))
+  ;(println "----" (aux.t/subtract-days price-date to-subtract) "-" ((aux.t/subtract-days price-date to-subtract) historic))
   (let [subtracted-date (aux.t/subtract-days price-date to-subtract)]
     (when (and subtracted-date (not (nil? (subtracted-date historic))))
       {:past-date  subtracted-date
@@ -129,7 +129,7 @@
   [{:asset.market-price/keys [price price-date historic]
     :asset/keys [ticket]}
    days]
-  (println ticket "-" price-date "-" (count historic))
+  ;(println ticket "-" price-date "-" (count historic))
   (when historic
     (let [to-subtract days
           {:keys [past-date past-price]} (first (for [x (range 0 10)

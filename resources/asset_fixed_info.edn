@@ -195,6 +195,8 @@
           :alpha-vantage-allowed? true}
  :MCHI   {:category [:world]
           :alpha-vantage-allowed? true}
+ :EZA    {:category [:world]
+          :alpha-vantage-allowed? true}
  :MDT    {:category [:health]
           :alpha-vantage-allowed? true}
  :MSFT   {:category [:ti]
