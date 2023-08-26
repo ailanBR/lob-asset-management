@@ -12,8 +12,6 @@
             [mount.core :refer [defstate]]
             [telegrambot-lib.core :as tbot]))
 
-;TODO: Get saved messages
-
 (defstate bot
           :start (tbot/create telegram-key))
 
@@ -81,9 +79,12 @@
                            (filter day+weekly)
                            first
                            (assoc :month/diff-percentage diff-percentage)))
-                     (c.r/compare-past-day-price-assets assets 30))
-        result-message (a.t/asset-price-change-message result)]
-    (send-message result-message mybot)))
+                     (c.r/compare-past-day-price-assets assets 30))]
+
+    (-> #(not (:ticket %))
+        (remove  result)
+        a.t/asset-price-change-message
+        (send-message mybot))))
 
 (defmethod send-command :category
   [mybot _ _]
