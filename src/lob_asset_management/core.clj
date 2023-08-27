@@ -147,8 +147,7 @@
                   (future-cancel (stop-loop))
                   @(stop-loop))
         "read"    (c.p-f/process-folders)
-        "release" (c.r/irpf-release (:year options))
-        "telegram" (t.bot/send-command (t.bot/mybot) :portfolio)))))
+        "release" (c.r/irpf-release (:year options))))))
 
 (comment
   (schema.core/set-fn-validation! true)

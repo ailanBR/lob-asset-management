@@ -1,5 +1,6 @@
 (ns lob-asset-management.io.http_in
   (:require [clj-http.client :as http]
+            [net.cgrand.enlive-html :as html]
             [lob-asset-management.relevant :refer [alpha-key]]
             [lob-asset-management.adapter.alpha-vantage-api :as a.ava]
             [lob-asset-management.controller.metric :as c.metric]
@@ -93,5 +94,52 @@
   (def usd (get-forex-brl->usd))
 
   (get-crypto-price-real-time :blockstack)
+  ------------------------
+  ;Web Scraping =>  https://practical.li/blog/posts/web-scraping-with-clojure-hacking-hacker-news/
+  (def st-url "https://www.advfn.com/stock-market/bovespa/ABEV3/stock-price")
+  (def st-r (html/html-resource (java.net.URL. st-url)))
+  (-> st-r
+      (html/select [:div.price-info])
+      first
+      :content
+      second
+      :content)
 
+  --------- More info
+  (def te-url "https://tradingeconomics.com/abev3:bs")
+  (def te-r (html/html-resource (java.net.URL. te-url)))
+  (def price (->> [:div.market-header-values]
+                  (html/select te-r)
+                  first
+                  :content
+                  (remove #(clojure.string/includes? % "\n"))
+                  first
+                  :content
+                  (remove #(clojure.string/includes? % "\n"))
+                  second
+                  :content
+                  first
+                  lob-asset-management.aux.money/safe-number->bigdec))
+
+  (def txt-panel (-> te-r
+                     (html/select [:div.panel-default])
+                     (nth 5)
+                     :content))
+
+  (def price-desc (->> txt-panel
+                       (remove #(clojure.string/includes? % "\n"))
+                       second
+                       :content
+                       (remove #(clojure.string/includes? % "\n"))
+                       first
+                       :content
+                       first))
+
+  (def company-desc (->> txt-panel
+                         (remove #(clojure.string/includes? % "\n"))
+                         last
+                         :content
+                         (remove #(clojure.string/includes? % "\n"))
+                         first
+                         ))
   )
