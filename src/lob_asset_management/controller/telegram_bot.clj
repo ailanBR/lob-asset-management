@@ -82,7 +82,7 @@
                      (c.r/compare-past-day-price-assets assets 30))]
 
     (-> #(not (:ticket %))
-        (remove  result)
+        (remove result)
         a.t/asset-price-change-message
         (send-message mybot))))
 

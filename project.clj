@@ -10,6 +10,7 @@
                  [clj-http "3.12.3"]
                  [dk.ative/docjure "1.19.0"]
                  [environ "1.2.0"]
+                 [enlive "1.1.6"]
                  ;[log4j "2.17.2"]
                  [nubank/matcher-combinators "3.8.4"]
                  [mount "0.1.17"]
