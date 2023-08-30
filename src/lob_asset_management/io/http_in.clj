@@ -1,8 +1,10 @@
 (ns lob-asset-management.io.http_in
   (:require [clj-http.client :as http]
+            [clojure.tools.logging :as log]
             [net.cgrand.enlive-html :as html]
             [lob-asset-management.relevant :refer [alpha-key]]
             [lob-asset-management.adapter.alpha-vantage-api :as a.ava]
+            [lob-asset-management.adapter.web-data-extraction :as a.wde]
             [lob-asset-management.controller.metric :as c.metric]
             [schema.core :as s]))
 
@@ -84,6 +86,20 @@
       (throw (ex-info "Failed to get real time crypto price"
                       {:status (:status status)})))))
 
+
+(defn web-data-extraction
+  "e.g abev3:bs"
+  [ticket]
+  (try
+    (if-let [response (-> "https://tradingeconomics.com/"
+                          (str ticket)
+                          java.net.URL.
+                          html/html-resource)]
+      (a.wde/response->internal response)
+      (log/error "web-data-extraction error"))
+    (catch Exception e
+      (log/error "web-data-extraction error " e))))
+
 (comment
   (get-daily-adjusted-prices "CAN")
   (def abev-result (get-daily-adjusted-prices "CAN"))
@@ -105,7 +121,7 @@
       second
       :content)
 
-  --------- More info
+  ;--------- More info
   (def te-url "https://tradingeconomics.com/abev3:bs")
   (def te-r (html/html-resource (java.net.URL. te-url)))
   (def price (->> [:div.market-header-values]
@@ -142,4 +158,6 @@
                          (remove #(clojure.string/includes? % "\n"))
                          first
                          ))
+
+  ;----------- Other option https://www.marketscreener.com/quote/stock/AMBEV-S-A-15458762/
   )
