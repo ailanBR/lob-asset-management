@@ -1,73 +1,92 @@
 {:BBAS3  {:tax-number     "00000000000191"
           :category [:finance]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? true}
  :ALZR11 {:name     "Fundo de Investimento Imobiliário Alianza Trust Renda Imobiliária"
           :tax-number     "28.737.771/0001-85"
           :category [:fii :hybrid]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :ALZR13 {:name     "Fundo de Investimento Imobiliário Alianza Trust Renda Imobiliária"
           :tax-number     "28.737.771/0001-85"
           :category [:fii :hybrid]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :HGBS11 {:name     "Hedge Brasil Shopping"
           :tax-number     "08.431.747/0001-06"
           :category [:fii :shopping]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :INBR31 {:name     "Banco Inter"
           :tax-number     "00.416.968/0001-01"
           :category [:finance]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :INBR32 {:name     "Banco Inter"
           :tax-number     "00.416.968/0001-01"
           :category [:finance]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :KNRI11 {:name     "Kinea Renda Imobiliária"
           :tax-number     "12.005.956/0001-65"
           :category [:fii :hybrid]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :RECR11 {:name     "FUNDO DE INVESTIMENTO IMOBILIARIO – FII REC RECEBIVEIS IMOBILIARIOS"
           :tax-number     "28152272000126"
           :category [:fii :paper]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :RECR12 {:name     "FUNDO DE INVESTIMENTO IMOBILIARIO – FII REC RECEBIVEIS IMOBILIARIOS"
           :tax-number     "28152272000126"
           :category [:fii :paper]
-          :alpha-vantage-allowed? false}
+          :alpha-vantage-allowed? false
+          :trading-economy-allowed? false}
  :ABEV3  {:tax-number     "07526557000100"
           :category [:food]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? true}
  :B3SA3  {:tax-number     "09346601000125"
           :category [:finance]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :BIDI11 {:tax-number     "00416968000101"
           :category [:finance]
-          :alpha-vantage-allowed? false}
+          :alpha-vantage-allowed? false
+          :trading-economy-allowed? false}
  :BPAC3  {:name     "Banco BTG"
           :tax-number     "30306294000145"
           :category [:finance]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :BPAC11 {:name     "Banco BTG"
           :tax-number     "30306294000145"
           :category [:finance]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? true}
  :BPAC5  {:name     "Banco BTG"
           :tax-number     "30306294000145"
           :category [:finance]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :CAML3  {:name     "CAMIL ALIMENTOS S.A."
           :tax-number     "64904295000103"
           :category [:food]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :EQTL3  {:tax-number     "03220438000173"
           :category [:energy]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? true}
  :FLRY3  {:tax-number     "60840055000131"
           :category [:health]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? true}
  :NEOE3  {:name     "Neo Energia"
           :tax-number     "01083200000118"
           :category [:energy]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? false}
  :RAIL3  {:name     "Rumo Logística S.A."
           :tax-number     "02.387.241/0001-60"
           :category [:transport]
@@ -190,7 +209,8 @@
  :ISRG   {:category [:health]
           :alpha-vantage-allowed? true}
  :ITW    {:category [:industry]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? true
+          :trading-economy-allowed? true}
  :JPM    {:category [:finance]
           :alpha-vantage-allowed? true}
  :MCHI   {:category [:world]

@@ -56,3 +56,10 @@
      :perspective      (->price-perspective response)
      :company-overview (->company-overview response)}
     {:error "response->internal error extracting data"}))
+
+(defn in-ticket->out-ticket
+  [{:asset/keys [ticket type]}]
+  (let [asset-name (name ticket)]
+    (if (or (= type :stockBR) (= type :fii))
+      (str asset-name ":bs")
+      (str asset-name ":us"))))

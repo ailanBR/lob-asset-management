@@ -3,6 +3,7 @@
             [java-time.api :as t]
             [lob-asset-management.io.http_in :as io.http]
             [lob-asset-management.adapter.asset :as a.a]
+            [lob-asset-management.adapter.web-data-extraction :as a.wde]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.aux.util :refer [str-space->keyword-underline
@@ -45,8 +46,12 @@
     (throw (ex-info "[last-price] (2) Something was wrong in get market data => formatted-data" formatted-data))))
 
 (defn get-stock-market-price
-  [asset]
-  (if-let [market-info (-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices)]
+  [{:asset.market-price/keys [historic] :as asset} & args]
+  (if-let [market-info (-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices)
+                      ;(if (or (-> args first :with-historic) historic)
+                      ;   (-> asset a.wde/in-ticket->out-ticket io.http/trading-economics-data-extraction)
+                      ;   (-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices))
+           ]
     market-info
     (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data"))))
 
@@ -59,10 +64,12 @@
     (throw (ex-info :message "[get-crypto-market-price] Something was wrong in get market data"))))
 
 (defn get-market-price
-  [{:asset/keys [type] :as asset}]
+  "options
+    :with-historic => Get historic data using alpha api "
+  [{:asset/keys [type] :as asset} & args]
   (if (= type :crypto)
     (get-crypto-market-price asset)
-    (get-stock-market-price asset)))
+    (get-stock-market-price asset args)))
 
 (defn update-asset
   [{:asset/keys [id]
@@ -145,6 +152,13 @@
                             assets)]
     updated-assets))
 
+(defn handler-alpha-api-limit-error
+  [assets]
+  (let [updated-assets (update-assets-updated-at assets less-updated-asset)]
+    (log/error "[MARKET-UPDATING] Alpha API limit have reached")
+    ;(db.a/upsert! updated-assets)
+    ))
+
 (defn update-asset-market-price
   ([]
    (if-let [assets (db.a/get-all)]
@@ -152,7 +166,7 @@
      (log/error "[MARKET-UPDATING] update-asset-market-price - can't get assets")))
   ([assets]
    (update-asset-market-price assets 1))
-  ([assets day-of-week]
+  ([assets day-of-week & args]
    (if-let [{:asset/keys [ticket] :as less-updated-asset
              :asset.market-price/keys [retry-attempts]} (less-updated-asset assets day-of-week)]
      (try
@@ -160,22 +174,24 @@
            (let [market-last-price (get-market-price less-updated-asset)
                  updated-assets (update-assets assets less-updated-asset market-last-price)]
              (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
-             (db.a/upsert! updated-assets)))
+             ;(db.a/upsert! updated-assets)
+             (clojure.pprint/pprint market-last-price)
+
+             ))
        (catch Exception e
          (let [causes (-> e ex-data :causes)]
            (if (contains? causes :alpha-api-limit)
-             (let [updated-assets (update-assets-updated-at assets less-updated-asset)]
-               (log/error "[MARKET-UPDATING] Alpha API limit have reached")
-               (db.a/upsert! updated-assets)))
-           (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
-               (if (< (or retry-attempts 0) 3)
-                 (do
-                   (log/info (str "Already retry [" (or retry-attempts 0) "], new attempt after 5sec"))
-                   (let [updated-assets (update-assets-retry-attempt assets less-updated-asset)]
-                     (db.a/upsert! updated-assets)
-                     (Thread/sleep 5000)
-                     (update-asset-market-price updated-assets day-of-week)))
-                 (log/info (str "Retry limit archived")))))))
+             (handler-alpha-api-limit-error assets)
+             (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
+                 (if (< (or retry-attempts 0) 3)
+                   (do
+                     (log/info (str "Already retry [" (or retry-attempts 0) "], new attempt after 5sec"))
+                     (let [updated-assets (update-assets-retry-attempt assets less-updated-asset)]
+                       (db.a/upsert! updated-assets)
+                       (Thread/sleep 5000)
+                       (update-asset-market-price updated-assets day-of-week args)
+                       ))
+                   (log/info (str "Retry limit archived"))))))))
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
 
 (defn update-crypto-market-price
@@ -187,18 +203,6 @@
    (->> assets
         (filter #(= :crypto (:asset/type %)))
         update-asset-market-price)))
-
-#_(defn get-asset-market-price
-  "Receive a list of assets and return the list updated without read or write data"
-  [assets]
-  (if-let [less-updated-asset (-> assets a.a/get-less-market-price-updated first)]
-    (do (log/info "[MARKET-PRICE] Stating get asset price for " (:asset/ticket less-updated-asset))
-        (let [less-updated-asset-ticket (in-ticket->out-ticket less-updated-asset)
-              market-last-price (get-stock-market-price less-updated-asset-ticket)
-              updated-assets (update-assets assets less-updated-asset market-last-price)]
-          (log/info "[MARKET-UPDATING] Success " less-updated-asset-ticket " price " (:price market-last-price))
-          updated-assets))
-    (log/warn "[MARKET-UPDATING] No asset to be updated")))
 
 (comment
   (def market-formated (get-stock-market-price "ABEV3.SA"))
