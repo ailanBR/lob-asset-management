@@ -86,19 +86,16 @@
       (throw (ex-info "Failed to get real time crypto price"
                       {:status (:status status)})))))
 
-
-(defn web-data-extraction
+(defn trading-economics-data-extraction
   "e.g abev3:bs"
   [ticket]
-  (try
-    (if-let [response (-> "https://tradingeconomics.com/"
-                          (str ticket)
-                          java.net.URL.
-                          html/html-resource)]
-      (a.wde/response->internal response)
-      (log/error "web-data-extraction error"))
-    (catch Exception e
-      (log/error "web-data-extraction error " e))))
+  (if-let [response (-> "https://tradingeconomics.com/"
+                        (str ticket)
+                        java.net.URL.
+                        html/html-resource)]
+    (a.wde/response->internal response)
+    (throw (ex-info "Failed to get stock price using trading economics information"
+                    {:status 999}))))
 
 (comment
   (get-daily-adjusted-prices "CAN")
