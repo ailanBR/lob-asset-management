@@ -190,6 +190,12 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    2. [ ] Web Scraping for Stock information
 4. Consider subscription events `Low`
 5. Get asset information `Very low`
+6. Decision between stock APIs
+   1. [ ] Validate if the historic price is updated
+   2. [ ] Get more often with real time prices API
+   3. [ ] When error in one get using another
+      1. Create a new ident for error (E.g :asset/recent-alpha-api-error? true)
+      2. If true => Use another
 --------------
 ## License
 

@@ -5,7 +5,13 @@
 
 (defn ->price
   [data]
-  (->> [:div.market-header-values]
+  (-> data
+      (html/select [:span.cur-price])
+      first
+      :content
+      first)
+
+  #_(->> [:div.market-header-values]
        (html/select data)
        first
        :content
@@ -16,7 +22,8 @@
        second
        :content
        first
-       a.m/safe-number->bigdec))
+       a.m/safe-number->bigdec)
+  )
 
 (defn ->txt-panel
   [data]
@@ -25,41 +32,38 @@
       (nth 5)
       :content))
 
-(defn ->price-perspective
+(defn ->date
   [data]
-  (->> data
-       ->txt-panel
-       (remove #(clojure.string/includes? % "\n"))
-       second
-       :content
-       (remove #(clojure.string/includes? % "\n"))
+  (->> [:div.last-updated]
+       (html/select data)
        first
        :content
-       first))
-
-(defn ->company-overview
-  [data]
-  (->> data
-       ->txt-panel
-       (remove #(clojure.string/includes? % "\n"))
-       last
+       (remove #(or (clojure.string/includes? % "\n")
+                    (= % " ")))
+       second
        :content
-       (remove #(clojure.string/includes? % "\n"))
-       first))
+       first
+       aux.t/str-date->clj-date))
 
 (defn response->internal
   [response]
-  (if (not-empty (html/select response [:div.market-header-values]))
-    {:price            (-> response ->price bigdec)
-     :date             (aux.t/current-date->keyword)        ;TODO Get from response
-     :updated-at       (aux.t/get-current-millis)
-     :perspective      (->price-perspective response)
-     :company-overview (->company-overview response)}
+  (if (not-empty (html/select response [:span.cur-price]))
+    (let [price (-> response ->price bigdec)
+          date-keyword (->date response)
+          historic {date-keyword price}]
+      {:price      price
+       :date       date-keyword
+       :updated-at (aux.t/get-current-millis)
+       :historic   historic})
     {:error "response->internal error extracting data"}))
 
 (defn in-ticket->out-ticket
   [{:asset/keys [ticket type]}]
   (let [asset-name (name ticket)]
     (if (or (= type :stockBR) (= type :fii))
-      (str asset-name ":bs")
-      (str asset-name ":us"))))
+      (str "bovespa/" (clojure.string/upper-case asset-name))
+      (str "NASDAQ/" (clojure.string/upper-case asset-name)))))
+
+(defn advfn-url
+  [ticket]
+  (str "https://www.advfn.com/stock-market/" ticket "/stock-price"))
