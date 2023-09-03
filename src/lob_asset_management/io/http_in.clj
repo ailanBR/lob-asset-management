@@ -8,10 +8,23 @@
             [lob-asset-management.controller.metric :as c.metric]
             [schema.core :as s]))
 
+(defn- remove-credentials
+  [query-params]
+  (dissoc query-params :apikey))
+
 (defn- http-get
   [endpoint query-params]
-  (let [result (http/get endpoint query-params)]
+  (let [result (http/get endpoint query-params)
+        query-params (remove-credentials query-params)]
     (c.metric/add-api-call {:url endpoint :params query-params})
+    result))
+
+(defn- html-resource
+  [endpoint]
+  (let [result (-> endpoint
+                   java.net.URL.
+                   html/html-resource)]
+    (c.metric/add-api-call {:url endpoint})
     result))
 
 (defn get-daily-adjusted-prices
@@ -86,15 +99,12 @@
       (throw (ex-info "Failed to get real time crypto price"
                       {:status (:status status)})))))
 
-(defn trading-economics-data-extraction
-  "e.g abev3:bs"
+(defn advfn-data-extraction
+  "e.g NASDAQ/AAPL or bovespa/ABEV3"
   [ticket]
-  (if-let [response (-> "https://tradingeconomics.com/"
-                        (str ticket)
-                        java.net.URL.
-                        html/html-resource)]
+  (if-let [response (html-resource (a.wde/advfn-url ticket))]
     (a.wde/response->internal response)
-    (throw (ex-info "Failed to get stock price using trading economics information"
+    (throw (ex-info "Failed to get stock price using ADVFN information"
                     {:status 999}))))
 
 (comment
@@ -109,15 +119,6 @@
   (get-crypto-price-real-time :blockstack)
   ------------------------
   ;Web Scraping =>  https://practical.li/blog/posts/web-scraping-with-clojure-hacking-hacker-news/
-  (def st-url "https://www.advfn.com/stock-market/bovespa/ABEV3/stock-price")
-  (def st-r (html/html-resource (java.net.URL. st-url)))
-  (-> st-r
-      (html/select [:div.price-info])
-      first
-      :content
-      second
-      :content)
-
   ;--------- More info
   (def te-url "https://tradingeconomics.com/abev3:bs")
   (def te-r (html/html-resource (java.net.URL. te-url)))

@@ -55,3 +55,28 @@
   (or (nil? updated-at)
       (< updated-at
          (get-current-millis (jt/minus (jt/local-date-time) (jt/hours target-hours))))))
+
+(defn- month-str->number
+  [str-month]
+  (condp = (clojure.string/lower-case str-month)
+    "jan" "01"
+    "feb" "02"
+    "mar" "03"
+    "apr" "04"
+    "may" "05"
+    "jun" "06"
+    "jul" "07"
+    "aug" "08"
+    "sep" "09"
+    "oct" "10"
+    "nov" "11"
+    "dec" "12"))
+
+(defn str-date->clj-date
+  "e.g. Sep 01 2023"
+  [str-date]
+  (let [splited (clojure.string/split str-date #" ")
+        day (second splited)
+        month (month-str->number (first splited))
+        year (last splited)]
+    (clj-date->date-keyword (str year month day "T00:00:00.000000000"))))
