@@ -78,7 +78,8 @@
    {:keys [price updated-at date historic]}]
   (if (and (= id asset-id))
     (let [new-price? (and (not (= current-price price))
-                          (not (= current-date date)))
+                          (<= (aux.t/date-keyword->miliseconds current-date)
+                              (aux.t/date-keyword->miliseconds date)))
           updated-historic (merge (:asset.market-price/historic asset) historic)]
       (if new-price?
         (-> asset
@@ -152,11 +153,20 @@
                             assets)]
     updated-assets))
 
-(defn handler-alpha-api-limit-error
-  [assets]
+(defn- handle-alpha-api-limit-error
+  [assets less-updated-asset]
   (let [updated-assets (update-assets-updated-at assets less-updated-asset)]
     (log/error "[MARKET-UPDATING] Alpha API limit have reached")
     (db.a/upsert! updated-assets)))
+
+(defn handle-retry-attempt
+  [{:asset.market-price/keys [retry-attempts] :as less-updated-asset}
+   assets]
+  (log/info (str "Already retry [" (or retry-attempts 0) "], new attempt after 5sec"))
+  (let [updated-assets (update-assets-retry-attempt assets less-updated-asset)]
+    (db.a/upsert! updated-assets)
+    (Thread/sleep 5000)
+    updated-assets))
 
 (defn update-asset-market-price
   ([]
@@ -169,24 +179,20 @@
    (if-let [{:asset/keys [ticket] :as less-updated-asset
              :asset.market-price/keys [retry-attempts]} (less-updated-asset assets day-of-week)]
      (try
-       (do (log/info "[MARKET-UPDATING] Stating get asset price for " (:asset/ticket less-updated-asset))
-           (let [market-last-price (get-market-price less-updated-asset)
-                 updated-assets (update-assets assets less-updated-asset market-last-price)]
-             (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
-             (db.a/upsert! updated-assets)))
+       (log/info "[MARKET-UPDATING] Stating get asset price for " (:asset/ticket less-updated-asset))
+       (let [market-last-price (get-market-price less-updated-asset)
+             updated-assets (update-assets assets less-updated-asset market-last-price)]
+         (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
+         (db.a/upsert! updated-assets))
        (catch Exception e
-         (let [causes (-> e ex-data :causes)]
-           (if (contains? causes :alpha-api-limit)
-             (handler-alpha-api-limit-error assets)
-             (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
-                 (if (< (or retry-attempts 0) 3)
-                   (do
-                     (log/info (str "Already retry [" (or retry-attempts 0) "], new attempt after 5sec"))
-                     (let [updated-assets (update-assets-retry-attempt assets less-updated-asset)]
-                       (db.a/upsert! updated-assets)
-                       (Thread/sleep 5000)
-                       (update-asset-market-price updated-assets day-of-week args)))
-                   (log/info (str "Retry limit archived"))))))))
+         (if (contains? (-> e ex-data :causes) :alpha-api-limit)
+           (handle-alpha-api-limit-error assets less-updated-asset)
+           (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
+               (if (< (or retry-attempts 0) 3)
+                 (-> less-updated-asset
+                     (handle-retry-attempt assets)
+                     (update-asset-market-price day-of-week args))
+                 (log/info (str "Retry limit archived")))))))
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
 
 (defn update-crypto-market-price
@@ -200,7 +206,6 @@
         update-asset-market-price)))
 
 (comment
-
   (get-stock-market-price {:asset/ticket :ABEV3,
                            :asset/type :stockBR
                            :asset.market-price/historic
@@ -222,5 +227,4 @@
   (->> (db.a/get-all)
        (filter #(= :STX (:asset/ticket %)))
        update-asset-market-price)
-
   )

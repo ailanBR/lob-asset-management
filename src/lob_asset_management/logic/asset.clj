@@ -12,3 +12,9 @@
     false
     (let [db-data-tickets (->> db-data (map :asset/ticket) set)]
       (contains? db-data-tickets ticket))))
+
+(defn updated-historic?                                     ;TODO
+  [historic]
+  ;- Try to get past dates
+  ;- Receive a date that is required to exist in the list
+  )
