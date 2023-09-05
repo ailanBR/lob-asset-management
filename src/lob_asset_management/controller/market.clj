@@ -70,17 +70,26 @@
     (get-crypto-market-price asset)
     (get-stock-market-price asset args)))
 
+(defn- update-historic
+  [historic-list new-historic]
+  (->> new-historic
+       (merge historic-list)
+       (sort-by first)
+       (into (sorted-map))))
+
 (defn update-asset
   [{:asset/keys [id]
     current-price :asset.market-price/price
-    current-date :asset.market-price/price-date :as asset}
+    current-date :asset.market-price/price-date
+    current-historic :asset.market-price/historic :as asset}
    asset-id
    {:keys [price updated-at date historic]}]
   (if (and (= id asset-id))
     (let [new-price? (and (not (= current-price price))
+                          (> price 0M)
                           (<= (aux.t/date-keyword->miliseconds current-date)
                               (aux.t/date-keyword->miliseconds date)))
-          updated-historic (merge (:asset.market-price/historic asset) historic)]
+          updated-historic (update-historic current-historic historic)]
       (if new-price?
         (-> asset
             (assoc :asset.market-price/price price

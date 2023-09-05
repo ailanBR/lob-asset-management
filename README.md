@@ -196,6 +196,7 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    3. [ ] When error in one get using another
       1. Create a new ident for error (E.g :asset/recent-alpha-api-error? true)
       2. If true => Use another
+7. Extract asset news from data extraction flow
 --------------
 ## License
 
