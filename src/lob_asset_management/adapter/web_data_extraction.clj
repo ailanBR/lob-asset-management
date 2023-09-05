@@ -32,18 +32,25 @@
       (nth 5)
       :content))
 
+(defn updated-at-date-format?
+  [updated-at]
+  (println updated-at)
+  (> (count (clojure.string/split (str updated-at) #" ")) 1))
+
 (defn ->date
   [data]
-  (->> [:div.last-updated]
-       (html/select data)
-       first
-       :content
-       (remove #(or (clojure.string/includes? % "\n")
-                    (= % " ")))
-       second
-       :content
-       first
-       aux.t/str-date->date-keyword))
+  (let [updated-at (->> [:div.last-updated]
+                        (html/select data)
+                        first
+                        :content
+                        (remove #(or (clojure.string/includes? % "\n")
+                                     (= % " ")))
+                        second
+                        :content
+                        first)]
+    (if (updated-at-date-format? updated-at)
+      (aux.t/str-date->date-keyword updated-at)
+      (aux.t/current-date->keyword))))
 
 (defn response->internal
   [response]

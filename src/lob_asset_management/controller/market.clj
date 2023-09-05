@@ -86,6 +86,7 @@
    {:keys [price updated-at date historic]}]
   (if (and (= id asset-id))
     (let [new-price? (and (not (= current-price price))
+                          (> price 0M)
                           (<= (aux.t/date-keyword->miliseconds current-date)
                               (aux.t/date-keyword->miliseconds date)))
           updated-historic (update-historic current-historic historic)]
