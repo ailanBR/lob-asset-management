@@ -72,11 +72,47 @@
     "nov" "11"
     "dec" "12"))
 
-(defn str-date->clj-date
+(defn- month-number->str
+  [month-number]
+  (condp = month-number
+    1  "jan"
+    2  "feb"
+    3  "mar"
+    4  "apr"
+    5  "may"
+    6  "jun"
+    7  "jul"
+    8  "aug"
+    9  "sep"
+    10 "oct"
+    11 "nov"
+    12 "dec"))
+
+(defn str-date->date-keyword
   "e.g. Sep 01 2023"
   [str-date]
   (let [splited (clojure.string/split str-date #" ")
         day (second splited)
         month (month-str->number (first splited))
         year (last splited)]
-    (clj-date->date-keyword (str year month day "T00:00:00.000000000"))))
+    (clj-date->date-keyword (str year "-" month "-" day "T00:00:00.000000000"))))
+
+(defn str-date->str-timestamp
+  "e.g. Sep 01 2023"
+  [str-date]
+  (let [splited (clojure.string/split str-date #" ")
+        day (second splited)
+        month (month-str->number (first splited))
+        year (last splited)]
+    (str year "-" month "-" day "T00:00:00.000000000")))
+
+(defn date-keyword->miliseconds
+  "e.g. :2023-09-01"
+  [dt-keyword]
+  (let [splited (-> dt-keyword name (clojure.string/split #"-"))
+        day (last splited)
+        month (month-number->str (-> splited second Integer/parseInt))
+        year (first splited)]
+    (-> (clojure.string/join " " [month day year])
+        str-date->str-timestamp
+        get-current-millis)))

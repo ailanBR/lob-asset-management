@@ -43,7 +43,7 @@
        second
        :content
        first
-       aux.t/str-date->clj-date))
+       aux.t/str-date->date-keyword))
 
 (defn response->internal
   [response]
