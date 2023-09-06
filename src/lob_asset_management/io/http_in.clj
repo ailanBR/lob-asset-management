@@ -119,43 +119,28 @@
   (get-crypto-price-real-time :blockstack)
   ------------------------
   ;Web Scraping =>  https://practical.li/blog/posts/web-scraping-with-clojure-hacking-hacker-news/
-  ;--------- More info
-  (def te-url "https://tradingeconomics.com/abev3:bs")
-  (def te-r (html/html-resource (java.net.URL. te-url)))
-  (def price (->> [:div.market-header-values]
-                  (html/select te-r)
-                  first
-                  :content
-                  (remove #(clojure.string/includes? % "\n"))
-                  first
-                  :content
-                  (remove #(clojure.string/includes? % "\n"))
-                  second
-                  :content
-                  first
-                  lob-asset-management.aux.money/safe-number->bigdec))
-
-  (def txt-panel (-> te-r
-                     (html/select [:div.panel-default])
-                     (nth 5)
-                     :content))
-
-  (def price-desc (->> txt-panel
-                       (remove #(clojure.string/includes? % "\n"))
-                       second
-                       :content
-                       (remove #(clojure.string/includes? % "\n"))
-                       first
-                       :content
-                       first))
-
-  (def company-desc (->> txt-panel
-                         (remove #(clojure.string/includes? % "\n"))
-                         last
-                         :content
-                         (remove #(clojure.string/includes? % "\n"))
-                         first
-                         ))
-
   ;----------- Other option https://www.marketscreener.com/quote/stock/AMBEV-S-A-15458762/
+  (def t (-> "https://br.advfn.com/bolsa-de-valores/nasdaq/AAPL/cotacao"
+             java.net.URL.
+             html/html-resource))
+  (->> [:table#id_news]
+       (html/select t)
+       first
+       :content
+       (remove #(clojure.string/includes? % "\n"))
+       (map #(let [cnt (:content %)
+                   dt (-> cnt first :content first)
+                   hr (-> cnt second :content first)
+                   from (-> cnt rest rest first :content first :content first)
+                   txt (-> cnt last :content first :content first)
+                   href (clojure.string/join ["https//" (-> cnt last :content first :attrs :href)])
+                   ]
+              {:id (clojure.string/join "-" [dt hr from])
+               :txt txt
+               :href href}
+              ))
+       rest
+       ;first
+       )
+
   )
