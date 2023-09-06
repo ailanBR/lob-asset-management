@@ -34,7 +34,7 @@
 
 (defn updated-at-date-format?
   [updated-at]
-  (> (count (clojure.string/split (str updated-at) #" ")) 1))
+  (= (count (clojure.string/split (str updated-at) #" ")) 3))
 
 (defn ->date
   [data]

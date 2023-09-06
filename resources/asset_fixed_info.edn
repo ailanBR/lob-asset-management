@@ -8,7 +8,7 @@
  :ALZR13 {:name     "Fundo de Investimento Imobiliário Alianza Trust Renda Imobiliária"
           :tax-number     "28.737.771/0001-85"
           :category [:fii :hybrid]
-          :alpha-vantage-allowed? true}
+          :alpha-vantage-allowed? false}
  :HGBS11 {:name     "Hedge Brasil Shopping"
           :tax-number     "08.431.747/0001-06"
           :category [:fii :shopping]

@@ -6,7 +6,10 @@
 
 (defn get-all
   []
-  (io.f-in/get-file-by-entity :asset))
+  (try
+    (io.f-in/get-file-by-entity :asset)
+    (catch Exception e
+      (throw (ex-info "Error when getting asset informations" {:cause e})))))
 
 (defn- maybe-upsert!
   [db-data assets]
@@ -21,12 +24,15 @@
 
 (defn upsert!
   [assets]
-  (let [db-data (or (get-all) [])]
-    (->> db-data
-         (remove-already-exist assets)
-         (concat (or assets []))
-         (sort-by :asset/name)
-         (maybe-upsert! db-data))))
+  (try
+    (let [db-data (or (get-all) [])]
+      (->> db-data
+           (remove-already-exist assets)
+           (concat (or assets []))
+           (sort-by :asset/name)
+           (maybe-upsert! db-data)))
+    (catch Exception e
+      (throw (ex-info "ASSET UPSERT ERROR" {:cause e})))))
 
 (defn get-by-ticket
   ([ticket]

@@ -33,8 +33,11 @@
 
 (s/defn get-file-by-entity
   [entity :- m.f/file-name]
-  (let [entity-full-path (file-full-path (name entity))]
-    (file->edn entity-full-path)))
+  (try
+    (let [entity-full-path (file-full-path (name entity))]
+      (file->edn entity-full-path))
+    (catch Exception e
+      (throw (ex-info (format "Error when reading %s file %s" entity e)  {:cause e})))))
 
 (defn read-b3-folder
   ([]

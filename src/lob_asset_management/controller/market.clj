@@ -83,7 +83,7 @@
     current-date :asset.market-price/price-date
     current-historic :asset.market-price/historic :as asset}
    asset-id
-   {:keys [price updated-at date historic]}]
+   {:keys [price updated-at date historic] :as t}]
   (if (and (= id asset-id))
     (let [new-price? (and (not (= current-price price))
                           (> price 0M)
