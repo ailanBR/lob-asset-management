@@ -210,6 +210,6 @@
   (tbot/send-document )
 
   (tbot/set-my-commands )
-
+  ;[inline URL](http://www.example.com/) hyperlink message
   )
 
