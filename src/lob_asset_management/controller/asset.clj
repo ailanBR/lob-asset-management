@@ -1,17 +1,21 @@
 (ns lob-asset-management.controller.asset
-  (:require [clojure.tools.logging :as log]
+  (:require [lob-asset-management.aux.time :as aux.t]
+            [clojure.tools.logging :as log]
             [lob-asset-management.db.asset-news :as db.asset-news]
             [lob-asset-management.io.http_in :as io.http]))
+
+;TODO: Add notified-at when sent telegram message
+;      :asset-news/notified-at (aux.t/current-datetime->str)
 
 (defn update-news
   [{:asset/keys [ticket name]} news]
   (let [asset-news (map (fn [{:keys [id txt datetime href]}]
-                          {:asset-news/ticket   ticket
-                           :asset-news/name     name
-                           :asset-news/id       id
-                           :asset-news/txt      txt
-                           :asset-news/datetime datetime
-                           :asset-news/href     href}) news)]
+                          {:asset-news/ticket      ticket
+                           :asset-news/name        name
+                           :asset-news/id          id
+                           :asset-news/txt         txt
+                           :asset-news/datetime    datetime
+                           :asset-news/href        href}) news)]
     (db.asset-news/upsert! asset-news)))
 
 (defn get-stock-real-time
