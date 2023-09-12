@@ -60,17 +60,17 @@
   [str-month]
   (condp = (clojure.string/lower-case str-month)
     "jan" "01"
-    "feb" "02"
+    (or "feb" "fev") "02"
     "mar" "03"
-    "apr" "04"
-    "may" "05"
+    (or "abr" "apr") "04"
+    (or "mai" "may") "05"
     "jun" "06"
     "jul" "07"
-    "aug" "08"
-    "sep" "09"
-    "oct" "10"
+    (or "ago" "aug") "08"
+    (or "set" "sep") "09"
+    (or "out" "oct") "10"
     "nov" "11"
-    "dec" "12"))
+    (or "dez" "dec") "12"))
 
 (defn- month-number->str
   [month-number]
@@ -88,15 +88,6 @@
     11 "nov"
     12 "dec"))
 
-(defn str-date->date-keyword
-  "e.g. Sep 01 2023"
-  [str-date]
-  (let [splited (clojure.string/split str-date #" ")
-        day (second splited)
-        month (month-str->number (first splited))
-        year (last splited)]
-    (clj-date->date-keyword (str year "-" month "-" day "T00:00:00.000000000"))))
-
 (defn str-date->str-timestamp
   "e.g. Sep 01 2023"
   [str-date]
@@ -105,6 +96,26 @@
         month (month-str->number (first splited))
         year (last splited)]
     (str year "-" month "-" day "T00:00:00.000000000")))
+
+(defn str-date->date-keyword
+  "e.g. Sep 01 2023"
+  [str-date]
+  (clj-date->date-keyword (str-date->str-timestamp str-date)))
+
+
+(defn str-br-date->str-timestamp
+  "e.g. 11 Set 2023"
+  [str-date]
+  (let [splited (clojure.string/split str-date #" ")
+        day (first splited)
+        month (month-str->number (second splited))
+        year (last splited)]
+    (str year "-" month "-" day "T00:00:00.000000000")))
+
+(defn str-br-date->date-keyword
+  "e.g. 11 Set 2023"
+  [str-date]
+  (clj-date->date-keyword (str-br-date->str-timestamp str-date)))
 
 (defn date-keyword->miliseconds
   "e.g. :2023-09-01"

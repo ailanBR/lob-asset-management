@@ -107,6 +107,16 @@
     (throw (ex-info "Failed to get stock price using ADVFN information"
                     {:status 999}))))
 
+(defn advfn-data-extraction-br
+  [asset]
+  (if-let [response (-> asset
+                        a.wde/in-ticket->out-ticket
+                        a.wde/br-advfn-url
+                        html-resource)]
+    (a.wde/br-response->internal response)
+    (throw (ex-info "Failed to get stock price using ADVFN information"
+                    {:status 999}))))
+
 (comment
   (get-daily-adjusted-prices "CAN")
   (def abev-result (get-daily-adjusted-prices "CAN"))
@@ -123,6 +133,7 @@
   (def t (-> "https://br.advfn.com/bolsa-de-valores/nasdaq/AAPL/cotacao"
              java.net.URL.
              html/html-resource))
+
   (->> [:table#id_news]
        (html/select t)
        first
@@ -133,12 +144,14 @@
                    hr (-> cnt second :content first)
                    from (-> cnt rest rest first :content first :content first)
                    txt (-> cnt last :content first :content first)
-                   href (clojure.string/join ["https//" (-> cnt last :content first :attrs :href)])
-                   ]
-              {:id (clojure.string/join "-" [dt hr from])
-               :txt txt
-               :href href}
-              ))
+                   href (clojure.string/join ["https//" (-> cnt last :content first :attrs :href)])]
+              {:id   (-> "-"
+                         (clojure.string/join [dt hr from])
+                         (clojure.string/replace #" " "-")
+                         (clojure.string/replace #"/" "-")
+                         (clojure.string/replace #":" "-"))
+               :txt  txt
+               :href href}))
        rest
        ;first
        )
