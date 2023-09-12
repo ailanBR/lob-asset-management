@@ -6,6 +6,7 @@
   :dependencies [[alekcz/fire "0.5.0"]
                  [cheshire "5.10.1"]
                  [clojure.java-time "1.2.0"]
+                 [clojurewerkz/money "1.10.0"]
                  [clj-time "0.15.2"]
                  [clj-http "3.12.3"]
                  [dk.ative/docjure "1.19.0"]
