@@ -5,51 +5,14 @@
             [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.adapter.web-data-extraction :as a.wde]
             [lob-asset-management.db.asset :as db.a]
-            [lob-asset-management.aux.time :as aux.t]
-            [lob-asset-management.aux.util :refer [str-space->keyword-underline
-                                                   remove-keyword-parenthesis]]))
-
-(defn format-historic-price
-  [price-historic]
-  (reduce #(let [val->keyword (-> %2 val str-space->keyword-underline remove-keyword-parenthesis)]
-             (assoc %1 (key %2) (bigdec (or (:4._close val->keyword)
-                                             (:4a._close_BRL val->keyword)))))
-          {}
-          price-historic))
-
-(defn market-info->last-refreshed-dt
-  [formatted-data]
-  (when-let [latest-refreshed-dt (or (-> formatted-data :meta-data :3._Last_Refreshed)
-                                     (-> formatted-data :meta-data :6._Last_Refreshed))]
-    (-> latest-refreshed-dt
-        (clojure.string/split #" ")
-        first
-        keyword)))
-
-(defn last-price
-  [{:keys [time-series] :as formatted-data}]
-  (if (or (not (nil? formatted-data))
-          (not (empty? formatted-data)))
-    (if-let [latest-refreshed-dt (market-info->last-refreshed-dt formatted-data)]
-      (let [latest-refreshed-price (-> time-series
-                                       latest-refreshed-dt
-                                       str-space->keyword-underline
-                                       remove-keyword-parenthesis)
-            closed-price (bigdec (or (:4._close latest-refreshed-price)
-                                     (:4a._close_BRL latest-refreshed-price)))
-            price-historic (format-historic-price time-series)]
-        {:price      closed-price
-         :date       latest-refreshed-dt
-         :updated-at (aux.t/get-current-millis)
-         :historic   price-historic})
-      (throw (ex-info "[last-price] (1) Something was wrong in get market data => formatted-data" formatted-data)))
-    (throw (ex-info "[last-price] (2) Something was wrong in get market data => formatted-data" formatted-data))))
+            [lob-asset-management.aux.time :as aux.t]))
 
 (defn get-stock-market-price
   [{:asset.market-price/keys [historic] :as asset} & args]
   (if-let [market-info                                      ;(-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices)
                       (if (or (-> args first :with-historic) historic)
-                         (-> asset a.wde/in-ticket->out-ticket io.http/advfn-data-extraction)
+                        (io.http/advfn-data-extraction-br asset)
+                        ;(-> asset a.wde/in-ticket->out-ticket io.http/advfn-data-extraction)
                          (-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices))]
     market-info
     (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data"))))
@@ -225,7 +188,6 @@
   (def company-overview (io.http/get-company-overview "ABEV3.SA"))
 
   (clojure.pprint/pprint market-formated)
-  (last-price market-formated)
 
   (update-asset-market-price)
 

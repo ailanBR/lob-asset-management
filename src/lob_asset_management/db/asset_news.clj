@@ -26,9 +26,9 @@
   [asset-news]
   (try
     (let [db-data (or (get-all) [])]
-      (->> db-data
-           (remove-already-exist asset-news)
-           (concat (or asset-news []))
+      (->> asset-news
+           (remove-already-exist db-data)
+           (concat (or db-data []))
            (sort-by :asset-news/name)
            (maybe-upsert! db-data)))
     (catch Exception e

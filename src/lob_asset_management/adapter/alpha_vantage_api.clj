@@ -23,11 +23,11 @@
        (into (sorted-map))))
 
 (defmulti formatted-data
-          (fn [{:keys [Meta_Data Information]}]
-            (cond
-              Meta_Data :alpha-api
-              Information :alpha-limit
-              :else :real-time-crypto)))
+  (fn [{:keys [Meta_Data Information]}]
+    (cond
+      Meta_Data :alpha-api
+      Information :alpha-limit
+      :else :real-time-crypto)))
 
 (defmethod formatted-data :alpha-api
   [{:keys [Meta_Data Time_Series_Daily Time_Series_FX_Daily

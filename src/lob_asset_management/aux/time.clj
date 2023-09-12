@@ -60,17 +60,24 @@
   [str-month]
   (condp = (clojure.string/lower-case str-month)
     "jan" "01"
-    (or "feb" "fev") "02"
+    "feb" "02"
+    "fev" "02"
     "mar" "03"
-    (or "abr" "apr") "04"
-    (or "mai" "may") "05"
+    "abr" "04"
+    "apr" "04"
+    "mai" "05"
+    "may" "05"
     "jun" "06"
     "jul" "07"
-    (or "ago" "aug") "08"
-    (or "set" "sep") "09"
-    (or "out" "oct") "10"
+    "ago" "08"
+    "aug" "08"
+    "set" "09"
+    "sep" "09"
+    "out" "10"
+    "oct" "10"
     "nov" "11"
-    (or "dez" "dec") "12"))
+    "dez" "12"
+    "dec" "12"))
 
 (defn- month-number->str
   [month-number]
