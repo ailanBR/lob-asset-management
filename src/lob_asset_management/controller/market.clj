@@ -1,11 +1,22 @@
 (ns lob-asset-management.controller.market
   (:require [clojure.tools.logging :as log]
             [java-time.api :as t]
+            [lob-asset-management.db.asset-news :as db.asset-news]
             [lob-asset-management.io.http_in :as io.http]
             [lob-asset-management.adapter.asset :as a.a]
-            [lob-asset-management.adapter.web-data-extraction :as a.wde]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.aux.time :as aux.t]))
+
+(defn update-news
+  [{:asset/keys [ticket name]} news]
+  (let [asset-news (map (fn [{:keys [id txt datetime href]}]
+                          {:asset-news/ticket      ticket
+                           :asset-news/name        name
+                           :asset-news/id          id
+                           :asset-news/txt         txt
+                           :asset-news/datetime    datetime
+                           :asset-news/href        href}) news)]
+    (db.asset-news/upsert! asset-news)))
 
 (defn get-stock-market-price
   [{:asset.market-price/keys [historic] :as asset} & args]
@@ -14,6 +25,7 @@
                         (io.http/advfn-data-extraction-br asset)
                         ;(-> asset a.wde/in-ticket->out-ticket io.http/advfn-data-extraction)
                          (-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices))]
+    (update-news asset (:news market-info))
     market-info
     (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data"))))
 
@@ -178,7 +190,7 @@
         update-asset-market-price)))
 
 (comment
-  (get-stock-market-price {:asset/ticket :ABEV3,
+  #_(get-stock-market-price {:asset/ticket :ABEV3,
                            :asset/type :stockBR
                            :asset.market-price/historic
                            {:2023-05-02 14.2600M,
