@@ -155,5 +155,6 @@
        rest
        ;first
        )
-
+  ;---------------------------- Historic using ADVFN
+  ;https://br.advfn.com/bolsa-de-valores/amex/CNBS/historico
   )
