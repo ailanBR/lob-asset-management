@@ -63,7 +63,7 @@
 
 (defmethod upsert :asset-news
   [data]
-  (create-backup :asset-news)
+  ;(create-backup :asset-news)
   (let [file-path (file-full-path :asset-news)]
     (edn->file data file-path)))
 

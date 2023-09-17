@@ -185,6 +185,7 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    3. [ ] Do nothing
       1. Solution works for read/write entities in terminal
       2. ~~The problem is only **maybe** in the in-data files~~
+   4. XTDB 
 3. [Http_in] Find another option for Alpha API / Web Scraping `Medium`
    1. [X] Coingecko for crypto 
    2. [ ] Web Scraping for Stock information
@@ -196,7 +197,10 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    3. [ ] When error in one get using another
       1. Create a new ident for error (E.g :asset/recent-alpha-api-error? true)
       2. If true => Use another
-7. Extract asset news from data extraction flow
+7. Use the news to sent telegram message
+8. Fix the telegram scheduled messages
+9. Make the poling async and different by proposal (Get price / Get news / TelegramBot)
+10. 
 --------------
 ## License
 

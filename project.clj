@@ -9,6 +9,8 @@
                  [clojurewerkz/money "1.10.0"]
                  [clj-time "0.15.2"]
                  [clj-http "3.12.3"]
+                 [com.xtdb/xtdb-core "1.24.1"]
+                 [com.xtdb/xtdb-rocksdb "1.24.1"]
                  [dk.ative/docjure "1.19.0"]
                  [environ "1.2.0"]
                  [enlive "1.1.6"]

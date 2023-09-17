@@ -20,14 +20,17 @@
 
 (defn get-stock-market-price
   [{:asset.market-price/keys [historic] :as asset} & args]
-  (if-let [market-info                                      ;(-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices)
-                      (if (or (-> args first :with-historic) historic)
-                        (io.http/advfn-data-extraction-br asset)
-                        ;(-> asset a.wde/in-ticket->out-ticket io.http/advfn-data-extraction)
-                         (-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices))]
-    (update-news asset (:news market-info))
-    market-info
-    (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data"))))
+  (let [get-historic? (or (-> args first :with-historic) historic)]
+    (if-let [{:keys [news] :as market-info}                 ;(-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices)
+             (if get-historic?
+               (io.http/advfn-data-extraction-br asset)
+               ;(-> asset a.wde/in-ticket->out-ticket io.http/advfn-data-extraction)
+               (-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices))]
+      (do
+        (when-not get-historic?
+          (update-news asset news))
+        market-info)))
+  (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data")))
 
 (defn get-crypto-market-price
   [{:asset.market-price/keys [historic] :as asset}]
