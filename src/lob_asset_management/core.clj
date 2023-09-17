@@ -20,7 +20,9 @@
                #'lob-asset-management.relevant/alpha-key
                #'lob-asset-management.relevant/telegram-key
                #'lob-asset-management.relevant/telegram-personal-chat
-               #'lob-asset-management.controller.telegram-bot/bot))
+               #'lob-asset-management.controller.telegram-bot/bot
+               ;#'lob-asset-management.aux.xtdb/db-node
+               ))
 
 (start)                                                     ;for develop purpose
 
