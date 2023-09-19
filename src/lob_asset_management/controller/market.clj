@@ -16,7 +16,8 @@
                            :asset-news/txt         txt
                            :asset-news/datetime    datetime
                            :asset-news/href        href}) news)]
-    (db.asset-news/upsert! asset-news)))
+    (println "update-news")
+    (db.asset-news/upsert-bulk! asset-news)))
 
 (defn get-stock-market-price
   [{:asset.market-price/keys [historic] :as asset} & args]
@@ -27,7 +28,7 @@
                ;(-> asset a.wde/in-ticket->out-ticket io.http/advfn-data-extraction)
                (-> asset a.a/in-ticket->out-ticket io.http/get-daily-adjusted-prices))]
       (do
-        (when-not get-historic?
+        (when get-historic?
           (update-news asset news))
         market-info)
       (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data")))))
