@@ -1,5 +1,6 @@
 (ns lob-asset-management.core
   (:require [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.aux.xtdb :refer [db-node]]
             [lob-asset-management.controller.forex :as c.f]
             [lob-asset-management.controller.market :as c.m]
             [lob-asset-management.controller.process-file :as c.p-f]
@@ -21,8 +22,7 @@
                #'lob-asset-management.relevant/telegram-key
                #'lob-asset-management.relevant/telegram-personal-chat
                #'lob-asset-management.controller.telegram-bot/bot
-               ;#'lob-asset-management.aux.xtdb/db-node
-               ))
+               #'lob-asset-management.aux.xtdb/db-node))
 
 (start)                                                     ;for develop purpose
 

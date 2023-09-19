@@ -17,13 +17,14 @@
 
 #_(def xtdb-node (start-xtdb!))
 
-(defn stop-xtdb! []
-  (.close xtdb-node))
+(defn stop-xtdb!
+  [node]
+  (.close node))
 
 ;FIXME : WHY that don't work !!!
-#_(defstate db-node
-          :start start-xtdb!
-          :stop #(.close db-node))
+(defstate db-node
+          :start (start-xtdb!)
+          :stop (.close db-node))
 
 (defn upsert!
   "Insert new record
@@ -45,9 +46,20 @@
       (xt/q (xt/db node))
       (map first)))
 
+(defn get!
+  [node query]
+  (->> query
+       (xt/q (xt/db node))
+       (map first)))
+
+(defn delete!
+  [node id]
+  (let [tx [[::xt/delete id]]]
+    (xt/submit-tx node tx)))
+
 (comment
   (def xtdb-node (start-xtdb!))
-  (stop-xtdb!)
+  (stop-xtdb! xtdb-node)
 
   ;INSERT
   (xt/submit-tx xtdb-node [[::xt/put {:xt/id "2"
@@ -61,23 +73,12 @@
   (xt/q (xt/db xtdb-node) '{:find [(pull ?e [*])]
                             :where [[?e :xt/id _]]})
 
-  (xt/submit-tx xtdb-node [[::xt/delete #uuid"0c5a0035-4cab-4c93-8495-430ae2699d49"]])
-
   (xt/sync xtdb-node)
-
   (xt/entity-history xtdb-node )
-
-  (type '(1))
-
-  (mapv (fn [t]
-          (if (:xt/id t)
-            [::xt/put t]
-            [::xt/put (assoc t
-                        :xt/id (UUID/randomUUID))]))
-        '({:a 1}))
-
-  (get! xtdb-node :xt/id "1")
-
   (xt/pull (xt/db xtdb-node) [:xt/id :schedule/name] "1")
-  (def g (get-all! xtdb-node))
+
+  (get-all! xtdb-node)
+
+  (delete! xtdb-node #uuid"776d0415-3bed-466c-9709-ffc952fbd10f")
+  (xt/sync xtdb-node)
   )
