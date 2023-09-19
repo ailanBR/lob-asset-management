@@ -1,15 +1,15 @@
 (ns lob-asset-management.aux.time
-  (:require [java-time.api :as jt]
-            [clj-time.coerce :as coerce]
-            [clj-time.core :as t]))
+  (:require [java-time.api :as jt]))
 
 (defn get-current-millis
   ([]
    (let [dt (jt/local-date-time)]
      (get-current-millis dt)))
   ([dt]
-   (let [c-dt (coerce/to-date-time (str dt))]
-     (.getMillis c-dt))))
+   (let [date-time-string (str dt)
+         fmt (jt/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS")
+         c-dt (jt/zoned-date-time fmt date-time-string "America/Sao_Paulo")]
+     (-> c-dt .toInstant .toEpochMilli))))
 
 (defn day-of-week
   [dt]
@@ -33,9 +33,9 @@
   date example :2023-06-21"
   [dt days]
   (when dt
-    (let [c-dt (coerce/to-date-time (name dt))]
+    (let [c-dt (jt/local-date(name dt))]
       (-> c-dt
-          (t/minus (t/days days))
+          (jt/minus (jt/days days))
           clj-date->date-keyword))))
 
 (defn current-date-time

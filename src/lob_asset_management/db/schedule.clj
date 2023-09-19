@@ -5,6 +5,7 @@
 
 ;; USE CRON
 ;; https://github.com/sbocq/cronit
+;; http://www.nncron.ru/help/EN/working/cron-format.htm
 ;
 ;(s/defschema Schedule
 ;  #:schedule{:name s/Str
