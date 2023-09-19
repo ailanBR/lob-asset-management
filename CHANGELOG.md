@@ -156,7 +156,7 @@ All notable changes to this project will be documented in this file. This change
 - Move telegram key to environment variable
 
 ### 2023-09-19
-- Remove clojure-time library
+- Remove clj-time library
 - Change asset news database to use XTDB
 
 ## [0.1.1] - 2023-03-25
