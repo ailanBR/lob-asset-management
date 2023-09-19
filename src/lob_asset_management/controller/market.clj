@@ -29,8 +29,8 @@
       (do
         (when-not get-historic?
           (update-news asset news))
-        market-info)))
-  (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data")))
+        market-info)
+      (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data")))))
 
 (defn get-crypto-market-price
   [{:asset.market-price/keys [historic] :as asset}]
@@ -193,7 +193,7 @@
         update-asset-market-price)))
 
 (comment
-  #_(get-stock-market-price {:asset/ticket :ABEV3,
+  (get-stock-market-price {:asset/ticket :ABEV3,
                            :asset/type :stockBR
                            :asset.market-price/historic
                            {:2023-05-02 14.2600M,
