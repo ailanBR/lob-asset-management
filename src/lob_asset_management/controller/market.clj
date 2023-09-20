@@ -16,7 +16,6 @@
                            :asset-news/txt         txt
                            :asset-news/datetime    datetime
                            :asset-news/href        href}) news)]
-    (println "update-news")
     (db.asset-news/upsert-bulk! asset-news)))
 
 (defn get-stock-market-price
