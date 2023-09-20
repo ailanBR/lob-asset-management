@@ -2,13 +2,17 @@
   (:require [java-time.api :as jt]))
 
 (defn get-current-millis
+  "e.g. 2023-09-18T21:38:52.259569"
   ([]
    (let [dt (jt/local-date-time)]
      (get-current-millis dt)))
   ([dt]
-   (let [date-time-string (str dt)
+   (let [date-time-string (->> dt
+                               str
+                               (format "%-29s"))
+         dt-fmt (clojure.string/replace date-time-string " " "0")
          fmt (jt/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS")
-         c-dt (jt/zoned-date-time fmt date-time-string "America/Sao_Paulo")]
+         c-dt (jt/zoned-date-time fmt dt-fmt "America/Sao_Paulo")]
      (-> c-dt .toInstant .toEpochMilli))))
 
 (defn day-of-week

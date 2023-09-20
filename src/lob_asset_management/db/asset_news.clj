@@ -23,7 +23,6 @@
 
 (s/defn upsert-bulk!
   [asset-news :- [AssetNew]]
-  (println "insert")
   (aux.xtdb/upsert! db-node asset-news))
 
 (s/defn upsert!
