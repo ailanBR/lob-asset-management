@@ -21,13 +21,23 @@
   (aux.xtdb/get! db-node '{:find  [(pull ?e [*])]
                             :where [[?e :asset-news/id _]]}))
 
+(defn id->db-id
+  [{:asset-news/keys [id] :as asset-new}]
+  (assoc asset-new :xt/id id))
+
 (s/defn upsert-bulk!
   [asset-news :- [AssetNew]]
-  (aux.xtdb/upsert! db-node asset-news))
+  (->> asset-news
+      (map id->db-id)
+      (aux.xtdb/upsert! db-node)))
 
 (s/defn upsert!
+  "CAUTION! => Overwrite the document"
   [asset-new :- AssetNew]
-  (aux.xtdb/upsert! db-node asset-new))
+  (->> asset-new
+       list
+       (map id->db-id)
+       (aux.xtdb/upsert! db-node)))
 
 (s/defn get-by-ticket :- (s/maybe [AssetNew])
   [ticket :- s/Keyword]
