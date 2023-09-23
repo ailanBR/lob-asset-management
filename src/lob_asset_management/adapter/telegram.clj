@@ -201,3 +201,21 @@
                    message
                    "\n")
               current)) "" db-messages))
+
+(defn asset-news-message
+  [asset-news]
+  (let [ticket (-> asset-news first :asset-news/ticket name)]
+    (str (format "<b>\uD83D\uDCF0 %s NEWS \uD83D\uDCF0</b>\n" ticket)
+         "\n"
+         (reduce
+           (fn [current {:asset-news/keys [txt href datetime]}]
+             (let [txt' (-> txt
+                            (str/replace ticket "")
+                            (str/replace "(" "")
+                            (str/replace ")" "")
+                            (str/replace ":" ""))]
+               (str current
+                    (format "⌚ %s" datetime)
+                    "\n"
+                    (format "<a href='%s'>%s</a>" href txt'))))
+           "" asset-news))))

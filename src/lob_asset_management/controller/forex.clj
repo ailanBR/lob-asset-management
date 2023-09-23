@@ -17,13 +17,13 @@
   [{:forex-usd/keys [updated-at]} target-hours]
   (or (not updated-at)
       (< updated-at
-          (aux.t/get-current-millis
+          (aux.t/get-millis
             (t/minus (t/local-date-time) (t/hours target-hours))))))
 
 (defn- update-forex-usd
   ([forex-data]
    (assoc forex-data
-     :forex-usd/updated-at (aux.t/get-current-millis
+     :forex-usd/updated-at (aux.t/get-millis
                              (t/plus (t/local-date-time) (t/hours 5)))))
   ([{forex-usd-historic :forex-usd/historic}
     {:keys [price updated-at date historic]}]

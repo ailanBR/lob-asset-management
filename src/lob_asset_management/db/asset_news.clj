@@ -32,19 +32,26 @@
       (aux.xtdb/upsert! db-node)))
 
 (s/defn upsert!
-  "CAUTION! => Overwrite the document"
+  "CAUTION! => Overwrite the document with same id"
   [asset-new :- AssetNew]
   (->> asset-new
        list
        (map id->db-id)
        (aux.xtdb/upsert! db-node)))
 
+(defn ->internal
+  [data]
+  (map #(-> % first (dissoc :xt/id)) data))
+
 (s/defn get-by-ticket :- (s/maybe [AssetNew])
   [ticket :- s/Keyword]
-  (xt/q (xt/db db-node) '{:find  [(pull e [*])]
-                          :in    [t]
-                          :where [[e :asset-news/ticket t]]}
-        ticket))
+  (-> db-node
+      xt/db
+      (xt/q '{:find  [(pull ?e [*])]
+              :in    [?t]
+              :where [[?e :asset-news/ticket t]]}
+            (-> ticket name clojure.string/upper-case keyword))
+      ->internal))
 ;=================== Using local files
 #_(defn get-all
     []

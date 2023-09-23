@@ -24,7 +24,7 @@
 ;
 ;(comment
 ;
-;  (type (aux.t/get-current-millis))
+;  (type (aux.t/get-millis))
 ;  (type (aux.t/current-date-time))
 ;
 ;  (s/validate Schedule

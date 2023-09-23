@@ -1,18 +1,24 @@
 (ns lob-asset-management.aux.time
   (:require [java-time.api :as jt]))
 
-(defn get-current-millis
-  "e.g. 2023-09-18T21:38:52.259569"
+(def br-date-time-format "dd/MM/yyyy' 'HH:mm")
+(def timestamp-format "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS")
+
+(defn get-millis
+  "e.g. 2023-09-18T21:38:52.259569
+  28/03/2023 13:21 => fmt = \"dd/MM/yyyy' 'HH:mm\""
   ([]
    (let [dt (jt/local-date-time)]
-     (get-current-millis dt)))
+     (get-millis dt)))
   ([dt]
    (let [date-time-string (->> dt
                                str
                                (format "%-29s"))
-         dt-fmt (clojure.string/replace date-time-string " " "0")
-         fmt (jt/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS")
-         c-dt (jt/zoned-date-time fmt dt-fmt "America/Sao_Paulo")]
+         dt-fmt (clojure.string/replace date-time-string " " "0")]
+     (get-millis dt-fmt timestamp-format)))
+  ([dt format]
+   (let [fmt (jt/formatter format)
+         c-dt (jt/zoned-date-time fmt dt "America/Sao_Paulo")]
      (-> c-dt .toInstant .toEpochMilli))))
 
 (defn day-of-week
@@ -54,11 +60,15 @@
   []
   (clj-date->date-keyword (current-date-time)))
 
+(defn current-datetime-minus-hh
+  [target-hours]
+  (jt/minus (jt/local-date-time) (jt/hours target-hours)))
+
 (defn less-updated-than-target?
   [target-hours updated-at]
   (or (nil? updated-at)
       (< updated-at
-         (get-current-millis (jt/minus (jt/local-date-time) (jt/hours target-hours))))))
+         (get-millis (current-datetime-minus-hh target-hours)))))
 
 (defn- month-str->number
   [str-month]
@@ -137,4 +147,4 @@
         year (first splited)]
     (-> (clojure.string/join " " [month day year])
         str-date->str-timestamp
-        get-current-millis)))
+        get-millis)))

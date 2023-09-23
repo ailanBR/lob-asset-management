@@ -8,7 +8,8 @@
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.db.telegram :as db.t]
-            [lob-asset-management.relevant :refer [telegram-key telegram-personal-chat]]
+            [lob-asset-management.relevant :refer [telegram-key
+                                                   telegram-personal-chat]]
             [mount.core :refer [defstate]]
             [telegrambot-lib.core :as tbot]))
 
@@ -180,7 +181,7 @@
 (defn handle-msg
   [mybot msg]
   (try
-    (when (= 772662600 (-> msg :message :from :id))
+    (when (= telegram-personal-chat (-> msg :message :from :id))
       (let [msg-txt (-> msg :message :text)
             {:telegram/keys [command] :as message} (a.t/msg-out->msg-in msg-txt)]
         (log/info "[Telegram BOT] Message received " msg-txt)
@@ -189,6 +190,10 @@
           (send-invalid-command mybot))))
     (catch Exception e
       (send-error-command mybot e))))
+
+(defn asset-news-message
+  [asset-news mybot]
+  (send-message (a.t/asset-news-message asset-news) mybot))
 
 (comment
   (def mybot (tbot/create telegram-key))
