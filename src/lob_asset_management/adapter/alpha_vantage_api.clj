@@ -46,7 +46,7 @@
             price-historic (format-historic-price time-series)]
         {:price      closed-price
          :date       latest-refreshed-dt
-         :updated-at (aux.t/get-current-millis)
+         :updated-at (aux.t/get-millis)
          :historic   price-historic}))))
 
 (defmethod formatted-data :real-time-crypto
@@ -56,7 +56,7 @@
         historic {today-date price}]
     {:price      price
      :date       today-date
-     :updated-at (aux.t/get-current-millis)
+     :updated-at (aux.t/get-millis)
      :historic   historic}))
 
 (defmethod formatted-data :alpha-limit

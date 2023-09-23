@@ -98,7 +98,7 @@
                                                               last
                                                               (clojure.string/split #".edn")
                                                               first
-                                                              aux.t/get-current-millis)]
+                                                              aux.t/get-millis)]
                                     {:path %
                                      :created-timestamp created-timestamp})
                                  files)

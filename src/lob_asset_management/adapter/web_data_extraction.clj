@@ -60,7 +60,7 @@
           historic {date-keyword price}]
       {:price      price
        :date       date-keyword
-       :updated-at (aux.t/get-current-millis)
+       :updated-at (aux.t/get-millis)
        :historic   historic})
     {:error "response->internal error extracting data"}))
 
@@ -128,7 +128,7 @@
           historic {date-keyword price}]
       {:price      price
        :date       date-keyword
-       :updated-at (aux.t/get-current-millis)
+       :updated-at (aux.t/get-millis)
        :historic   historic
        :news       news})
     {:error "response->internal error extracting data"}))

@@ -1,22 +1,31 @@
 (ns lob-asset-management.controller.market
   (:require [clojure.tools.logging :as log]
             [java-time.api :as t]
-            [lob-asset-management.db.asset-news :as db.asset-news]
+            [lob-asset-management.db.asset-news :as db.an]
             [lob-asset-management.io.http_in :as io.http]
             [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.db.asset :as db.a]
-            [lob-asset-management.aux.time :as aux.t]))
+            [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.controller.telegram-bot :refer [bot] :as t.b]))
+
+(defn- asset-news-new-one
+  [received-news]
+  (if-let [stored-news (db.an/get-by-ticket (-> received-news first :asset-news/ticket))]
+    (let [stored-ids (->> stored-news (map :asset-news/id) set)
+          new-ones (remove #(contains? stored-ids (:asset-news/id %)) received-news)]
+      new-ones)
+    received-news))
 
 (defn update-news
   [{:asset/keys [ticket name]} news]
-  (let [asset-news (map (fn [{:keys [id txt datetime href]}]
-                          {:asset-news/ticket      ticket
-                           :asset-news/name        name
-                           :asset-news/id          id
-                           :asset-news/txt         txt
-                           :asset-news/datetime    datetime
-                           :asset-news/href        href}) news)]
-    (db.asset-news/upsert-bulk! asset-news)))
+  (when news
+    (when-let [asset-news (->> news
+                               (a.a/external-news->internal ticket name)
+                               asset-news-new-one
+                               (remove #(not (:asset-news/id %))))]
+      (when (not (empty? asset-news))
+        (t.b/asset-news-message asset-news bot)
+        #_(db.an/upsert-bulk! asset-news)))))
 
 (defn get-stock-market-price
   [{:asset.market-price/keys [historic] :as asset} & args]
@@ -129,7 +138,7 @@
   [{:asset/keys [id] :as asset}
    asset-id]
   (if (= id asset-id)
-    (assoc asset :asset.market-price/updated-at (aux.t/get-current-millis
+    (assoc asset :asset.market-price/updated-at (aux.t/get-millis
                                                   (t/plus (t/local-date-time) (t/hours 5))))
     asset))
 

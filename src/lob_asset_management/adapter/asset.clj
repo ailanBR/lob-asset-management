@@ -178,6 +178,17 @@
                            (filter-less-updated-than-target? min-updated-hours))]
     (or (take quantity filter-assets) nil)))
 
+
+(defn external-news->internal
+  [ticket name news]
+  (map (fn [{:keys [id txt datetime href]}]
+         {:asset-news/ticket   ticket
+          :asset-news/name     name
+          :asset-news/id       id
+          :asset-news/txt      txt
+          :asset-news/datetime datetime
+          :asset-news/href     href}) news))
+
 (comment
   (def assets-file (lob-asset-management.db.transaction/get-file-by-entity :asset))
 
