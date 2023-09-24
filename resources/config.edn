@@ -31,6 +31,7 @@
                                 :sheet "Movimentação"
                                 :release-folder "./in-data/crypto"}}]
  :out-data-path  "./out-data/"
+ :env :dev
  ;
  ;:asset-parse    {:product {:type :string :eql :ticket}}
  ;:transaction-parse {:transaction-date {:type :dd-mm-yyyy :eql :created-at}

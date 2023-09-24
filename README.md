@@ -198,9 +198,15 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
       1. Create a new ident for error (E.g :asset/recent-alpha-api-error? true)
       2. If true => Use another
 7. Use the news to sent telegram message
-8. Fix the telegram scheduled messages
+8. Fix the telegram scheduled messages [CRON]
 9. Make the poling async and different by proposal (Get price / Get news / TelegramBot)
-10. 
+10. Create env config
+    1. DEV/TEST => Use archive as DB
+    2. PROD => Use XTDB
+
+## FIXME
+1. Consider ALZR subscription
+
 --------------
 ## License
 

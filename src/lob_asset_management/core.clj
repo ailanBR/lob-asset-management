@@ -14,18 +14,32 @@
             [java-time.api :as t]
             [clojure.tools.logging :as log]
             [clojure.tools.cli :as t.cli]
-            [lob-asset-management.controller.telegram-bot :as t.bot :refer [bot]]))
+            [lob-asset-management.controller.telegram-bot :as t.bot :refer [bot]]
+            [lob-asset-management.relevant :refer [config config-prod]]))
 
-(defn start []
+(defn start [env]
+  "Default env = :dev
+
+  v2 => mount functions to be used by environment"
   (mount/start #'lob-asset-management.relevant/config
                #'lob-asset-management.relevant/alpha-key
                #'lob-asset-management.relevant/telegram-key
                #'lob-asset-management.relevant/telegram-personal-chat
-               #'lob-asset-management.controller.telegram-bot/bot
-               #'lob-asset-management.aux.xtdb/db-node))
+               #'lob-asset-management.controller.telegram-bot/bot)
+  (when (= :prod env)
+    (mount/start #'lob-asset-management.aux.xtdb/db-node)
+    (mount/start-with {#'lob-asset-management.relevant/config config-prod})))
 
-(start)                                                     ;for develop purpose
+(defn stop []
+  (mount/stop #'lob-asset-management.relevant/config
+              #'lob-asset-management.relevant/alpha-key
+              #'lob-asset-management.relevant/telegram-key
+              #'lob-asset-management.relevant/telegram-personal-chat
+              #'lob-asset-management.controller.telegram-bot/bot
+              #'lob-asset-management.aux.xtdb/db-node))
 
+(start :dev)                                                     ;for develop purpose
+(stop)
 (def cli-options
   [["-y" "--year Year" "Year of the release"
     :default 2022
@@ -122,7 +136,7 @@
     (future
       (try
         (while @run-forest-run
-          ;(println "[Poller running" (str (t/local-date-time)) "]")
+          ;(log/info "[Poller running" (str (t/local-date-time)) "]")
           (if (contains? window (.getHour (t/local-date-time)))
             (f)
             (log/info "[Poller " (str f-name "-" (t/local-date-time)) "] Out of the configured window hour " window))
@@ -134,7 +148,7 @@
     (fn [] (reset! run-forest-run false))))
 
 (defn -main [& args]
-  (start)
+  (start :prod)
   (let [{:keys [action options exit-message ok?]} (validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
@@ -159,8 +173,9 @@
   ;=========================================
 
   (clojure.pprint/print-table
-    [:portfolio/ticket :portfolio/quantity :portfolio/total-last-value]
+    [:portfolio/ticket :portfolio/quantity]
     (->> (db.p/get-all)
+         (filter #(contains? #{:nu :inter} (first (:portfolio/exchanges %))))
          ;(filter #(or (contains? (:portfolio/exchanges %) :nu)
          ;             (contains? (:portfolio/exchanges %) :inter)))
          (sort-by :portfolio/ticket)))
