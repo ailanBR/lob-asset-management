@@ -25,7 +25,7 @@
                                (remove #(not (:asset-news/id %))))]
       (when (not (empty? asset-news))
         (t.b/asset-news-message asset-news bot)
-        #_(db.an/upsert-bulk! asset-news)))))
+        (db.an/upsert-bulk! asset-news)))))
 
 (defn get-stock-market-price
   [{:asset.market-price/keys [historic] :as asset} & args]

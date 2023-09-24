@@ -7,7 +7,7 @@
                  [cheshire "5.10.1"]
                  [clojure.java-time "1.2.0"]
                  [clojurewerkz/money "1.10.0"]
-                 ;[clj-time "0.15.2"] ;=> clojure.java-time
+                 ;[clj-time "0.15.2"] ;MIGRATED clojure.java-time
                  [clj-http "3.12.3"]
                  [com.xtdb/xtdb-core "1.24.1"]
                  [com.xtdb/xtdb-rocksdb "1.24.1"]
