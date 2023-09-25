@@ -25,9 +25,9 @@
 
 (defstate config :start (file->edn "./resources/config.edn"))
 
-(defstate config-prod :start (-> "./resources/config.edn"
-                                 file->edn
-                                 (assoc :env :prod)))       ;default = dev
+(def config-prod (-> "./resources/config.edn"
+                     file->edn
+                     (assoc :env :prod)))       ;default = dev
 
 (defstate alpha-key :start (System/getenv "ALPHA_KEY"))     ;(:alpha-vantage-key (get-secrets)))
 (defstate telegram-key :start (System/getenv "TELEGRAM_BOT_KEY")) ; (:telegram-bot-key (get-secrets)))
