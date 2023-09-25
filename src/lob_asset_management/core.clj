@@ -1,21 +1,21 @@
 (ns lob-asset-management.core
-  (:require [lob-asset-management.aux.time :as aux.t]
+  (:require [clojure.tools.cli :as t.cli]
+            [clojure.tools.logging :as log]
+            [java-time.api :as t]
+            [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.aux.xtdb :refer [db-node]]
             [lob-asset-management.controller.forex :as c.f]
             [lob-asset-management.controller.market :as c.m]
             [lob-asset-management.controller.process-file :as c.p-f]
             [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.controller.release :as c.r]
+            [lob-asset-management.controller.telegram-bot :as t.bot :refer [bot]]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.forex :as db.f]
             [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.io.file-in :as io.f-in]
-            [mount.core :as mount]
-            [java-time.api :as t]
-            [clojure.tools.logging :as log]
-            [clojure.tools.cli :as t.cli]
-            [lob-asset-management.controller.telegram-bot :as t.bot :refer [bot]]
-            [lob-asset-management.relevant :refer [config config-prod]]))
+            [lob-asset-management.relevant :refer [config config-prod]]
+            [mount.core :as mount]))
 
 (defn start [env]
   "Default env = :dev
@@ -38,8 +38,9 @@
               #'lob-asset-management.controller.telegram-bot/bot
               #'lob-asset-management.aux.xtdb/db-node))
 
-(start :dev)                                                     ;for develop purpose
-(stop)
+;(start :dev)                                                     ;for develop purpose
+;(stop)
+
 (def cli-options
   [["-y" "--year Year" "Year of the release"
     :default 2022

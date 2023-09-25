@@ -5,45 +5,31 @@
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.logic.asset :as l.a]
             [lob-asset-management.relevant :refer [config]]
+            [lob-asset-management.models.asset-news :as m.an]
             [schema.core :as s]
             [xtdb.api :as xt]))
-
-(s/defschema AssetNew
-  #:asset-news{:ticket   s/Keyword
-               :name     s/Str
-               :id       s/Str
-               :txt      s/Str
-               :datetime s/Str
-               :href     s/Str
-               (s/optional-key :status) s/Keyword})
 
 (defn ->internal
   [data]
   (map #(-> % first (dissoc :xt/id)) data))
 
-(s/defn get-all-xtdb :- [(s/maybe [AssetNew])]
-  []
-  (->> '{:find  [(pull ?e [*])]
-         :where [[?e :asset-news/id _]]}
-       (aux.xtdb/get! db-node )
-       (map #(dissoc % :xt/id))))
+(defmulti get-all (fn [] (or (:env config) :dev)))
 
-(s/defn get-all-file :- [(s/maybe [AssetNew])]
+(defmethod get-all :dev
   []
   (try
     (io.f-in/get-file-by-entity :asset-news)
     (catch Exception e
       (throw (ex-info "Error when getting asset news information" {:cause e})))))
 
-(s/defn get-all :- [(s/maybe [AssetNew])]
+(defmethod get-all :prod
   []
-  (condp = (:env config)
-    :dev (get-all-file)
-    :prod (get-all-xtdb)))
+  (->> '{:find  [(pull ?e [*])]
+         :where [[?e :asset-news/id _]]}
+       (aux.xtdb/get! db-node)
+       (map #(dissoc % :xt/id))))
 
-(defn id->db-id
-  [{:asset-news/keys [id] :as asset-new}]
-  (assoc asset-new :xt/id id))
+(defmulti upsert-bulk! (fn [_] (or (:env config) :dev)))
 
 (defn- maybe-upsert!
   [db-data assets]
@@ -56,8 +42,8 @@
   [assets-keep asset-filtered]
   (remove #(l.a/already-exist? (:asset-news/id %) assets-keep) asset-filtered))
 
-(s/defn upsert-bulk-file!
-  [asset-news :- [AssetNew]]
+(s/defmethod upsert-bulk! :dev
+  [asset-news :- [m.an/AssetNews]]
   (try
     (let [db-data (or (get-all) [])]
       (->> asset-news
@@ -68,48 +54,31 @@
     (catch Exception e
       (throw (ex-info "ASSET-NEWS UPSERT ERROR" {:cause e})))))
 
-(s/defn upsert-bulk-xtdb!
-  [asset-news :- [AssetNew]]
+(defn id->db-id
+  [{:asset-news/keys [id] :as asset-news}]
+  (assoc asset-news :xt/id id))
+
+(s/defmethod upsert-bulk! :prod
+  [asset-news :- [m.an/AssetNews]]
   (->> asset-news
       (map id->db-id)
       (aux.xtdb/upsert! db-node)))
 
-(s/defn upsert-bulk!
-  [asset-news :- AssetNew]
-  (condp = (:env config)
-    :dev (upsert-bulk-file! asset-news)
-    :prod (upsert-bulk-xtdb! asset-news)))
-
-(s/defn upsert-file!
-  "CAUTION! => Overwrite the document with same id"
-  [asset-new :- AssetNew]
-  (->> asset-new
-       list
-       upsert-bulk-file!))
-
-(s/defn upsert-xtdb!
-  "CAUTION! => Overwrite the document with same id"
-  [asset-new :- AssetNew]
-  (->> asset-new
-       list
-       (map id->db-id)
-       (aux.xtdb/upsert! db-node)))
-
 (s/defn upsert!
-  [asset-new :- AssetNew]
-  (condp = (:env config)
-    :dev (upsert-file! asset-new)
-    :prod (upsert-xtdb! asset-new)))
+  "CAUTION! => Overwrite the document with same id"
+  [asset-news :- m.an/AssetNews]
+  (upsert-bulk! (list asset-news)))
 
-(defn get-by-ticket-file
-  ([ticket]
-   (get-by-ticket-file ticket (get-all)))
-  ([ticket db-data]
-   (->> db-data
-        (filter #(= ticket (:asset-news/ticket %)))
-        first)))
+(defmulti get-by-ticket (fn [_] (or (:env config) :dev)))
 
-(s/defn get-by-ticket-xtdb :- (s/maybe [AssetNew])
+(s/defmethod get-by-ticket :dev :- (s/maybe [m.an/AssetNews])
+  [ticket :- s/Keyword]
+  (let [db-data (get-all)]
+    (->> db-data
+         (filter #(= ticket (:asset-news/ticket %)))
+         first)))
+
+(s/defmethod get-by-ticket :prod :- (s/maybe [m.an/AssetNews])
   [ticket :- s/Keyword]
   (-> db-node
       xt/db
@@ -118,9 +87,3 @@
               :where [[?e :asset-news/ticket t]]}
             (-> ticket name clojure.string/upper-case keyword))
       ->internal))
-
-(s/defn get-by-ticket :- (s/maybe [AssetNew])
-  [ticket :- s/Keyword]
-  (condp = (:env config)
-    :dev (get-by-ticket-file ticket)
-    :prod (get-by-ticket-xtdb ticket)))
