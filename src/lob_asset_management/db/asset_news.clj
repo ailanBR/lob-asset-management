@@ -84,6 +84,6 @@
       xt/db
       (xt/q '{:find  [(pull ?e [*])]
               :in    [?t]
-              :where [[?e :asset-news/ticket t]]}
+              :where [[?e :asset-news/ticket ?t]]}
             (-> ticket name clojure.string/upper-case keyword))
       ->internal))

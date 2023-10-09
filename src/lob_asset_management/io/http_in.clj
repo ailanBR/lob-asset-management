@@ -1,6 +1,7 @@
 (ns lob-asset-management.io.http_in
   (:require [clj-http.client :as http]
             [clojure.tools.logging :as log]
+            [lob-asset-management.adapter.asset :as a.a]
             [net.cgrand.enlive-html :as html]
             [lob-asset-management.relevant :refer [alpha-key]]
             [lob-asset-management.adapter.alpha-vantage-api :as a.ava]
@@ -28,10 +29,13 @@
     result))
 
 (defn get-daily-adjusted-prices
-  ([symbol]
-   (get-daily-adjusted-prices symbol alpha-key))
-  ([symbol api-key]
-   (let [{:keys [status body]} (http-get "https://www.alphavantage.co/query"
+  ([stock]
+   (-> stock
+       a.a/in-ticket->out-ticket
+       (get-daily-adjusted-prices alpha-key)))
+  ([stock api-key]
+   (let [symbol (a.a/in-ticket->out-ticket stock)
+         {:keys [status body]} (http-get "https://www.alphavantage.co/query"
                                     {:query-params {:function "TIME_SERIES_DAILY"
                                                     :symbol   symbol
                                                     :apikey   api-key}})]
@@ -130,6 +134,11 @@
   ------------------------
   ;Web Scraping =>  https://practical.li/blog/posts/web-scraping-with-clojure-hacking-hacker-news/
   ;----------- Other option https://www.marketscreener.com/quote/stock/AMBEV-S-A-15458762/
+
+  (def resp (advfn-data-extraction-br {:asset/ticket :HGBS11
+                                       :asset/type   :stockBR}))
+
+  (a.wde/asset-news resp)
   (def t (-> "https://br.advfn.com/bolsa-de-valores/nasdaq/AAPL/cotacao"
              java.net.URL.
              html/html-resource))

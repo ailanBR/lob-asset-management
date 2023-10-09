@@ -215,7 +215,7 @@
                             (str/replace ")" "")
                             (str/replace ":" ""))]
                (str current
-                    (format "⌚ %s" datetime)
                     "\n"
-                    (format "<a href='%s'>%s</a>" href txt'))))
+                    (format "<a href='%s'>%s</a>" href txt')
+                    (format "⌚ %s" datetime))))
            "" asset-news))))
