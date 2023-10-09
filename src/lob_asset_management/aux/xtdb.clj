@@ -70,8 +70,10 @@
              :schedule/name "test to delete after 2 changed"}])
 
   ;GET
-  (xt/q (xt/db xtdb-node) '{:find [(pull ?e [*])]
-                            :where [[?e :xt/id _]]})
+  (->> (xt/q (xt/db db-node) '{:find  [?id]
+                              :where [[?e :asset-news/id ?id]]})
+       (map first)
+       set)
 
   (xt/sync xtdb-node)
   (xt/entity-history xtdb-node )
