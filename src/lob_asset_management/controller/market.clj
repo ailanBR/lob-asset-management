@@ -32,11 +32,9 @@
   [{:asset.market-price/keys [historic] :as asset} & args]
   (let [get-real-time?                                      false ;(or (-> args first :with-historic) historic)
         ]
-    (if-let [{:keys [news] :as market-info}
-             (if get-real-time?
-               (io.http/advfn-data-extraction-br asset)
-               ;(-> asset a.wde/in-ticket->out-ticket io.http/advfn-data-extraction)
-               (io.http/get-daily-adjusted-prices asset))]
+    (if-let [{:keys [news] :as market-info} (if get-real-time?
+                                              (io.http/advfn-data-extraction-br asset)
+                                              (io.http/get-daily-adjusted-prices asset))]
       (do
         (when get-real-time?
           (update-news asset news))
