@@ -30,14 +30,15 @@
 
 (defn get-stock-market-price
   [{:asset.market-price/keys [historic] :as asset} & args]
-  (let [get-historic? (or true (-> args first :with-historic) historic)]
+  (let [get-real-time?                                      false ;(or (-> args first :with-historic) historic)
+        ]
     (if-let [{:keys [news] :as market-info}
-             (if get-historic?
+             (if get-real-time?
                (io.http/advfn-data-extraction-br asset)
                ;(-> asset a.wde/in-ticket->out-ticket io.http/advfn-data-extraction)
                (io.http/get-daily-adjusted-prices asset))]
       (do
-        (when get-historic?
+        (when get-real-time?
           (update-news asset news))
         market-info)
       (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data")))))

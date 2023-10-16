@@ -11,7 +11,8 @@
    (let [dt (jt/local-date-time)]
      (get-millis dt)))
   ([dt]
-   (let [date-time-string (->> dt
+   (let [dt' (if (= 19 (count (str dt))) (str dt ".") dt)
+         date-time-string (->> dt'
                                str
                                (format "%-29s"))
          dt-fmt (clojure.string/replace date-time-string " " "0")]
