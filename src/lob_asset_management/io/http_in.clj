@@ -30,9 +30,7 @@
 
 (defn get-daily-adjusted-prices
   ([stock]
-   (-> stock
-       a.a/in-ticket->out-ticket
-       (get-daily-adjusted-prices alpha-key)))
+   (get-daily-adjusted-prices stock alpha-key))
   ([stock api-key]
    (let [symbol (a.a/in-ticket->out-ticket stock)
          {:keys [status body]} (http-get "https://www.alphavantage.co/query"
