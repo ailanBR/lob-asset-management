@@ -160,7 +160,11 @@ All notable changes to this project will be documented in this file. This change
 - Change asset news database to use XTDB
 
 ### 2023-09-23
-- Asset news bot message 
+- Asset news bot message
+
+### 2023-10-21
+- Price change notification
+- Telegram stop command
 
 ## [0.1.1] - 2023-03-25
 ### Changed

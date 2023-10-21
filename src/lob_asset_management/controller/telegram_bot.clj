@@ -47,7 +47,9 @@
    :s         {:fn   #(send-command %1 %2 :save)
                :desc "Save anything"}
    :gs        {:fn #(send-command %1 %2 :get-saved)
-               :desc "Get saved messages"}})
+               :desc "Get saved messages"}
+   :stop      {:fn #(send-command %1 %2 :stop)
+               :desc "Stop all process running"}})
 
 (defmethod send-command :portfolio
   [mybot _ _]
@@ -139,6 +141,11 @@
   (let [db-messages (db.t/get-all)]
     (send-message (a.t/saved-messages db-messages) mybot)))
 
+(defmethod send-command :stop
+  [mybot _ _]
+  (send-message "Stop command received" mybot)
+  (throw (ex-info :telegram-force-break "Telegram force break command executed")))
+
 (defn send-invalid-command
   [mybot]
   (send-message (nth a.t/phrases (rand-int (count a.t/phrases))) mybot))
@@ -194,6 +201,10 @@
 (defn asset-news-message
   [asset-news mybot]
   (send-message (a.t/asset-news-message asset-news) mybot))
+
+(defn asset-price-changed
+  [asset new-data change-percentage]
+  (send-message (a.t/asset-price-changed-message asset new-data change-percentage)))
 
 (comment
   (def mybot (tbot/create telegram-key))

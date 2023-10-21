@@ -219,3 +219,22 @@
                     (format "<a href='%s'>%s</a>" href txt')
                     (format "⌚ %s" datetime))))
            "" asset-news))))
+
+(defn asset-price-changed-message
+  [{:asset/keys [ticket]
+    current-price :asset.market-price/price
+    current-date :asset.market-price/price-date}
+   {:keys [price date]}
+   change-percentage]
+  (str (format "<b>\uD83D\uDCF0 %s PRICE CHANGED \uD83D\uDCF0</b>\n" ticket)
+       "\n\n"
+       (format "<b>%5s</b> FROM R$ %-9s TO R$ %-9s"
+               (format "%.2f%%" change-percentage)
+               (format "%.2f" current-price)
+               (format "%.2f" price))
+       "\n"
+       (format "CURRENT PRICE FROM DATE : %11s"
+               (name current-date))
+       "\n"
+       (format "NEW PRICE FROM DATE : %11s"
+               (name date))))

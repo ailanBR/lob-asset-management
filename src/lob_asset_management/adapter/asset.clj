@@ -10,7 +10,7 @@
   (:import (java.util UUID)))
 
 (defn in-ticket->out-ticket
-  [{:asset/keys [ticket type] :as t}]
+  [{:asset/keys [ticket type]}]
   (let [asset-name (name ticket)]
     (if (or (= type :stockBR) (= type :fii))
       (str asset-name ".SA")
