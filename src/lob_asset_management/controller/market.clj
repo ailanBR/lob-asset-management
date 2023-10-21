@@ -6,6 +6,8 @@
             [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.aux.money :refer [safe-number->bigdec]]
+            [lob-asset-management.aux.util :refer [abs]]
             [lob-asset-management.controller.telegram-bot :refer [bot] :as t.b]))
 
 (defn- asset-news-new-one
@@ -30,7 +32,7 @@
 
 (defn get-stock-market-price
   [{:asset.market-price/keys [historic] :as asset} & args]
-  (let [get-real-time?                                      false ;(or (-> args first :with-historic) historic)
+  (let [get-real-time? (or (-> args first :with-historic) historic)
         ]
     (if-let [{:keys [news] :as market-info} (if get-real-time?
                                               (io.http/advfn-data-extraction-br asset)
@@ -64,26 +66,41 @@
        (sort-by first)
        (into (sorted-map))))
 
+(defn new-price?
+  [{current-price :asset.market-price/price
+    current-date :asset.market-price/price-date}
+   {:keys [price date]}]
+  (and (not (= current-price price))
+       (> price 0M)
+       (<= (aux.t/date-keyword->miliseconds current-date)
+           (aux.t/date-keyword->miliseconds date))))
+
+(defn price-change-validation
+  "TODO : Validate the date"
+  [{current-price :asset.market-price/price :as asset}
+   {:keys [price] :as new-data}]
+  (let [change-percentage (safe-number->bigdec (- (/ (* price 100) current-price) 100))
+        change-percentage-abs (abs (- (/ (* price 100) current-price) 100))]
+    (if (> change-percentage-abs 10)
+      (t.b/asset-price-changed asset new-data change-percentage))))
+
 (defn update-asset
   [{:asset/keys [id]
-    current-price :asset.market-price/price
-    current-date :asset.market-price/price-date
     current-historic :asset.market-price/historic :as asset}
    asset-id
-   {:keys [price updated-at date historic] :as t}]
+   {:keys [price updated-at date historic] :as new-data}]
   (if (and (= id asset-id))
-    (let [new-price? (and (not (= current-price price))
-                          (> price 0M)
-                          (<= (aux.t/date-keyword->miliseconds current-date)
-                              (aux.t/date-keyword->miliseconds date)))
+    (let [new-price? (new-price? asset new-data)
           updated-historic (update-historic current-historic historic)]
       (if new-price?
-        (-> asset
-            (assoc :asset.market-price/price price
-                   :asset.market-price/updated-at updated-at
-                   :asset.market-price/price-date date
-                   :asset.market-price/historic updated-historic)
-            (dissoc :asset.market-price/retry-attempts))
+        (do
+          (price-change-validation asset new-data)
+          (-> asset
+              (assoc :asset.market-price/price price
+                     :asset.market-price/updated-at updated-at
+                     :asset.market-price/price-date date
+                     :asset.market-price/historic updated-historic)
+              (dissoc :asset.market-price/retry-attempts)))
         (-> asset
             (assoc :asset.market-price/updated-at updated-at)
             (dissoc :asset.market-price/retry-attempts))))
