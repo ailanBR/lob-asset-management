@@ -144,7 +144,7 @@
 (defmethod send-command :stop
   [mybot _ _]
   (send-message "Stop command received" mybot)
-  (throw (ex-info :telegram-force-break "Telegram force break command executed")))
+  (throw (ex-info "Telegram force break command executed" {:causes #{:telegram-force-break}})))
 
 (defn send-invalid-command
   [mybot]
@@ -197,7 +197,9 @@
           (command-fn mybot message)
           (send-invalid-command mybot))))
     (catch Exception e                                      ;FIXME : propagate the stop command throw
-      (send-error-command mybot e))))
+      (if (contains? (-> e ex-data :causes) :telegram-force-break)
+        (throw e)
+        (send-error-command mybot e)))))
 
 (defn asset-news-message
   [asset-news mybot]
