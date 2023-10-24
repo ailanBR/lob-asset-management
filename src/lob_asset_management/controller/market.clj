@@ -85,20 +85,11 @@
       (throw (ex-info (str "Price Change Validation above threshold for " ticket " " change-percentage " %")
                       {:price-changed-percentage change-percentage
                        :threshold                100
-                       :ticket                   ticket}))
+                       :ticket                   ticket
+                       :current-price            current-price
+                       :new-price                price}))
       (when (> change-percentage-abs 10)
         (t.b/asset-price-changed asset new-data change-percentage)))))
-
-(comment
-  (try
-    (throw (ex-info (str "Price Change Validation above threshold for AAA 1 %")
-                    {:price-changed-percentage 10
-                     :threshold                100
-                     :ticket                   "AAA"}))
-    (catch Exception e
-      (println (-> e ex-cause))
-      ))
-  )
 
 (defn update-asset
   [{:asset/keys      [id]
