@@ -152,7 +152,8 @@
 
 (defn send-error-command
   [mybot exception]
-  (send-message (str "Houston, we have a problem \uD83D\uDCA9 \n\n" (ex-message exception)) mybot))
+  (send-message (str "Houston, we have a problem \uD83D\uDCA9 \n\n"
+                     (or (->> exception ex-data :cause str (take 200) (apply str)) (ex-message exception))) mybot))
 
 (def config {:timeout 10}) ;the bot api timeout is in seconds
 
@@ -195,7 +196,7 @@
         (if-let [command-fn (-> commands command :fn)]
           (command-fn mybot message)
           (send-invalid-command mybot))))
-    (catch Exception e
+    (catch Exception e                                      ;FIXME : propagate the stop command throw
       (send-error-command mybot e))))
 
 (defn asset-news-message
