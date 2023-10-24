@@ -11,7 +11,6 @@
 
 (defn safe-number->bigdec
   [num]
-  (println num)
   (if (number? num)
     (bigdec num)
     (let [formatted-input (-> num
