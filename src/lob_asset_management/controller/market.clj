@@ -209,7 +209,7 @@
          (if (contains? (-> e ex-data :causes) :alpha-api-limit)
            (handle-alpha-api-limit-error assets less-updated-asset)
            (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
-               (if (< (or retry-attempts 0) 3)
+               #_(if (< (or retry-attempts 0) 3)
                  (-> less-updated-asset
                      (handle-retry-attempt assets)
                      (update-asset-market-price day-of-week args))

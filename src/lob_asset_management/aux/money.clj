@@ -11,6 +11,7 @@
 
 (defn safe-number->bigdec
   [num]
+  (println num)
   (if (number? num)
     (bigdec num)
     (let [formatted-input (-> num
@@ -20,8 +21,9 @@
                               (string/replace "-" ""))]
       (if (empty? formatted-input)
         0M
-        (let [formatted-input' (when (= (first formatted-input) \0)
-                                 (str (first formatted-input) "." (apply str (rest formatted-input))))
+        (let [formatted-input' (if (= (first formatted-input) \0)
+                                 (str (first formatted-input) "." (apply str (rest formatted-input)))
+                                 formatted-input)
               formatted-input-bigdec (bigdec formatted-input')
               number-with-decimal-cases (if (>= formatted-input-bigdec 100M)
                                           (/ formatted-input-bigdec 100)
