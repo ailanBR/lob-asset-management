@@ -62,7 +62,8 @@
   [asset-news :- [m.an/AssetNews]]
   (->> asset-news
       (map id->db-id)
-      (aux.xtdb/upsert! db-node)))
+      (aux.xtdb/upsert! db-node))
+  (xt/sync db-node))
 
 (s/defn upsert!
   "CAUTION! => Overwrite the document with same id"
@@ -87,3 +88,9 @@
               :where [[?e :asset-news/ticket ?t]]}
             (-> ticket name clojure.string/upper-case keyword))
       ->internal))
+
+(comment
+
+  (xt/sync db-node)
+
+  )

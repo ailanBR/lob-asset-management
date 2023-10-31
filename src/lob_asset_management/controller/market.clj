@@ -6,9 +6,13 @@
             [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.aux.time :as aux.t]
-            [lob-asset-management.aux.money :refer [safe-number->bigdec]]
             [lob-asset-management.aux.util :refer [abs]]
             [lob-asset-management.controller.telegram-bot :refer [bot] :as t.b]))
+
+(defn expected-historic
+  []
+
+  )
 
 (defn- asset-news-new-one
   [received-news]
@@ -35,7 +39,8 @@
   (let [get-real-time? (or (-> args first :with-historic) historic)]
     (if-let [{:keys [news] :as market-info} (if get-real-time?
                                               (io.http/advfn-data-extraction-br asset)
-                                              (io.http/get-daily-adjusted-prices asset))]
+                                              ;(io.http/get-daily-adjusted-prices asset)
+                                              (io.http/advfn-data-historic-extraction-br asset))]
       (do
         (when get-real-time?
           (update-news asset news))
