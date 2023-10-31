@@ -119,6 +119,16 @@
     (throw (ex-info "Failed to get stock price using ADVFN information"
                     {:status 999}))))
 
+(defn advfn-data-historic-extraction-br
+  [asset]
+  (if-let [response (-> asset
+                        a.wde/in-ticket->out-ticket
+                        a.wde/br-historic-advfn-url
+                        html-resource)]
+    (a.wde/br-historic-response->internal response)
+    (throw (ex-info "Failed to get stock historic price using ADVFN information"
+                    {:status 999}))))
+
 (comment
   (get-daily-adjusted-prices "CAN")
   (def abev-result (get-daily-adjusted-prices "CAN"))
@@ -133,33 +143,41 @@
   ;Web Scraping =>  https://practical.li/blog/posts/web-scraping-with-clojure-hacking-hacker-news/
   ;----------- Other option https://www.marketscreener.com/quote/stock/AMBEV-S-A-15458762/
 
-  (def resp (advfn-data-extraction-br {:asset/ticket :HGBS11
-                                       :asset/type   :stockBR}))
+  (def resp (advfn-data-historic-extraction-br {:asset/ticket :ABEV3
+                                                :asset/type   :stockBR}))
 
-  (a.wde/asset-news resp)
-  (def t (-> "https://br.advfn.com/bolsa-de-valores/nasdaq/AAPL/cotacao"
+  #_(a.wde/asset-news resp)
+  #_(def t (-> "https://br.advfn.com/bolsa-de-valores/nasdaq/AAPL/cotacao"
              java.net.URL.
              html/html-resource))
-
-  (->> [:table#id_news]
-       (html/select t)
+  ;(html/select resp [:table.histo-results])
+  (->> [:table.histo-results]
+       (html/select resp)
        first
        :content
+       ;
        (remove #(clojure.string/includes? % "\n"))
-       (map #(let [cnt (:content %)
-                   dt (-> cnt first :content first)
-                   hr (-> cnt second :content first)
-                   from (-> cnt rest rest first :content first :content first)
-                   txt (-> cnt last :content first :content first)
-                   href (clojure.string/join ["https//" (-> cnt last :content first :attrs :href)])]
-              {:id   (-> "-"
-                         (clojure.string/join [dt hr from])
-                         (clojure.string/replace #" " "-")
-                         (clojure.string/replace #"/" "-")
-                         (clojure.string/replace #":" "-"))
-               :txt  txt
-               :href href}))
        rest
+       (map (fn [row]
+              (let [cnt (->> row :content (remove #(clojure.string/includes? % "\n")))
+                    dt (-> cnt first :content first lob-asset-management.aux.time/str-br-date->date-keyword)
+                    p (-> cnt second :content first lob-asset-management.aux.money/safe-number->bigdec)
+                    ;from (-> cnt rest rest first :content first :content first)
+                    ]
+                {
+                 ;:cnt cnt
+                 :date dt
+                 :price p
+                 ;:date   (-> "-"
+                 ;          (clojure.string/join [dt hr from])
+                 ;          (clojure.string/replace #" " "-")
+                 ;          (clojure.string/replace #"/" "-")
+                 ;          (clojure.string/replace #":" "-"))
+                 ;:price  txt
+                 })
+              ))
+       (reduce #(assoc %1 (:date %2) (:price %2)) {})
+       ;rest
        ;first
        )
   ;---------------------------- Historic using ADVFN

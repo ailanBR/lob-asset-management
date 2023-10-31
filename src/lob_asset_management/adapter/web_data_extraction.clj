@@ -81,6 +81,10 @@
   [ticket]
   (str "https://br.advfn.com/bolsa-de-valores/" ticket "/cotacao"))
 
+(defn br-historic-advfn-url
+  [ticket]
+  (str "https://br.advfn.com/bolsa-de-valores/" ticket "/historico/mais-dados-historicos"))
+
 (defn asset-news
   [data]
   (->> [:table#id_news]
@@ -132,6 +136,36 @@
        :historic   historic
        :news       news})
     {:error "response->internal error extracting data"}))
+
+(defn historic-response->internal
+  [resp]
+  (->> [:table.histo-results]
+       (html/select resp)
+       first
+       :content
+       ;
+       (remove #(clojure.string/includes? % "\n"))
+       rest
+       (map (fn [row]
+              (let [cnt (->> row :content (remove #(clojure.string/includes? % "\n")))
+                    dt (-> cnt first :content first aux.t/str-br-date->date-keyword)
+                    p (-> cnt second :content first aux.m/safe-number->bigdec)]
+                {:date dt
+                 :price p})
+              ))
+       (reduce #(assoc %1 (:date %2) (:price %2)) {})))
+
+(defn br-historic-response->internal
+  [response]
+  (if (not-empty (html/select response [:span.cur-price]))
+    (let [historic (historic-response->internal response)
+          price (->price response)
+          date-keyword (br-date->date-keyword response)]
+      {:price      price
+       :date       date-keyword
+       :updated-at (aux.t/get-millis)
+       :historic   historic})
+    {:error "response->internal error extracting data historic"}))
 
 (comment
   (def r (lob-asset-management.io.http_in/advfn-data-extraction-br {:asset/ticket :abev3
