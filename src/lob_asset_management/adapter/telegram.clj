@@ -1,6 +1,8 @@
 (ns lob-asset-management.adapter.telegram
   (:require [clojure.string :as str]
             [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.aux.util :refer [abs]]
+            [lob-asset-management.aux.money :refer [safe-number->bigdec]]
             [lob-asset-management.logic.portfolio :as l.p]
             [lob-asset-management.aux.time :as t]
             [lob-asset-management.db.telegram :as db.t]
@@ -129,6 +131,13 @@
        (total-currency-row "Crypto" crypto current)
        "</pre>"))
 
+(defn get-value-fraction
+  [value]
+  (let [splited (-> value str (clojure.string/split #"\."))]
+    (if (> (count splited) 1)
+      (->> splited last (str "0.") safe-number->bigdec)
+      0M)))
+
 (defn assets-table-message
   [portfolio]
   (let [number (atom 0)]
@@ -148,7 +157,7 @@
                         "|"
                         (format "%5s" (format "%.2f%%" percentage))
                         "|"
-                        (format "%5s" (if (< quantity 1)
+                        (format "%5s" (if (> (get-value-fraction quantity) 0)
                                         (format "%.3f" quantity)
                                         (format "%.1f" quantity)))
                         "|\n")) "" portfolio)

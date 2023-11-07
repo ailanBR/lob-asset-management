@@ -77,6 +77,10 @@
 
 ;========================== BR ADVFN
 
+(defn- f-content [d] (-> d first :content))
+(defn- l-content [d] (-> d last :content))
+(defn- s-content [d] (-> d second :content))
+
 (defn br-advfn-url
   [ticket]
   (str "https://br.advfn.com/bolsa-de-valores/" ticket "/cotacao"))
@@ -89,15 +93,14 @@
   [data]
   (->> [:table#id_news]
        (html/select data)
-       first
-       :content
+       f-content
        (remove #(clojure.string/includes? % "\n"))
        (map #(let [cnt (:content %)
-                   dt (-> cnt first :content first)
-                   hr (-> cnt second :content first)
-                   from (-> cnt rest rest first :content first :content first)
-                   txt (-> cnt last :content first :content first)
-                   href (clojure.string/join ["https:" (-> cnt last :content first :attrs :href)])]
+                   dt (-> cnt f-content first)
+                   hr (-> cnt s-content first)
+                   from (-> cnt rest rest f-content f-content first)
+                   txt (-> cnt l-content f-content first)
+                   href (clojure.string/join ["https:" (-> cnt l-content first :attrs :href)])]
                {:id   (-> "-"
                           (clojure.string/join [dt hr from])
                           (clojure.string/replace #" " "-")
@@ -112,12 +115,10 @@
   [data]
   (let [updated-at (->> [:div.last-updated]
                         (html/select data)
-                        first
-                        :content
+                        f-content
                         (remove #(or (clojure.string/includes? % "\n")
                                      (= % " ")))
-                        last
-                        :content
+                        l-content
                         first)]
     (if (updated-at-date-format? updated-at)
       (aux.t/str-br-date->date-keyword updated-at)
@@ -141,18 +142,14 @@
   [resp]
   (->> [:table.histo-results]
        (html/select resp)
-       first
-       :content
-       ;
+       f-content
        (remove #(clojure.string/includes? % "\n"))
        rest
        (map (fn [row]
               (let [cnt (->> row :content (remove #(clojure.string/includes? % "\n")))
-                    dt (-> cnt first :content first aux.t/str-br-date->date-keyword)
-                    p (-> cnt second :content first aux.m/safe-number->bigdec)]
-                {:date dt
-                 :price p})
-              ))
+                    dt (-> cnt f-content first aux.t/str-br-date->date-keyword)
+                    p (-> cnt s-content first aux.m/safe-number->bigdec)]
+                {:date dt :price p})))
        (reduce #(assoc %1 (:date %2) (:price %2)) {})))
 
 (defn br-historic-response->internal

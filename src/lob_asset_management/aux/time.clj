@@ -52,7 +52,7 @@
 (defn date-keyword->clj-date
   [dt]
   (when dt
-    (jt/local-date(name dt))))
+    (jt/local-date (name dt))))
 
 (defn current-date-time
   []

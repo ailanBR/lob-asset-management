@@ -1,9 +1,10 @@
 (ns lob-asset-management.adapter.portfolio
-  (:require [lob-asset-management.adapter.asset :as a.a]
+  (:require [clojure.tools.logging :as log]
+            [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.logic.portfolio :as l.p]
             [lob-asset-management.aux.util :refer [assoc-if abs]]
             [lob-asset-management.aux.time :as aux.t]
-            [lob-asset-management.aux.money :refer [safe-big safe-dob]]))
+            [lob-asset-management.aux.money :refer [safe-big safe-dob safe-number->bigdec]]))
 
 (defmulti update-quantity (fn [_ _ op] (keyword op)))
 
@@ -110,9 +111,35 @@
   [consolidated transaction]
   (add-dividend-profit consolidated transaction))
 
+(defn get-value-fraction
+  [value]
+  (let [splited (-> value str (clojure.string/split #"\."))]
+    (if (> (count splited) 1)
+      (->> splited last (str "0.") safe-number->bigdec)
+      0M)))
+
 (defmethod transaction->portfolio :waste
-  [consolidated transaction]
-  (add-dividend-profit consolidated transaction))
+  [{:portfolio/keys [transaction-ids dividend exchanges status]
+    portfolio-quantity :portfolio/quantity
+    portfolio-average-price :portfolio/average-price
+    portfolio-cost :portfolio/total-cost
+    portfolio-sell-profit :portfolio/sell-profit :as portfolio}
+   {:transaction/keys [average-price operation-total id exchange] ticket :transaction.asset/ticket  :as transaction}]
+  (if portfolio-quantity
+    (let [quantity' (get-value-fraction portfolio-quantity)
+          updated-quantity (- (safe-dob portfolio-quantity) quantity')]
+      (assoc-if {:portfolio/ticket          ticket
+                 :portfolio/quantity        updated-quantity
+                 :portfolio/total-cost      portfolio-cost
+                 :portfolio/transaction-ids (conj transaction-ids id)
+                 :portfolio/category        (-> ticket (a.a/ticket->categories) first)
+                 :portfolio/exchanges       (if (contains? exchanges exchange) exchanges (-> exchanges (conj exchange) set))
+                 :portfolio/dividend        (safe-big dividend)
+                 :portfolio/average-price   (or portfolio-average-price average-price)
+                 :portfolio/sell-profit     (+ (safe-big portfolio-sell-profit) operation-total)}
+                :portfolio/status status))
+    (do (log/info (str "[TRANSACTION->PORTFOLIO] Invalid quantity for WASTE operation ticket" ticket))
+        (add-dividend-profit portfolio transaction))))
 
 (defmethod transaction->portfolio :grupamento
   [{:portfolio/keys [ticket average-price transaction-ids exchanges dividend sell-profit status]

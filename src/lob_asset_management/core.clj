@@ -177,24 +177,30 @@
     [:portfolio/ticket :portfolio/quantity]
     (->> (db.p/get-all)
          (filter #(contains? #{:nu :inter} (first (:portfolio/exchanges %))))
+         ;(filter #(contains? #{:sproutfy} (first (:portfolio/exchanges %))))
+         ;(filter #(= :crypto (:portfolio/category %)))
          ;(filter #(or (contains? (:portfolio/exchanges %) :nu)
          ;             (contains? (:portfolio/exchanges %) :inter)))
          (sort-by :portfolio/ticket)))
 
+  (filter #(= :SMTO3 (:portfolio/ticket %)) (db.p/get-all))
+
   (clojure.pprint/print-table
-    [:transaction/created-at :transaction/operation-type :transaction/quantity]
+    [:transaction/id :transaction/created-at :transaction/operation-type :transaction/quantity :transaction/average-price]
     (->> (lob-asset-management.db.transaction/get-all)
          ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
-         (filter #(or (= :BTC (:transaction.asset/ticket %))))
-         ;(remove #(contains?
-         ;           #{:buy :sell :JCP :income :dividend :waste :grupamento}
-         ;           (:transaction/operation-type %)))
-         ;(filter #(or (= :ROMI3 (:transaction.asset/ticket %))))
+         ;(filter #(or (= :SMTO3 (:transaction.asset/ticket %))))
+         (remove #(contains?
+                    #{:buy :sell :JCP :income :dividend}
+                    (:transaction/operation-type %)))
+         (filter #(or (= :RDOR3 (:transaction.asset/ticket %))))
          ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
          ;(sort-by :transaction/exchange)
-         (sort-by :transaction.asset/ticket)
          ;(sort-by :transaction.asset/ticket)
+         (sort-by :transaction/created-at)
          ))
+
+
   ;=========================================
   (def in (lob-asset-management.relevant/incorporation-movements))
 
