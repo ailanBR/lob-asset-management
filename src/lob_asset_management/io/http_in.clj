@@ -130,6 +130,28 @@
                     {:status 999}))))
 
 (comment
+  (require '[clj-http.client :as client])
+
+  (:headers (client/get "https://br.investing.com/"
+                        {:proxy-host "20.206.106.192"
+                         :proxy-port 80}))
+  {:cache true
+   :cookie-policy :standard
+   :cookies       {"ring-session" {:discard true, :path "/", :value "", :version 0}}
+   :user-agent    "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2"}
+
+
+
+  (def u (java.net.URL. "https://br.investing.com/"))
+  (def hc (.openConnection u))
+  (def hca (.setRequestProperty hc "User-Agent" "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2"))
+
+  (html/html-resource hca)
+
+  (-> "https://us10.proxysite.com/process.php?d=QD%2BVb0R1375S3drDPk2w12Ce7n3%2F&b=1&f=norefer"
+      java.net.URL.
+      html/html-resource)
+  ;---------------------------
   (get-daily-adjusted-prices "CAN")
   (def abev-result (get-daily-adjusted-prices "CAN"))
   (clojure.pprint/pprint abev-result)
@@ -146,6 +168,8 @@
   (def resp (advfn-data-historic-extraction-br {:asset/ticket :ABEV3
                                                 :asset/type   :stockBR}))
 
+  (advfn-data-extraction-br {:asset/ticket :ABEV3
+                                      :asset/type   :stockBR})
   #_(a.wde/asset-news resp)
   #_(def t (-> "https://br.advfn.com/bolsa-de-valores/nasdaq/AAPL/cotacao"
              java.net.URL.

@@ -79,12 +79,22 @@
        (<= (aux.t/date-keyword->miliseconds current-date)
            (aux.t/date-keyword->miliseconds date))))
 
+(defn price-change-percentage
+  [current-price
+   new-price]
+  (-> new-price float (* 100) (/ (float current-price)) (- 100) float))
+
+(defn historic-validation
+  [current-price
+   historic]
+  ())
+
 (defn price-change-validation
   "TODO : Validate the date"
   [{:asset/keys [ticket]
     current-price :asset.market-price/price :as asset}
    {:keys [price] :as new-data}]
-  (let [change-percentage (-> price float (* 100) (/ (float current-price)) (- 100) float)
+  (let [change-percentage (price-change-percentage current-price price)
         change-percentage-abs (abs change-percentage)]
     (if (> change-percentage-abs 100)
       (throw (ex-info (str "Price Change Validation above threshold for " ticket " " change-percentage " %")
@@ -210,7 +220,7 @@
          (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
          (db.a/upsert! updated-assets))
        (catch Exception e
-         (t.b/send-error-command bot e)
+         #_(t.b/send-error-command bot e)
          (if (contains? (-> e ex-data :causes) :alpha-api-limit)
            (handle-alpha-api-limit-error assets less-updated-asset)
            (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
