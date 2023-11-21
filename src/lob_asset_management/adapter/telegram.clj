@@ -13,8 +13,8 @@
   [portfolio]
   (str "<b>\uD83D\uDCCA Portfolio allocation \uD83D\uDCCA</b>\n"
        "<pre>"
-       "|Ticket|    R$    |  %  |  Res  |\n"
-       "|:-----|:--------:|-----|------:|\n"
+       "|Ticket|    R$    |  %   |  Res  |\n"
+       "|:-----|:--------:|------|------:|\n"
        (reduce #(str %1
                      "|"
                      (format "%-6s" (-> %2 :portfolio/ticket name))
@@ -143,8 +143,8 @@
   (let [number (atom 0)]
     (str "<b>\uD83D\uDCCA Portfolio allocation \uD83D\uDCCA</b>\n"
          "<pre>"
-         "|n.|Ticket| Category |  %  | Qnt |\n"
-         "|--|:-----|:--------:|-----|-----|\n"
+         "|n.|Ticket| Category |  %  | Qnt  |\n"
+         "|--|:-----|:--------:|-----|------|\n"
          (reduce (fn [current {:portfolio/keys [ticket category percentage quantity]}]
                    (swap! number inc)
                    (str current

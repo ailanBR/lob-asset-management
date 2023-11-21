@@ -2,7 +2,8 @@
   (:require [clojure.tools.logging :as log]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
-            [lob-asset-management.logic.asset :as l.a]))
+            [lob-asset-management.logic.asset :as l.a]
+            [lob-asset-management.relevant :refer [asset-more-info]]))
 
 (defn get-all
   []
@@ -33,6 +34,10 @@
            (maybe-upsert! db-data)))
     (catch Exception e
       (throw (ex-info "ASSET UPSERT ERROR" {:cause e})))))
+
+(defn get-fixed-info-by-ticket
+  [ticket]
+  (get asset-more-info ticket))
 
 (defn get-by-ticket
   ([ticket]
