@@ -1,6 +1,8 @@
 (ns lob-asset-management.adapter.web-data-extraction
-  (:require [lob-asset-management.aux.money :as aux.m]
+  (:require [clojure.string :as string]
+            [lob-asset-management.aux.money :as aux.m]
             [lob-asset-management.aux.time :as aux.t]
+            [lob-asset-management.db.asset :as db.a]
             [net.cgrand.enlive-html :as html]))
 
 (defn ->price
@@ -35,7 +37,7 @@
 
 (defn updated-at-date-format?
   [updated-at]
-  (= (count (clojure.string/split (str updated-at) #" ")) 3))
+  (= (count (string/split (str updated-at) #" ")) 3))
 
 (defn ->date
   [data]
@@ -43,7 +45,7 @@
                         (html/select data)
                         first
                         :content
-                        (remove #(or (clojure.string/includes? % "\n")
+                        (remove #(or (string/includes? % "\n")
                                      (= % " ")))
                         second
                         :content
@@ -66,10 +68,13 @@
 
 (defn in-ticket->out-ticket
   [{:asset/keys [ticket type]}]
-  (let [asset-name (name ticket)]
-    (if (or (= type :stockBR) (= type :fii))
-      (str "bovespa/" (clojure.string/upper-case asset-name))
-      (str "NASDAQ/" (clojure.string/upper-case asset-name)))))
+  (let [asset-name (name ticket)
+        {:keys [exchange]} (db.a/get-fixed-info-by-ticket ticket)]
+    (if exchange
+      (str (name exchange) "/" (string/upper-case asset-name))
+      (if (or (= type :stockBR) (= type :fii))
+        (str "bovespa/" (string/upper-case asset-name))
+        (str "NASDAQ/" (string/upper-case asset-name))))))
 
 (defn advfn-url
   [ticket]
@@ -94,20 +99,20 @@
   (->> [:table#id_news]
        (html/select data)
        f-content
-       (remove #(clojure.string/includes? % "\n"))
+       (remove #(string/includes? % "\n"))
        (map #(let [cnt (:content %)
                    dt (-> cnt f-content first)
                    hr (-> cnt s-content first)
                    from (-> cnt rest rest f-content f-content first)
                    txt (-> cnt l-content f-content first)
-                   href (clojure.string/join ["https:" (-> cnt l-content first :attrs :href)])]
+                   href (string/join ["https:" (-> cnt l-content first :attrs :href)])]
                {:id   (-> "-"
-                          (clojure.string/join [dt hr from])
-                          (clojure.string/replace #" " "-")
-                          (clojure.string/replace #"/" "-")
-                          (clojure.string/replace #":" "-"))
+                          (string/join [dt hr from])
+                          (string/replace #" " "-")
+                          (string/replace #"/" "-")
+                          (string/replace #":" "-"))
                 :txt  txt
-                :datetime (clojure.string/join " " [dt hr])
+                :datetime (string/join " " [dt hr])
                 :href href}))
        rest))
 
@@ -116,7 +121,7 @@
   (let [updated-at (->> [:div.last-updated]
                         (html/select data)
                         f-content
-                        (remove #(or (clojure.string/includes? % "\n")
+                        (remove #(or (string/includes? % "\n")
                                      (= % " ")))
                         l-content
                         first)]
@@ -143,10 +148,10 @@
   (->> [:table.histo-results]
        (html/select resp)
        f-content
-       (remove #(clojure.string/includes? % "\n"))
+       (remove #(string/includes? % "\n"))
        rest
        (map (fn [row]
-              (let [cnt (->> row :content (remove #(clojure.string/includes? % "\n")))
+              (let [cnt (->> row :content (remove #(string/includes? % "\n")))
                     dt (-> cnt f-content first aux.t/str-br-date->date-keyword)
                     p (-> cnt s-content first aux.m/safe-number->bigdec)]
                 {:date dt :price p})))
