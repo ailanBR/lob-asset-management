@@ -23,8 +23,14 @@
                  [org.clojure/tools.cli "1.0.219"]
                  [org.clojure/tools.logging "1.2.4"]
                  [prismatic/schema "1.4.1"]
-                 [telegrambot-lib "2.3.0"]]
+                 [telegrambot-lib "2.3.0"]
+                 ;GOOGLE TRY
+                 [com.google.apis/google-api-services-sheets "v4-rev20220927-2.0.0"]
+                 [com.google.oauth-client/google-oauth-client-jetty "1.34.1"]
+                 [com.google.api-client/google-api-client "2.0.0"]]
+
   :repl-options {:init-ns lob-asset-management.core
                  :width 12000}
   :jvm-opts ["-Dclojure.tools.logging.factory=clojure.tools.logging.impl/jul-factory"]
+  :core.typed {:check [google-apps-clj.google-sheets]}
   :main ^:skip-aot lob-asset-management.core)

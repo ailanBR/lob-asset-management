@@ -16,3 +16,5 @@ pom.xml.asc
 /resources/secrets.edn
 /resources/log4j2.xml
 /metric/metric.edn
+/resources/credentials.json
+/resources/oauth.json

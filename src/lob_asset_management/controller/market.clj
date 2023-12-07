@@ -54,7 +54,7 @@
 (defn get-historic?
   [{:asset.market-price/keys [historic-at historic]}
    args]
-  (let [target-hours 48]
+  (let [target-hours 1]
     (or (nil? historic)
         (boolean (and args (-> args first :with-historic)))
         (aux.t/less-updated-than-target? target-hours historic-at))))
