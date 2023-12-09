@@ -46,7 +46,8 @@
     (java.security KeyFactory Signature)
     (java.security.spec PKCS8EncodedKeySpec)
     ))
-
+;https://developers.google.com/sheets/api/quickstart/java?hl=pt-br
+;https://github.com/SparkFund/google-apps-clj/blob/develop/src/google_apps_clj/google_sheets_v4.clj <- Maybe use that library
 
 (comment
   (def google-ctx (-> relevant/secrets :google-key))
