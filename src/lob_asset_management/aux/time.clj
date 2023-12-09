@@ -44,7 +44,7 @@
   date example :2023-06-21"
   [dt days]
   (when dt
-    (let [c-dt (jt/local-date(name dt))]
+    (let [c-dt (jt/local-date (name dt))]
       (-> c-dt
           (jt/minus (jt/days days))
           clj-date->date-keyword))))
