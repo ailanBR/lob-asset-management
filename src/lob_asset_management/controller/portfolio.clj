@@ -157,15 +157,20 @@
     (log/warn "[PROCESS PORTFOLIO] No new portfolio records to be registered")))
 
 (defn update-portfolio-representation
-  [portfolio forex-usd]
-  (let [assets (db.a/get-all)
-        updated-portfolio (->> portfolio
-                               (set-portfolio-representation assets forex-usd)
-                               (sort-by :portfolio/percentage >))]
-    (when (not= updated-portfolio portfolio)
-      (log/info "[PROCESS PORTFOLIO] New portfolio info to be registered")
-      (db.p/overwrite! updated-portfolio)
-      updated-portfolio)))
+  ([]
+   (let [portfolio (db.p/get-all)
+         forex-usd (db.f/get-all)]
+     (update-portfolio-representation portfolio forex-usd)))
+  ([portfolio forex-usd]
+   (let [assets (db.a/get-all)
+         updated-portfolio (->> portfolio
+                                (set-portfolio-representation assets forex-usd)
+                                (sort-by :portfolio/percentage >))]
+     (when (not= updated-portfolio portfolio)
+       (log/info "[PROCESS PORTFOLIO] New portfolio info to be registered")
+       (db.p/overwrite! updated-portfolio)
+       updated-portfolio))))
+
 
 ;Portfolio category====================================================
 (defn consolidate-categories

@@ -34,6 +34,7 @@
       :forex-usd/historic   updated-historic})))
 
 (defn update-usd-price
+  ;TODO: Remove target-hour validation
   ([]
    (update-usd-price (db.f/get-all) 3))
   ([forex-usd]
