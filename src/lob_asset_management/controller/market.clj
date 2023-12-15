@@ -6,7 +6,7 @@
             [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.aux.time :as aux.t]
-            [lob-asset-management.aux.util :refer [abs]]
+            [lob-asset-management.aux.util :refer [abs log-colors]]
             [lob-asset-management.controller.telegram-bot :refer [bot] :as t.b]))
 
 (defn- asset-news-new-one
@@ -31,33 +31,30 @@
 
 (defn get-stock-market-price
   [asset get-historic?]
-  (if-let [{:keys [news updated-at] :as market-info} (if get-historic?
-                                                       (io.http/advfn-data-historic-extraction-br asset)
-                                                       (io.http/advfn-data-extraction-br asset)
-                                                       #_(io.http/get-daily-adjusted-prices asset))]
+  (if-let [{:keys [news] :as market-info} (if get-historic?
+                                            (io.http/advfn-data-historic-extraction-br asset)
+                                            (io.http/advfn-data-extraction-br asset)
+                                            #_(io.http/get-daily-adjusted-prices asset))]
     (if get-historic?
-      (assoc market-info :updated-historic-at updated-at)
+      market-info
       (do (update-news asset news)
           market-info))
     (throw (ex-info :message "[get-stock-market-price] Something was wrong in get market data"))))
 
 (defn get-crypto-market-price
   [asset get-historic?]
-  (if-let [{:keys [updated-at] :as market-info} (if get-historic?
+  (if-let [{:keys [updated-at] :as market-info} (if true
                                                   (-> asset a.a/in-ticket->out-crypto-id io.http/get-crypto-price-real-time)
-                                                  (-> asset a.a/in-ticket->out-ticket io.http/get-crypto-price))]
-    (if get-historic?
-      (assoc market-info :updated-historic-at updated-at)
-      market-info)
+                                                  (-> asset a.a/in-ticket->out-ticket io.http/get-crypto-price) ;FIXME: {:Error_Message Invalid API call. Please retry or visit the documentation (https://www.alphavantage.co/documentation/) for DIGITAL_CURRENCY_DAILY.}
+                                                  )]
+    market-info
     (throw (ex-info :message "[get-crypto-market-price] Something was wrong in get market data"))))
 
 (defn get-historic?
-  [{:asset.market-price/keys [historic-at historic]}
+  [{:asset.market-price/keys [historic]}
    args]
-  (let [target-hours 1]
-    (or (nil? historic)
-        (boolean (and args (-> args first :with-historic)))
-        (aux.t/less-updated-than-target? target-hours historic-at))))
+  (or (nil? historic)
+      (boolean (and args (-> args first :with-historic)))))
 
 (defn get-market-price
   "options
@@ -114,21 +111,18 @@
 
 (defn update-asset
   [{:asset/keys          [id]
-    current-historic    :asset.market-price/historic
-    current-historic-at :asset.market-price/historic-at :as asset}
+    current-historic    :asset.market-price/historic :as asset}
    asset-id
-   {:keys [price updated-at date historic historic-at] :as new-data}]
+   {:keys [price updated-at date historic] :as new-data}]
   (if (and (= id asset-id))
     (let [new-price? (new-price? asset new-data)
-          updated-historic (update-historic current-historic historic)
-          historic-at' (or historic-at current-historic-at) ]
+          updated-historic (update-historic current-historic historic)]
       (if new-price?
         (do
           (price-change-validation asset new-data)
           (-> asset
               (assoc :asset.market-price/price price
                      :asset.market-price/updated-at updated-at
-                     :asset.market-price/historic-at historic-at'
                      :asset.market-price/price-date date
                      :asset.market-price/historic updated-historic)
               (dissoc :asset.market-price/retry-attempts)))
@@ -161,8 +155,8 @@
     updated-assets))
 
 (defn less-updated-asset
-  [assets day-of-week]
-  (-> assets (a.a/get-less-market-price-updated {:day-of-week day-of-week}) first))
+  [assets day-of-week & args]
+  (-> assets (a.a/get-less-market-price-updated (merge {:day-of-week day-of-week} (when args (first args)))) first))
 
 (defn reset-retry-attempts
   ([]
@@ -221,30 +215,40 @@
    (update-asset-market-price assets 1))
   ([assets day-of-week & args]
    (if-let [{:asset/keys [ticket] :as less-updated-asset
-             :asset.market-price/keys [retry-attempts]} (less-updated-asset assets day-of-week)]
+             :asset.market-price/keys [retry-attempts]} (less-updated-asset assets day-of-week (when args (first args)))]
      (try
        (log/info "[MARKET-UPDATING] Starting get asset price for " (:asset/ticket less-updated-asset))
-       (let [market-last-price (get-market-price less-updated-asset)
+       (let [market-last-price (get-market-price less-updated-asset (when args (first args)))
              updated-assets (update-assets assets less-updated-asset market-last-price)]
          (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
          (db.a/upsert! updated-assets))
        (catch Exception e
          #_(t.b/send-error-command bot e)
+         #_(log/error e)
          (if (contains? (-> e ex-data :causes) :alpha-api-limit)
            (handle-alpha-api-limit-error assets less-updated-asset)
-           (do (log/error (str (:asset/ticket less-updated-asset) " error in update-asset-market-price " e))
+           (do (log/error (str (:fail log-colors)
+                               (:asset/ticket less-updated-asset) " error in update-asset-market-price " e
+                               (:end log-colors)))
                (if (< (or retry-attempts 0) 3)
                  (-> less-updated-asset
                      (handle-retry-attempt assets)
-                     (update-asset-market-price day-of-week args))
+                     (update-asset-market-price day-of-week (when args (first args))))
                  (log/info (str "Retry limit archived")))))))
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
+
+(defn update-asset-market-price-historic
+  []
+  (if-let [assets (db.a/get-all)]
+    (update-asset-market-price assets 1 {:with-historic true
+                                         :ignore-timer true})
+    (log/error "[GET STOCK HISTORIC] update-asset-market-price-historic - can't get assets")))
 
 (defn update-crypto-market-price
   ([]
    (if-let [assets (db.a/get-all)]
      (update-crypto-market-price assets)
-     (log/error "[MARKET-UPDATING] update-asset-market-price - can't get assets")))
+     (log/error "[GET CRYPTO PRICE] update-crypto-market-price - can't get assets")))
   ([assets]
    (->> assets
         (filter #(= :crypto (:asset/type %)))

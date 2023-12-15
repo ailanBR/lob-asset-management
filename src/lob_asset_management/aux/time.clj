@@ -154,3 +154,15 @@
     (-> (clojure.string/join " " [month day year])
         str-date->str-timestamp
         get-millis)))
+
+(defmacro timed [expr]                                      ;TODO: USE THIS
+  (let [sym (= (type expr) clojure.lang.Symbol)]
+    `(let [start# (. System (nanoTime))
+           return# ~expr
+           res# (if ~sym
+                  (resolve '~expr)
+                  (resolve (first '~expr)))]
+       (prn (str "Timed "
+                 (:name (meta res#))
+                 ": " (/ (double (- (. System (nanoTime)) start#)) 1000000.0) " msecs"))
+       return#)))

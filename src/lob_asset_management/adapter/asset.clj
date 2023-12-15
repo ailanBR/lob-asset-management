@@ -139,9 +139,11 @@
   (filter #(allowed-ticket-get-market-info? (:asset/ticket %)) assets))
 
 (defn filter-less-updated-than-target?                      ;TODO: Receive milliseconds instead target-hours
-  [target-hours assets]
-  (filter #(aux.t/less-updated-than-target? target-hours (:asset.market-price/updated-at %))
-          assets))
+  [target-hours ignore-timer assets]
+  (if (not ignore-timer)
+    (filter #(aux.t/less-updated-than-target? target-hours (:asset.market-price/updated-at %))
+            assets)
+    assets))
 
 (defn remove-limit-attempts
   [assets]
@@ -167,7 +169,7 @@
   [assets & args]
   {:pre [(boolean assets)]}
   (let [{:keys [quantity min-updated-hours
-                type day-of-week]} (get-less-updated-config (first args))
+                type day-of-week ignore-timer]} (get-less-updated-config (first args))
         type' (if (> day-of-week 5) #{:crypto} type)
         filter-assets (->> assets
                            (filter-allowed-type type')
@@ -175,7 +177,7 @@
                            remove-disabled-ticket
                            remove-limit-attempts
                            (sort-by :asset.market-price/updated-at)
-                           (filter-less-updated-than-target? min-updated-hours))]
+                           (filter-less-updated-than-target? min-updated-hours ignore-timer))]
     (or (take quantity filter-assets) nil)))
 
 (defn external-news->internal

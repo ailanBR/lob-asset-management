@@ -9,6 +9,7 @@
             [lob-asset-management.controller.process-file :as c.p-f]
             [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.controller.release :as c.r]
+            [lob-asset-management.controller.scheduler :as c.s]
             [lob-asset-management.controller.telegram-bot :as t.bot :refer [bot]]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.forex :as db.f]
@@ -92,22 +93,6 @@
   (println msg)
   (System/exit status))
 
-(defonce update-id (atom nil))
-
-(defn set-id!
-  "Sets the update id to process next as the passed in `id`."
-  [id]
-  (reset! update-id id))
-
-(defn check-telegram-messages
-  [interval time]
-  (let [updates (t.bot/pull-updates bot @update-id)
-        messages (:result updates)]
-    (doseq [msg messages]
-      (t.bot/handle-msg bot msg)
-      (-> msg :update_id inc set-id!))
-    (t.bot/auto-message bot time interval)))
-
 (defn get-market-info
   [forex-usd stock-window current-time]
   (let [assets (db.a/get-all)
@@ -126,8 +111,8 @@
   (let [forex-usd (db.f/get-all)
         update-target-hour 3
         current-time (t/local-date-time)]
-    (check-telegram-messages interval current-time)
-    (c.p-f/backup-cleanup :asset)
+    (t.bot/check-telegram-messages interval current-time)
+    (c.p-f/backup-cleanup :asset)                           ;FIXME: Didn't work in the shell execution
     (if (c.f/less-updated-than-target forex-usd update-target-hour)
       (c.f/update-usd-price forex-usd update-target-hour)
       (get-market-info forex-usd stock-window current-time))))
@@ -154,11 +139,12 @@
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (case action
-        "start" (let [interval 13000
-                      stop-loop (poller "Main"
-                                        #(start-processing #{11 12 13 14 15 16 17 18 19 20 21 22 23} interval)
-                                        13000
-                                        #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
+        "start" (let [interval 3000
+                      stop-loop (c.s/poller interval)
+                      #_(poller "Main"
+                              #(start-processing #{11 12 13 14 15 16 17 18 19 20 21 22 23} interval)
+                              13000
+                              #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
                   (println "Press enter to stop...")
                   (read-line)
                   (future-cancel (stop-loop))

@@ -1,9 +1,17 @@
 (ns lob-asset-management.controller.scheduler
-  (:require [sbocq.cronit :as cronit]
+  (:require [clojure.tools.logging :as log]
+            [lob-asset-management.controller.forex :as c.f]
+            [lob-asset-management.controller.market :as c.m]
+            [lob-asset-management.controller.portfolio :as c.p]
+            [lob-asset-management.controller.telegram-bot :as t.bot :refer [bot]]
+            [sbocq.cronit :as cronit]
             [java-time.api :as jt]
             [java-time.format :as jf]
             [java-time.util :as ju]
-            [lob-asset-management.aux.time :as aux.time]))
+            [lob-asset-management.aux.time :as aux.time]
+            [lob-asset-management.aux.util :refer [log-colors]]))
+
+;https://github.com/sbocq/cronit/blob/main/README.md
 
 (def days-of-week #{:mon :tue :wed :thu :fri :sat :sun})
 
@@ -15,9 +23,22 @@
   ([cron-expression]
    (new-cron cron-expression (jt/zoned-date-time))))
 
+(defn its-time!
+  [{:keys [cron-exp fn name]} next]
+  (println (:okgreen log-colors)
+           "NOW!!!! " name
+           " N: " (-> next
+                      :current
+                      jt/zoned-date-time
+                      jt/local-date-time
+                      str)
+           " C: " (str (aux.time/current-date-time))
+           (:end log-colors))
+  (fn)
+  (new-cron cron-exp))
+
 (defn its-time-validate
-  ;TODO : Add callback fn when its time
-  [cron cron-expression]
+  [{:keys [cron name] :as schedule}]
   (let [next (cronit/next cron)
         next-millis (-> next
                         :current
@@ -27,62 +48,115 @@
                         aux.time/get-millis)
         current-millis (aux.time/get-millis)]
     (if (> current-millis next-millis)
-      (do (println "NOW!!!!")
-          (new-cron cron-expression))
-      (do (println "Not yet")
+      (its-time! schedule next)
+      (do (println (:okblue log-colors)
+                   "[X] Not yet " name
+                   " N: " (-> next
+                              :current
+                              jt/zoned-date-time
+                              jt/local-date-time
+                              str)
+                   " C: " (str (aux.time/current-date-time))
+                   (:end log-colors))
           cron))))
 
-(comment
-  ;Get current datetime zoned
-  (str (jt/zoned-date-time))
+(def get-stock-price
+  {:name :get-stock-price
+   :cron-exp {:minute [:* 10] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]}
+   :cron     (new-cron {:minute [:* 10] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :times    :continuous
+   :fn       #(do
+                (c.m/update-asset-market-price)
+                (c.p/update-portfolio-representation))
+   :dependency #{:get-stock-hist}})
 
+(def get-stock-hist
+  {:name :get-stock-hist
+   :cron-exp {:minute [:* 10] :hour [:+ 10 18]}
+   :cron     (new-cron {:minute [:* 10] :hour [:+ 10 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :fn       #(do
+                (c.m/update-asset-market-price-historic)
+                (c.p/update-portfolio-representation))})
+
+(def get-crypto-price
+  {:name :get-crypto-price
+   :cron-exp {:minute [:* 10]}
+   :cron     (new-cron {:minute [:* 10]})
+   :fn       #(do
+                (c.m/update-crypto-market-price)
+                (c.p/update-portfolio-representation))})
+
+(def notify-price-highlight
+  {:name     :notify-price-highlight
+   :cron-exp {:minute [:+ 20] :hour [:+ 10 16 18] :day-of-week [:+ :mon :tue :wed :thu :fri]}
+   :cron     (new-cron {:minute [:+ 20] :hour [:+ 10 16 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :fn       #(t.bot/send-command bot nil :daily)})
+
+(def notify-portfolio-total
+  {:name     :notify-portfolio-total
+   :cron-exp {:minute [:+ 0] :hour [:+ 10 16 18] :day-of-week [:+ :mon :tue :wed :thu :fri]}
+   :cron     (new-cron {:minute [:+ 0] :hour [:+ 10 16 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :fn       #(t.bot/send-command bot nil :total)})
+
+(def check-telegram-new-message
+  {:name     :check-telegram-new-message
+   :cron-exp {:second [:* 5]}
+   :cron     (new-cron {:second [:* 5]})
+   :fn       #(t.bot/check-telegram-messages)})
+
+(def forex-update
+  {:name     :forex-update
+   :cron-exp {:hour [:* 3] :day-of-week [:+ :mon :tue :wed :thu :fri]}
+   :cron     (new-cron {:hour [:* 3] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :fn       #(c.f/update-usd-price)})
+
+(defonce schedulers (atom [get-stock-price
+                           get-stock-hist
+                           get-crypto-price
+                           notify-price-highlight
+                           notify-portfolio-total
+                           check-telegram-new-message
+                           forex-update]))
+
+(defn evaluate-schedulers
+  []
+  (log/info (str (:underline log-colors)
+                 "**********Evaluating Start**********"
+                 (:end log-colors)))
+  (doseq [{:keys [name] :as s} @schedulers]
+    (log/info (str (:bold log-colors)
+                   "Evaluating " name
+                   (:end log-colors)))
+    (let [new-cron (its-time-validate s)
+          s' (assoc s :cron new-cron)
+          ss' (-> #(= (:name %) name) (remove @schedulers) (conj s'))]
+      (reset! schedulers ss'))))
+
+(defn poller
+  [interval]
+  (let [run-forest-run (atom true)]
+    (future
+      (try
+        (while @run-forest-run
+          ;(log/info "[Schedulers poller running" (str (jt/local-date-time)) "]")
+          (evaluate-schedulers)
+          (log/info "[Schedulers poller next " (str (jt/plus
+                                                      (jt/local-date-time)
+                                                      (jt/millis interval))) "]")
+          (Thread/sleep interval))
+        (catch Exception e
+          (println (:fail log-colors) "Error in scheduler poller: " e (:end log-colors)))))
+    (fn [] (reset! run-forest-run false))))
+
+(defn scheduler-show
+  [name]
+  (if-let [{:keys [cron-exp] :as s} (->> @schedulers (filter #(= (% :name) name)) first)]
+    (do (clojure.pprint/pprint s)
+      (cronit/show cron-exp))
+    (println "NOT FOUND " name)))
+
+(comment
   ;Only saturday - 5 minutes interval
   (cronit/show {:hour [:* 24] :day-of-week [:+ :sat]}
              {:date (str (jt/zoned-date-time)) :context 2})
-
-  ;Only saturday - 5 minutes interval
-  (->> #_(jt/zoned-date-time)
-       #_(cronit/init {:hour [:* 24] :day-of-week [:+ :mon :tue :wed :thu :fri :sat :sun]})
-       init
-       cron/next
-       :current
-       str
-       (jt/zoned-date-time)
-       (jt/local-date-time)
-       str
-       ;(jf/format "yyyy-MM-dd hh:mm:ss")
-      )
-
-  ;NOTES
-  ;context => number of samples
-
-
-  (-> c  :current str)
-  (cronit/show (:every-minute expressions)
-               {:date (str (jt/zoned-date-time)) :context 2})
-
-  ;USAGE
-  ;1. Create the cron
-  (def c (new-cron (:every-minute expressions)))
-
-
-  (its-time-validate c (:every-minute expressions))
-
-  ;DEFINE A MAP WITH THE SCHEDULERS FOLLOWING WITH THE RESPECTIVE CRON EXPRESSSION
-  (def schedulers {:get-stock-price {:cron-exp {:minute [:* 1]}
-                                     :cron     (new-cron {:minute [:* 1]})}})
-
-  (def as (atom {:cron-exp {:minute [:* 1]}
-                 :cron     (new-cron {:minute [:* 1]})}))
-  (def counter (atom 0))
-
-  (while (< @counter 30)
-    (println "[ " @counter " ]" (str (jt/local-date-time)))
-    (swap! counter inc)
-    (let [cron-exp (:cron-exp @as)
-          cron (:cron @as)
-          new-cron' (its-time-validate cron cron-exp)]
-      (swap! as assoc :cron new-cron'))
-    (Thread/sleep 1000))
-
   )

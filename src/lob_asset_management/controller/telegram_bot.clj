@@ -209,6 +209,20 @@
   [asset new-data change-percentage]
   (send-message (a.t/asset-price-changed-message asset new-data change-percentage)))
 
+
+(defonce update-id (atom nil))
+
+(defn check-telegram-messages
+  ([]
+   (let [updates (pull-updates bot @update-id)
+         messages (:result updates)]
+     (doseq [msg messages]
+       (handle-msg bot msg)
+       (->> msg :update_id inc (reset! update-id)))))
+  ([interval time]
+   (check-telegram-messages)
+   (auto-message bot time interval)))
+
 (comment
   (def mybot (tbot/create telegram-key))
 
