@@ -166,6 +166,10 @@ All notable changes to this project will be documented in this file. This change
 - Price change notification
 - Telegram stop command
 
+### 2023-12-15
+- Create new Poller schedule based
+- Move corer poller to scheduled tasks
+
 ## [0.1.1] - 2023-03-25
 ### Changed
 
