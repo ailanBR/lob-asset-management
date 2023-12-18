@@ -77,10 +77,11 @@
   [{current-price :asset.market-price/price
     current-date :asset.market-price/price-date}
    {:keys [price date]}]
-  (and (not (= current-price price))
-       (> price 0M)
-       (<= (aux.t/date-keyword->miliseconds current-date)
-           (aux.t/date-keyword->miliseconds date))))
+  (or (or (nil? current-date) (nil? current-date))
+      (and (not (= current-price price))
+           (> price 0M)
+           (<= (aux.t/date-keyword->miliseconds current-date)
+               (aux.t/date-keyword->miliseconds date)))))
 
 (defn price-change-percentage
   [current-price
@@ -97,7 +98,7 @@
   [{:asset/keys [ticket]
     current-price :asset.market-price/price :as asset}
    {:keys [price] :as new-data}]
-  (let [change-percentage (price-change-percentage current-price price)
+  (let [change-percentage (price-change-percentage (or current-price price) price)
         change-percentage-abs (abs change-percentage)]
     (if (> change-percentage-abs 100)
       (throw (ex-info (str "Price Change Validation above threshold for " ticket " " change-percentage " %")
@@ -257,10 +258,11 @@
 (comment
 
   (->> (db.a/get-all)
-       (filter #(= (:asset/ticket %) :BLK))
+       (filter #(= (:asset/ticket %) :AMAT))
        first
-       (get-market-price))
-
+       (get-market-price)
+       )
+  (get-market-price)
   (update-asset-market-price)
   (def company-overview (io.http/get-company-overview "ABEV3.SA"))
 

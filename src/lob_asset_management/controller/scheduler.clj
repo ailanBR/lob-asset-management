@@ -25,15 +25,15 @@
 
 (defn its-time!
   [{:keys [cron-exp fn name]} next]
-  (println (:okgreen log-colors)
-           "NOW!!!! " name
-           " N: " (-> next
-                      :current
-                      jt/zoned-date-time
-                      jt/local-date-time
-                      str)
-           " C: " (str (aux.time/current-date-time))
-           (:end log-colors))
+  (log/info (str (:okgreen log-colors)
+                     "[>] NOW!!!! " name
+                     " N: " (-> next
+                                :current
+                                jt/zoned-date-time
+                                jt/local-date-time
+                                str)
+                     " C: " (str (aux.time/current-date-time))
+                     (:end log-colors)))
   (fn)
   (new-cron cron-exp))
 
@@ -49,21 +49,21 @@
         current-millis (aux.time/get-millis)]
     (if (> current-millis next-millis)
       (its-time! schedule next)
-      (do (println (:okblue log-colors)
-                   "[X] Not yet " name
-                   " N: " (-> next
-                              :current
-                              jt/zoned-date-time
-                              jt/local-date-time
-                              str)
-                   " C: " (str (aux.time/current-date-time))
-                   (:end log-colors))
+      (do (log/info (str (:okblue log-colors)
+                         "[X] Not yet " name
+                         " N: " (-> next
+                                    :current
+                                    jt/zoned-date-time
+                                    jt/local-date-time
+                                    str)
+                         " C: " (str (aux.time/current-date-time))
+                         (:end log-colors)))
           cron))))
 
 (def get-stock-price
   {:name :get-stock-price
-   :cron-exp {:minute [:* 10] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]}
-   :cron     (new-cron {:minute [:* 10] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :cron-exp {:minute [:* 8] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]}
+   :cron     (new-cron {:minute [:* 8] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :times    :continuous
    :fn       #(do
                 (c.m/update-asset-market-price)
@@ -72,8 +72,8 @@
 
 (def get-stock-hist
   {:name :get-stock-hist
-   :cron-exp {:minute [:* 10] :hour [:+ 10 18]}
-   :cron     (new-cron {:minute [:* 10] :hour [:+ 10 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :cron-exp {:minute [:* 8] :hour [:+ 10 18]}
+   :cron     (new-cron {:minute [:* 8] :hour [:+ 10 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :fn       #(do
                 (c.m/update-asset-market-price-historic)
                 (c.p/update-portfolio-representation))})
@@ -88,14 +88,14 @@
 
 (def notify-price-highlight
   {:name     :notify-price-highlight
-   :cron-exp {:minute [:+ 20] :hour [:+ 10 16 18] :day-of-week [:+ :mon :tue :wed :thu :fri]}
-   :cron     (new-cron {:minute [:+ 20] :hour [:+ 10 16 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :cron-exp {:minute [:+ 20] :hour [:+ 10 16 20] :day-of-week [:+ :mon :tue :wed :thu :fri]}
+   :cron     (new-cron {:minute [:+ 20] :hour [:+ 10 16 20] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :fn       #(t.bot/send-command bot nil :daily)})
 
 (def notify-portfolio-total
   {:name     :notify-portfolio-total
-   :cron-exp {:minute [:+ 0] :hour [:+ 10 16 18] :day-of-week [:+ :mon :tue :wed :thu :fri]}
-   :cron     (new-cron {:minute [:+ 0] :hour [:+ 10 16 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :cron-exp {:minute [:+ 0] :hour [:+ 10 16 20] :day-of-week [:+ :mon :tue :wed :thu :fri]}
+   :cron     (new-cron {:minute [:+ 0] :hour [:+ 10 16 20] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :fn       #(t.bot/send-command bot nil :total)})
 
 (def check-telegram-new-message
@@ -124,7 +124,7 @@
                  "**********Evaluating Start**********"
                  (:end log-colors)))
   (doseq [{:keys [name] :as s} @schedulers]
-    (log/info (str (:bold log-colors)
+    #_(log/info (str (:bold log-colors)
                    "Evaluating " name
                    (:end log-colors)))
     (let [new-cron (its-time-validate s)
