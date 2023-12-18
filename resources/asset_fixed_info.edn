@@ -303,7 +303,16 @@
  :CAKE   {:category [:crypto]
           :alpha-vantage-allowed? true}
  :FANTOM {:category [:crypto]
-          :alpha-vantage-allowed? false}}
-
-
-
+          :alpha-vantage-allowed? false}
+ :AMAT {:category [:ti]
+        :alpha-vantage-allowed? true
+        :exchange :nasdaq}
+ :LRCX {:category [:ti]
+        :alpha-vantage-allowed? true
+        :exchange :nasdaq}
+ :ASML {:category [:ti]
+        :alpha-vantage-allowed? true
+        :exchange :nasdaq}
+ :KLAC {:category [:ti]
+        :alpha-vantage-allowed? true
+        :exchange :nasdaq}}
