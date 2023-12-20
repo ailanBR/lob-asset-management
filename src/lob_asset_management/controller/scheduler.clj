@@ -62,8 +62,8 @@
 
 (def get-stock-price
   {:name :get-stock-price
-   :cron-exp {:minute [:* 8] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]}
-   :cron     (new-cron {:minute [:* 8] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :cron-exp {:minute [:* 4] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]}
+   :cron     (new-cron {:minute [:* 4] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :times    :continuous
    :fn       #(do
                 (c.m/update-asset-market-price)
@@ -72,8 +72,8 @@
 
 (def get-stock-hist
   {:name :get-stock-hist
-   :cron-exp {:minute [:* 8] :hour [:+ 10 18]}
-   :cron     (new-cron {:minute [:* 8] :hour [:+ 10 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :cron-exp {:minute [:* 4] :hour [:+ 10 18]}
+   :cron     (new-cron {:minute [:* 4] :hour [:+ 10 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :fn       #(do
                 (c.m/update-asset-market-price-historic)
                 (c.p/update-portfolio-representation))})

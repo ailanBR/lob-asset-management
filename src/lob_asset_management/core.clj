@@ -175,18 +175,33 @@
     [:transaction/id :transaction/created-at :transaction/operation-type :transaction/quantity :transaction/average-price]
     (->> (lob-asset-management.db.transaction/get-all)
          ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
-         ;(filter #(or (= :SMTO3 (:transaction.asset/ticket %))))
+         (filter #(or (= :SULA11 (:transaction.asset/ticket %))))
          (remove #(contains?
-                    #{:buy :sell :JCP :income :dividend}
+                    #{:sell :JCP :income :dividend :bonificaçãoemativos
+                      :fraçãoemativos :transferência :waste :incorporation}
                     (:transaction/operation-type %)))
-         (filter #(or (= :RDOR3 (:transaction.asset/ticket %))))
+         #_(filter #(or (= :SQIA3 (:transaction.asset/ticket %))
+                      (= :EVTC31 (:transaction.asset/ticket %))))
          ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
          ;(sort-by :transaction/exchange)
          ;(sort-by :transaction.asset/ticket)
          (sort-by :transaction/created-at)
          ))
 
-
+  (->> (lob-asset-management.db.transaction/get-all)
+       ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
+       (filter #(or (= :SULA11 (:transaction.asset/ticket %))))
+       (remove #(contains?
+                  #{:sell :JCP :income :dividend :bonificaçãoemativos
+                    :fraçãoemativos :transferência :waste :incorporation}
+                  (:transaction/operation-type %)))
+       #_(filter #(or (= :SQIA3 (:transaction.asset/ticket %))
+                      (= :EVTC31 (:transaction.asset/ticket %))))
+       ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
+       ;(sort-by :transaction/exchange)
+       ;(sort-by :transaction.asset/ticket)
+       (sort-by :transaction/created-at)
+       (reduce #(+ %1 (:transaction/quantity %2)) 0))
   ;=========================================
   (def in (lob-asset-management.relevant/incorporation-movements))
 

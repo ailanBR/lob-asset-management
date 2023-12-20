@@ -315,4 +315,8 @@
         :exchange :nasdaq}
  :KLAC {:category [:ti]
         :alpha-vantage-allowed? true
-        :exchange :nasdaq}}
+        :exchange :nasdaq}
+ :EVTC31 {:name "Evertec Inc"
+          :category [:ti]
+          :alpha-vantage-allowed? true
+          :exchange :bovespa}}

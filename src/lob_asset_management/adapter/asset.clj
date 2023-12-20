@@ -79,7 +79,7 @@
   (let [ticket (movement-ticket->asset-ticket product)
         {:keys [name tax-number category]} (get asset-more-info ticket)
         asset-type (ticket->asset-type ticket)]
-    {:asset/id         (UUID/randomUUID)
+    {:asset/id         (aux.u/string->uuid (name ticket))
      :asset/name       (or name (str product))
      :asset/ticket     ticket
      :asset/category   (or category [:unknown])

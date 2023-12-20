@@ -37,4 +37,14 @@
   :currency         "BRL"
   :movement-type    "Incorporation"
   :incorporated-by  "RDOR3"
-  :factor           "*-0.765234"}]
+  :factor           "*-0.765234"}
+ {:transaction-date "06/11/2023"
+  :unit-price       "0,00"                                  ;All position value
+  :quantity         0                                       ;All position value
+  :exchange         "INTER DTVM LTDA"
+  :product          "SQIA3 - SINQIA"
+  :operation-total  "0,00"                                  ;All position value
+  :currency         "BRL"
+  :movement-type    "Incorporation"
+  :incorporated-by  "EVTC31"
+  :factor           "*-0.00693"}]
