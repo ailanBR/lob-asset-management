@@ -77,11 +77,12 @@
   [{current-price :asset.market-price/price
     current-date :asset.market-price/price-date}
    {:keys [price date]}]
-  (or (or (nil? current-date) (nil? current-date))
-      (and (not (= current-price price))
-           (> price 0M)
-           (<= (aux.t/date-keyword->miliseconds current-date)
-               (aux.t/date-keyword->miliseconds date)))))
+  (if (or (nil? current-date) (nil? current-date))
+    true
+    (and (not (= current-price price))
+         (> price 0M)
+         (<= (aux.t/date-keyword->miliseconds current-date)
+             (aux.t/date-keyword->miliseconds date)))))
 
 (defn price-change-percentage
   [current-price
@@ -175,7 +176,7 @@
                            asset))]
          (->> assets
               (map update-fn)
-              db.a/upsert!))))))
+              db.a/upsert-bulk!))))))
 
 (defn update-asset-updated-at
   [{:asset/keys [id] :as asset}
@@ -196,14 +197,14 @@
   [assets less-updated-asset]
   (let [updated-assets (update-assets-updated-at assets less-updated-asset)]
     (log/error "[MARKET-UPDATING] Alpha API limit have reached")
-    (db.a/upsert! updated-assets)))
+    (db.a/upsert-bulk! updated-assets)))
 
 (defn handle-retry-attempt
   [{:asset.market-price/keys [retry-attempts] :as less-updated-asset}
    assets]
   (log/info (str "Already retry [" (or retry-attempts 0) "], new attempt after 5sec"))
   (let [updated-assets (update-assets-retry-attempt assets less-updated-asset)]
-    (db.a/upsert! updated-assets)
+    (db.a/upsert-bulk! updated-assets)
     (Thread/sleep 5000)
     updated-assets))
 
@@ -222,7 +223,7 @@
        (let [market-last-price (get-market-price less-updated-asset (when args (first args)))
              updated-assets (update-assets assets less-updated-asset market-last-price)]
          (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
-         (db.a/upsert! updated-assets))
+         (db.a/upsert-bulk! updated-assets))
        (catch Exception e
          #_(t.b/send-error-command bot e)
          #_(log/error e)
@@ -257,11 +258,15 @@
 
 (comment
 
-  (->> (db.a/get-all)
-       (filter #(= (:asset/ticket %) :AMAT))
-       first
+  (->> #_(db.a/get-all)
+       #_(filter #(= (:asset/ticket %) :AMAT))
+       #_first
+       (db.a/get-by-ticket :AMAT)
        (get-market-price)
        )
+
+  (db.a/get-by-ticket :AMAT)
+
   (get-market-price)
   (update-asset-market-price)
   (def company-overview (io.http/get-company-overview "ABEV3.SA"))

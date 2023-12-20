@@ -1,4 +1,5 @@
-(ns lob-asset-management.aux.util)
+(ns lob-asset-management.aux.util
+  (:import (java.util UUID)))
 
 (defn assoc-if
   ([map new-args]
@@ -70,3 +71,10 @@
    :bold "\033[1m"
    :underline "\033[4m"})
 
+(defn string->uuid
+  [string]
+  (-> string
+      .getBytes
+      UUID/nameUUIDFromBytes
+      str
+      UUID/fromString))

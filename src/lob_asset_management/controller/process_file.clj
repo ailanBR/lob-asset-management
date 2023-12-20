@@ -19,7 +19,7 @@
         assets (a.a/movements->assets movements db-assets)]
     (when (not= db-assets assets)
       (log/info "[PROCESS ASSETS] New assets to be registered")
-      (db.a/upsert! assets)
+      (db.a/upsert-bulk! assets)
       assets)))
 
 (defn process-transactions
