@@ -4,6 +4,7 @@
             [lob-asset-management.controller.market :as c.m]
             [lob-asset-management.controller.portfolio :as c.p]
             [lob-asset-management.controller.telegram-bot :as t.bot :refer [bot]]
+            [lob-asset-management.db.asset :as db.a]
             [sbocq.cronit :as cronit]
             [java-time.api :as jt]
             [java-time.format :as jf]
@@ -110,13 +111,20 @@
    :cron     (new-cron {:hour [:* 3] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :fn       #(c.f/update-usd-price)})
 
+(def asset-backup
+  {:name     :snapshot
+   :cron-exp {:hour [:+ 7]}
+   :cron     (new-cron {:hour [:+ 7]})
+   :fn       #(db.a/snapshot)})
+
 (defonce schedulers (atom [get-stock-price
                            get-stock-hist
                            get-crypto-price
                            notify-price-highlight
                            notify-portfolio-total
                            check-telegram-new-message
-                           forex-update]))
+                           forex-update
+                           asset-backup]))
 
 (defn evaluate-schedulers
   []
