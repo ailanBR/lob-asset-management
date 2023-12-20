@@ -97,6 +97,19 @@
       ->internal
       first))
 
+(defn snapshot
+  []
+  (let [db-data (or (get-all) [])
+        assets (->> '{:find  [(pull ?e [*])]
+                      :where [[?e :asset/id _]]}
+                  (aux.xtdb/get! db-node)
+                  (map #(dissoc % :xt/id)))]
+    (->> db-data
+         (remove-already-exist assets)
+         (concat (or assets []))
+         (sort-by :asset/name)
+         (maybe-upsert! db-data))))
+
 (comment
   ;MIGRATION
   (let [from (io.f-in/get-file-by-entity :asset)

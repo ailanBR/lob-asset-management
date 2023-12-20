@@ -188,9 +188,6 @@
   [{:portfolio/keys [ticket total-cost transaction-ids exchanges dividend sell-profit]
     portfolio-quantity :portfolio/quantity :as portfolio}
    {:transaction/keys [id exchange incorporated-by factor]}]
-  (println ">" ticket)
-  (clojure.pprint/pprint portfolio)
-  (println ">" (:denominator factor))
   (if incorporated-by
     (let [quantity' (condp = (:operator factor)
                       "/" (/ portfolio-quantity (safe-big (:denominator factor)))
