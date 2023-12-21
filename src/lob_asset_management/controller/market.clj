@@ -240,10 +240,12 @@
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
 
 (defn update-asset-market-price-historic
+  ;FIXME: Allow the crypto asset to get historic
   []
   (if-let [assets (db.a/get-all)]
-    (update-asset-market-price assets 1 {:with-historic true
-                                         :ignore-timer true})
+    (-> assets
+        (filter #(contains? #{:stockBR :fii :stockEUA} (:asset/type %)))
+        (update-asset-market-price 1 {:with-historic true :ignore-timer true}))
     (log/error "[GET STOCK HISTORIC] update-asset-market-price-historic - can't get assets")))
 
 (defn update-crypto-market-price
@@ -252,11 +254,23 @@
      (update-crypto-market-price assets)
      (log/error "[GET CRYPTO PRICE] update-crypto-market-price - can't get assets")))
   ([assets]
-   (->> assets
-        (filter #(= :crypto (:asset/type %)))
-        update-asset-market-price)))
+   (-> #(= :crypto (:asset/type %))
+        (filter assets)
+        (update-asset-market-price 1 {:ignore-timer true}))))
+
+(defn update-stock-market-price
+  ([]
+   (if-let [assets (db.a/get-all)]
+     (update-stock-market-price assets)
+     (log/error "[GET STOCK PRICE] update-stock-market-price - can't get assets")))
+  ([assets]
+   (-> #(= :crypto (:asset/type %))
+        (remove assets)
+        (update-asset-market-price 1 {:ignore-timer true}))))
 
 (comment
+
+  (update-crypto-market-price)
 
   (->> #_(db.a/get-all)
        #_(filter #(= (:asset/ticket %) :AMAT))
@@ -265,7 +279,21 @@
        (get-market-price)
        )
 
-  (db.a/get-by-ticket :AMAT)
+  (db.a/get-by-ticket :INBR31)
+
+
+
+  (-> (db.a/get-all)
+      (a.a/sort-by-updated-at)
+      (clojure.pprint/print-table)
+      #_(get-market-price)
+      )
+
+
+  ;LIST ASSET NOT UPDATED TODAY
+  (let [assets (db.a/get-all)]
+    ()
+    )
 
   (get-market-price)
   (update-asset-market-price)

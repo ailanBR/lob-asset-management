@@ -7,8 +7,6 @@
             [lob-asset-management.db.asset :as db.a]
             [sbocq.cronit :as cronit]
             [java-time.api :as jt]
-            [java-time.format :as jf]
-            [java-time.util :as ju]
             [lob-asset-management.aux.time :as aux.time]
             [lob-asset-management.aux.util :refer [log-colors]]))
 
@@ -50,7 +48,7 @@
         current-millis (aux.time/get-millis)]
     (if (> current-millis next-millis)
       (its-time! schedule next)
-      (do (log/info (str (:okblue log-colors)
+      (do #_(log/info (str (:okblue log-colors)
                          "[X] Not yet " name
                          " N: " (-> next
                                     :current
@@ -63,26 +61,26 @@
 
 (def get-stock-price
   {:name :get-stock-price
-   :cron-exp {:minute [:* 4] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]}
-   :cron     (new-cron {:minute [:* 4] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :cron-exp {:minute [:* 3] :hour [:+ 11 12 13 14 15 16 17 22 23] :day-of-week [:+ :mon :tue :wed :thu :fri]}
+   :cron     (new-cron {:minute [:* 3] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :times    :continuous
    :fn       #(do
-                (c.m/update-asset-market-price)
+                (c.m/update-stock-market-price)
                 (c.p/update-portfolio-representation))
    :dependency #{:get-stock-hist}})
 
 (def get-stock-hist
   {:name :get-stock-hist
-   :cron-exp {:minute [:* 4] :hour [:+ 10 18]}
-   :cron     (new-cron {:minute [:* 4] :hour [:+ 10 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :cron-exp {:minute [:* 3] :hour [:+ 10 18]}
+   :cron     (new-cron {:minute [:* 3] :hour [:+ 10 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :fn       #(do
                 (c.m/update-asset-market-price-historic)
                 (c.p/update-portfolio-representation))})
 
 (def get-crypto-price
   {:name :get-crypto-price
-   :cron-exp {:minute [:* 10]}
-   :cron     (new-cron {:minute [:* 10]})
+   :cron-exp {:minute [:* 3]}
+   :cron     (new-cron {:minute [:* 3]})
    :fn       #(do
                 (c.m/update-crypto-market-price)
                 (c.p/update-portfolio-representation))})

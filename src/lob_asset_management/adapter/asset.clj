@@ -180,6 +180,20 @@
                            (filter-less-updated-than-target? min-updated-hours ignore-timer))]
     (or (take quantity filter-assets) nil)))
 
+(defn sort-by-updated-at
+  [assets]
+  (->> assets
+       filter-allowed-ticket
+       remove-disabled-ticket
+       remove-limit-attempts
+       (sort-by :asset.market-price/updated-at)
+       (map (fn [{:asset/keys [ticket]
+                  :asset.market-price/keys [updated-at price-date retry-attempts]}]
+              {:ticket ticket
+               :price-date price-date
+               :updated-at updated-at
+               :retry-attempts (or retry-attempts 0)}))))
+
 (defn external-news->internal
   [ticket name news]
   (map (fn [{:keys [id txt datetime href]}]
