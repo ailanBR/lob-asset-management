@@ -62,7 +62,7 @@
 (def get-stock-price
   {:name :get-stock-price
    :cron-exp {:minute [:* 3] :hour [:+ 11 12 13 14 15 16 17 22 23] :day-of-week [:+ :mon :tue :wed :thu :fri]}
-   :cron     (new-cron {:minute [:* 3] :hour [:+ 11 12 13 14 15 16 17] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :cron     (new-cron {:minute [:* 3] :hour [:+ 11 12 13 14 15 16 17 22 23] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :times    :continuous
    :fn       #(do
                 (c.m/update-stock-market-price)

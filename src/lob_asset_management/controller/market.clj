@@ -11,7 +11,8 @@
 
 (defn- asset-news-new-one
   [received-news]
-  (let [stored-news (db.an/get-by-ticket (-> received-news first :asset-news/ticket))]
+  (let [received-ids (map :asset-news/id received-news)
+        stored-news (db.an/get-by-ids received-ids)]
     (if (empty? stored-news)
       received-news
       (let [stored-ids (->> stored-news (map :asset-news/id) set)
@@ -243,8 +244,8 @@
   ;FIXME: Allow the crypto asset to get historic
   []
   (if-let [assets (db.a/get-all)]
-    (-> assets
-        (filter #(contains? #{:stockBR :fii :stockEUA} (:asset/type %)))
+    (-> #(contains? #{:stockBR :fii :stockEUA} (:asset/type %))
+        (filter assets)
         (update-asset-market-price 1 {:with-historic true :ignore-timer true}))
     (log/error "[GET STOCK HISTORIC] update-asset-market-price-historic - can't get assets")))
 
@@ -275,7 +276,7 @@
   (->> #_(db.a/get-all)
        #_(filter #(= (:asset/ticket %) :AMAT))
        #_first
-       (db.a/get-by-ticket :AMAT)
+       (db.a/get-by-ticket :COIN)
        (get-market-price)
        )
 
