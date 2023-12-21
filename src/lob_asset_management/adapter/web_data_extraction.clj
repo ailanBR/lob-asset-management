@@ -106,13 +106,9 @@
                    from (-> cnt rest rest f-content f-content first)
                    txt (-> cnt l-content f-content first)
                    href (string/join ["https:" (-> cnt l-content first :attrs :href)])]
-               {:id   (-> "-"
-                          (string/join [dt hr from])
-                          (string/replace #" " "-")
-                          (string/replace #"/" "-")
-                          (string/replace #":" "-"))
-                :txt  txt
+               {:txt  txt
                 :datetime (string/join " " [dt hr])
+                :from from
                 :href href}))
        rest))
 

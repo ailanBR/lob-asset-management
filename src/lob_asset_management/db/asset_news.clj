@@ -89,8 +89,58 @@
             (-> ticket name clojure.string/upper-case keyword))
       ->internal))
 
+(defmulti get-by-ids (fn [_] (or (:env config) :dev)))
+
+(s/defmethod get-by-ids :dev :- (s/maybe [m.an/AssetNews])
+  [ids :- [s/Str]]
+  (let [db-data (get-all)]
+   (->> db-data
+        (filter #(contains? (set ids) (:asset-news/id %)))
+        first)))
+
+(s/defmethod get-by-ids :prod :- (s/maybe [m.an/AssetNews])
+  [ids :- [s/Str]]
+  (-> db-node
+     xt/db
+     (xt/q '{:find  [(pull ?e [*])]
+             :in    [[?ids ...]]
+             :where [[?e :asset-news/id ?ids]]}
+           ids)
+     ->internal))
+
 (comment
 
   (xt/sync db-node)
 
+  ;MIGRATE STRING IDS -> UUID
+  (let [from (get-by-ticket :COIN)
+        changed (map (fn [{:asset-news/keys [href] :as a}]
+                       (assoc a :asset-news/id (lob-asset-management.aux.util/string->uuid href)))
+                     from)]
+    changed
+    (upsert-bulk! changed)
+    (doseq [a from]
+      (println (:asset-news/id a))
+      (aux.xtdb/delete! db-node (:asset-news/id a)))
+
+    )
+
+  (def bkb (get-by-ticket :COIN))
+
+  (-> db-node
+      xt/db
+      (xt/q '{:find  [(pull ?e [*])]
+              :in    [?t]
+              :where [[?e :asset-news/ticket ?t]]}
+            :COIN))
+
+  (aux.xtdb/delete! db-node #uuid"0fbaa4df-b563-3502-a364-297a7c367995")
+
+  (upsert!  #:asset-news{:ticket :INBR32,
+                         :name "INBR32",
+                         :id "21-12-2023-15-37-LOB-News-(BR)",
+                         :txt "INBR32 go to the moon Lob news..",
+                         :datetime "21/12/2023 15:37",
+                         :href "https://br.advfn.com/noticias/INBR32/2023/artigo/1"})
+;(-> a :asset-news/id name string->uuid)
   )
