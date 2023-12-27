@@ -2,9 +2,14 @@
   (:require [clojure.tools.logging :as log]
             [lob-asset-management.adapter.asset :as a.a]
             [lob-asset-management.logic.portfolio :as l.p]
-            [lob-asset-management.aux.util :refer [assoc-if abs]]
+            [lob-asset-management.aux.util :refer [assoc-if abs string->uuid]]
             [lob-asset-management.aux.time :as aux.t]
-            [lob-asset-management.aux.money :refer [safe-big safe-dob safe-number->bigdec]]))
+            [lob-asset-management.aux.money :refer [safe-big safe-dob safe-number->bigdec]]
+            [schema.core :as s]))
+
+(s/defn ticket->portfolio-id :- s/Uuid
+  [ticket :- s/Keyword]
+  (->> ticket name (str "portfolio/") string->uuid))
 
 (defmulti update-quantity (fn [_ _ op] (keyword op)))
 
@@ -187,11 +192,12 @@
 (defmethod transaction->portfolio :incorporation
   [{:portfolio/keys [ticket total-cost transaction-ids exchanges dividend sell-profit]
     portfolio-quantity :portfolio/quantity :as portfolio}
-   {:transaction/keys [id exchange incorporated-by factor]}]
+   {:transaction/keys [id exchange incorporated-by factor] :as t}]
   (if incorporated-by
     (let [quantity' (condp = (:operator factor)
                       "/" (/ portfolio-quantity (safe-big (:denominator factor)))
-                      "*" (* portfolio-quantity (safe-big (:denominator factor))))
+                      "*" (* portfolio-quantity (safe-big (:denominator factor)))
+                      "+" (+ portfolio-quantity (safe-big (:denominator factor))))
           average-price' (/ total-cost quantity')]
       {:portfolio/ticket          incorporated-by
        :portfolio/average-price   average-price'

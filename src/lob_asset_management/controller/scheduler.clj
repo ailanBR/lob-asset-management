@@ -65,22 +65,23 @@
    :cron     (new-cron {:minute [:* 3] :hour [:+ 11 12 13 14 15 16 17 22 23] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :times    :continuous
    :fn       #(do
+                (c.m/reset-retry-attempts)
                 (c.m/update-stock-market-price)
                 (c.p/update-portfolio-representation))
    :dependency #{:get-stock-hist}})
 
 (def get-stock-hist
   {:name :get-stock-hist
-   :cron-exp {:minute [:* 3] :hour [:+ 10 18]}
-   :cron     (new-cron {:minute [:* 3] :hour [:+ 10 18] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :cron-exp {:minute [:* 2] :hour [:+ 10 15 16 18]}
+   :cron     (new-cron {:minute [:* 2] :hour [:+ 10 18 15 16] :day-of-week [:+ :mon :tue :wed :thu :fri :sat]})
    :fn       #(do
                 (c.m/update-asset-market-price-historic)
                 (c.p/update-portfolio-representation))})
 
 (def get-crypto-price
   {:name :get-crypto-price
-   :cron-exp {:minute [:* 3]}
-   :cron     (new-cron {:minute [:* 3]})
+   :cron-exp {:minute [:* 2]}
+   :cron     (new-cron {:minute [:* 2]})
    :fn       #(do
                 (c.m/update-crypto-market-price)
                 (c.p/update-portfolio-representation))})
