@@ -17,10 +17,7 @@
   (log/info "[PROCESS ASSETS] Started")
   (let [db-assets (db.a/get-all)
         assets (a.a/movements->assets movements db-assets)]
-    (when (not= db-assets assets)
-      (log/info "[PROCESS ASSETS] New assets to be registered")
-      (db.a/upsert-bulk! assets)
-      assets)))
+    (db.a/upsert-bulk! assets)))
 
 (defn process-transactions
   [movements]

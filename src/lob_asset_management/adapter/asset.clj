@@ -74,13 +74,18 @@
           clojure.string/upper-case
           keyword))))
 
+(s/defn ticket->asset-id :- s/Uuid
+  [ticket :- s/Keyword]
+  (-> ticket name (str "asset/") aux.u/string->uuid))
+
 (s/defn movements->asset :- m.a/Asset
   [{:keys [product]}]
   (let [ticket (movement-ticket->asset-ticket product)
-        {:keys [name tax-number category]} (get asset-more-info ticket)
+        {:keys [tax-number category]
+         name' :name} (get asset-more-info ticket)
         asset-type (ticket->asset-type ticket)]
-    {:asset/id         (aux.u/string->uuid (name ticket))
-     :asset/name       (or name (str product))
+    {:asset/id         (ticket->asset-id ticket)
+     :asset/name       (or name' (str product))
      :asset/ticket     ticket
      :asset/category   (or category [:unknown])
      :asset/type       (ticket->asset-type ticket)
@@ -89,7 +94,7 @@
 
 (defn remove-already-exist-asset
   [assets-keep asset-filtered]
-  (remove #(l.a/already-exist? (:asset/ticket %) assets-keep) asset-filtered))
+  (remove #(l.a/already-exist? (:asset/ticket %) asset-filtered) assets-keep))
 
 (defn update-assets
   [assets db-assets]
@@ -116,7 +121,6 @@
                "read assets [" (count mov-assets) "] "
                "result [" (count new-assets) "]")
      new-assets)))
-
 
 (defn remove-disabled-ticket
   [assets]

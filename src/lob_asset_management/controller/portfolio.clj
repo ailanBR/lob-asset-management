@@ -66,20 +66,29 @@
          (sort-by :transaction/created-at)
          (reduce #(a.p/transaction->portfolio %1 %2) {}))))
 
+(defn usd-price->brl
+  [usd-last-price last-price ticket]
+  (if usd-last-price
+    (* usd-last-price last-price)
+    (throw
+      (ex-info
+        (str "[PORTFOLIO - usd-price->brl] Don't find current USD price for " ticket)
+        {:ticket ticket
+         :usd-last-price usd-last-price
+         :last-price last-price}))))
+
 (defn get-position-value
   [assets usd-last-price {:portfolio/keys [average-price ticket quantity]}]
   (let [{:asset/keys [type]
          last-price  :asset.market-price/price} (->> assets (filter #(= (:asset/ticket %) ticket)) first)
-        position-current-price (if (and (= :stockEUA type)
-                                        last-price
-                                        usd-last-price)
-                                 (* usd-last-price last-price)
+        position-current-price (if (= :stockEUA type)
+                                 (usd-price->brl usd-last-price last-price ticket)
                                  last-price)
         position-value (* (or position-current-price average-price) quantity)]
     (when (and (> average-price 0M)
                (not position-current-price)
                (not (contains? #{:LINX3 :DEFI11 :USDT :SULA3 :BSEV3 :SULA11 :S3TE11} ticket)))
-      (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
+      (log/error (str "[PORTFOLIO - get-position-value] Don't find current value for " ticket)))
     position-value))
 
 (defn set-portfolio-representation
@@ -94,7 +103,7 @@
              (when (and (> average-price 0M)
                         (<= position-value 0M)
                         (not (contains? #{:SULA3 :BSEV3 :SULA11} ticket)))
-               (log/error (str "[PORTFOLIO] Don't find current value for " ticket)))
+               (log/error (str "[PORTFOLIO - set-portfolio-representation] Don't find current value for " ticket)))
              (assoc portfolio-row
                :portfolio/total-last-value position-value
                :portfolio/percentage (l.p/position-percentage total-portfolio position-value)
@@ -152,7 +161,7 @@
           portfolio (transactions->portfolio asset-transactions assets forex-usd)]
       (when (-> args first :db-update)
         (log/info "[PROCESS PORTFOLIO] New portfolio records to be registered")
-        (db.p/upsert! portfolio))
+        (db.p/upsert-bulk! portfolio))
       portfolio)
     (log/warn "[PROCESS PORTFOLIO] No new portfolio records to be registered")))
 
@@ -170,7 +179,6 @@
        (log/info "[PROCESS PORTFOLIO] New portfolio info to be registered")
        (db.p/overwrite! updated-portfolio)
        updated-portfolio))))
-
 
 ;Portfolio category====================================================
 (defn consolidate-categories

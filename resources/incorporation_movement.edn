@@ -38,7 +38,7 @@
   :movement-type    "Incorporation"
   :incorporated-by  "RDOR3"
   :factor           "*-0.765234"}
- {:transaction-date "06/11/2023"
+ {:transaction-date "09/11/2023"
   :unit-price       "0,00"                                  ;All position value
   :quantity         0                                       ;All position value
   :exchange         "INTER DTVM LTDA"
@@ -46,5 +46,15 @@
   :operation-total  "0,00"                                  ;All position value
   :currency         "BRL"
   :movement-type    "Incorporation"
+  :incorporated-by  "E9TC11"
+  :factor           "*-1"}
+ {:transaction-date "11/12/2023"                            ;Better put 1 day before the first event
+  :unit-price       "0,00"                                  ;All position value
+  :quantity         0                                       ;All position value
+  :exchange         "INTER DTVM LTDA"
+  :product          "E9TC11 - EVERTEC"
+  :operation-total  "0,00"                                  ;All position value
+  :currency         "BRL"
+  :movement-type    "Incorporation"
   :incorporated-by  "EVTC31"
-  :factor           "*-0.00693"}]
+  :factor           "+-0.19"}]

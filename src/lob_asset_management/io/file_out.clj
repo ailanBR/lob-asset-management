@@ -14,6 +14,7 @@
         root-directory (:out-data-path config)]
     (str root-directory file-name "/" file-name ".edn")))
 
+
 (defn backup-folder
   [file-name]
   (str (:out-data-path config) file-name "/bkp/"))

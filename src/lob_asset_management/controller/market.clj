@@ -163,21 +163,20 @@
 
 (defn reset-retry-attempts
   ([]
-   (if-let [assets (db.a/get-all)]
+   (if-let [assets (db.a/get-with-retry)]
      (reset-retry-attempts assets)
      (log/error "[MARKET-UPDATING] update-asset-market-price - can't get assets")))
   ([assets]
-   (let [any-to-reset? (->> assets (filter :asset.market-price/retry-attempts) empty? not)]
-     (when any-to-reset?
-       (let [update-fn (fn [{:asset.market-price/keys [retry-attempts updated-at] :as asset}]
-                         (if (and retry-attempts
-                                  updated-at
-                                  (aux.t/less-updated-than-target? 6 updated-at))
-                           (dissoc asset :asset.market-price/retry-attempts)
-                           asset))]
-         (->> assets
-              (map update-fn)
-              db.a/upsert-bulk!))))))
+   (when (seq assets)
+     (let [update-fn (fn [{:asset.market-price/keys [retry-attempts updated-at] :as asset}]
+                       (if (and retry-attempts
+                                updated-at
+                                (aux.t/less-updated-than-target? 1 updated-at))
+                         (dissoc asset :asset.market-price/retry-attempts)
+                         asset))]
+       (->> assets
+            (map update-fn)
+            db.a/upsert-bulk!)))))
 
 (defn update-asset-updated-at
   [{:asset/keys [id] :as asset}
