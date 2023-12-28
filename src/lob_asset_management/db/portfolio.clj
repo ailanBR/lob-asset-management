@@ -118,6 +118,12 @@
             (-> ticket name clojure.string/upper-case keyword))
       ffirst))
 
+(defn snapshot
+  []
+  (->> (get-all)
+       (sort-by :portfolio/ticket)
+       (io.f-out/upsert)))
+
 (comment
   (get-by-ticket :CNBS)
   )
