@@ -24,7 +24,7 @@
   (log/info "[PROCESS TRANSACTIONS] Started")
   (let [usd-price (db.f/get-all)
         transactions (a.t/movements->transactions movements usd-price)]
-    (db.t/upsert! transactions)))
+    (db.t/upsert-bulk! transactions)))
 
 (defn process-movement
   [movements]

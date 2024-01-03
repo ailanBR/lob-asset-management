@@ -32,16 +32,6 @@
               string/lower-case
               keyword)))
 
-(s/defn gen-transaction-id
-  [{:keys [transaction-date unit-price quantity product exchange] :as movement}]
-  (let [operation-type (movement-type->transaction-type movement)
-        ticket (a.a/movement-ticket->asset-ticket product)
-        exchange' (movement-exchange->transaction-exchange exchange)]
-    (-> (str ticket "-" transaction-date "-" unit-price "-" quantity "-" operation-type "-" exchange')
-        (string/replace "/" "")
-        (string/replace ":" ""))))
-
-
 (defn mov-date->transaction-created-at
   [date]
   (let [split (string/split date #"/")]
@@ -76,6 +66,28 @@
       {:operator    (first factor')
        :denominator (-> factor' second bigdec)})))
 
+(s/defn gen-transaction-id
+  [{:keys [transaction-date unit-price quantity product exchange] :as movement}]
+  (let [operation-type (movement-type->transaction-type movement)
+        ticket (a.a/movement-ticket->asset-ticket product)
+        exchange' (movement-exchange->transaction-exchange exchange)]
+    (-> (str ticket "-" transaction-date "-" unit-price "-" quantity "-" operation-type "-" exchange')
+        (string/replace "/" "")
+        (string/replace ":" ""))))
+
+(s/defn transaction->id :- s/Uuid
+  ([{:transaction/keys [ticket created-at average-price quantity operation-type exchange]}]
+   (-> (str ticket "-" created-at "-" average-price "-" quantity "-" operation-type "-" exchange)
+       aux.u/string->uuid))
+  ([ticket
+    created-at
+    average-price
+    quantity
+    exchange
+    operation-type]
+   (-> (str ticket "-" created-at "-" average-price "-" quantity "-" operation-type "-" exchange)
+       aux.u/string->uuid)))
+
 (s/defn movements->transaction :- m.t/Transaction
   [{:keys [transaction-date unit-price quantity exchange product operation-total currency
            incorporated-by factor] :as movement}
@@ -90,15 +102,19 @@
         operation-total-bigdec (safe-number->bigdec operation-total)
         operation-total' (if (= currency' :UST)
                            (brl-price operation-total-bigdec transaction-date brl->usd-historic)
-                           operation-total-bigdec)]
+                           operation-total-bigdec)
+        created-at (mov-date->transaction-created-at (str transaction-date))
+        average-price (safe-number->bigdec unit-price')
+        quantity' (safe-number->bigdec quantity)
+        exchange' (movement-exchange->transaction-exchange exchange)]
     ;(println "[TRANSACTION] Row => " movement)
     (aux.u/assoc-if
-      {:transaction/id              (gen-transaction-id movement)
-       :transaction/created-at      (mov-date->transaction-created-at (str transaction-date))
+      {:transaction/id              (transaction->id ticket created-at average-price quantity' exchange' operation-type)
+       :transaction/created-at      created-at
        :transaction.asset/ticket    ticket
-       :transaction/average-price   (safe-number->bigdec unit-price')
-       :transaction/quantity        (safe-number->bigdec quantity)
-       :transaction/exchange        (movement-exchange->transaction-exchange exchange)
+       :transaction/average-price   average-price
+       :transaction/quantity        quantity'
+       :transaction/exchange        exchange'
        :transaction/operation-type  operation-type
        :transaction/processed-at    (-> (t/local-date-time) str)
        :transaction/operation-total (safe-number->bigdec operation-total')

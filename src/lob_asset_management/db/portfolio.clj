@@ -99,7 +99,6 @@
   []
   (delete! (get-all)))
 
-
 (defmulti get-by-ticket (fn [_] (or (:env config) :dev)))
 
 (defmethod get-by-ticket :dev
