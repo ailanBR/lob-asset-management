@@ -22,7 +22,6 @@
 
 (defn- html-resource
   [endpoint]
-  (println endpoint)
   (let [result (-> endpoint
                    java.net.URL.
                    html/html-resource)]

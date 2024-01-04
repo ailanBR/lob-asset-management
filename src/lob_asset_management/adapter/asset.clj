@@ -125,7 +125,6 @@
 
 (defn remove-disabled-ticket
   [assets]
-  (println "remove-disabled-ticket>" (count assets))
   (remove (fn [{:asset/keys [ticket]}]
             (contains? #{:INHF12 :USDT :SULA3 :SULA11} ticket)) assets))
 
@@ -142,7 +141,6 @@
 
 (defn filter-allowed-ticket
   [assets]
-  (println "filter-allowed-ticket>" (count assets))
   (filter #(allowed-ticket-get-market-info? (:asset/ticket %)) assets))
 
 (defn filter-less-updated-than-target?                      ;TODO: Receive milliseconds instead target-hours
@@ -175,7 +173,6 @@
      :day-of-week -> On weekends get only crypto prices [default => 1 (Monday)]"
   [assets & args]
   {:pre [(boolean assets)]}
-  (println "get-less-market-price-updated>" (count assets))
   (let [{:keys [quantity min-updated-hours
                 type day-of-week ignore-timer]} (get-less-updated-config (first args))
         type' (if (> day-of-week 5) #{:crypto} type)
