@@ -82,8 +82,8 @@
   (let [{:asset/keys [type]
          last-price  :asset.market-price/price} (->> assets (filter #(= (:asset/ticket %) ticket)) first)
         position-current-price (if (= :stockEUA type)
-                                 (usd-price->brl usd-last-price last-price ticket)
-                                 last-price)
+                                 (usd-price->brl usd-last-price (or last-price average-price) ticket)
+                                 (or last-price average-price))
         position-value (* (or position-current-price average-price) quantity)]
     (when (and (> average-price 0M)
                (not position-current-price)

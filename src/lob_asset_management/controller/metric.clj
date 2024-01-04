@@ -1,22 +1,16 @@
 (ns lob-asset-management.controller.metric
   (:require [clojure.tools.logging :as log]
+            [lob-asset-management.db.metric :as db.m]
             [lob-asset-management.aux.time :as aux.t]
-            [lob-asset-management.io.file-in :as io.f-in]
-            [lob-asset-management.io.file-out :as io.f-out]))
+            [lob-asset-management.io.file-in :as io.f-in]))
 
 (defn add-api-call
   [endpoint]
-  (let [{:metric/keys [api-call] :as metric} (io.f-in/get-file-by-entity :metric)
-        api-call' (->> {:endpoint endpoint
-                        :when     (aux.t/current-datetime->str)}
-                       list
-                       (concat (or api-call []))
-                       (assoc metric :metric/api-call))
-        ]
-    (try
-      (io.f-out/metric-file api-call')
-      (catch Exception e
-        (log/error "[METRICS] Error when writing metric information")))))
+  (try
+    (db.m/upsert! #:metric{:endpoint endpoint
+                           :when     (aux.t/current-datetime->str)})
+    (catch Exception e
+      (log/error "[METRICS] Error when writing metric information"))))
 
 (defn total-api-calls
   ([]

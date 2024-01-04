@@ -144,38 +144,7 @@
       (aux.xtdb/delete! db-node (-> a :asset/ticket name string->uuid))))
 
   ;-----------------
-  (xt/sync db-node)
-  (get-by-ticket :CNBS)
-  (get-all)
-  (-> db-node
-      xt/db
-      (xt/q '{:find  [(pull ?e [*])]
-              :in    [?t]
-              :where [[?e :asset/id ?t]]}
-            (a.a/ticket->asset-id :CNBS))
-      ->internal
-      first
-      )
-  ;------------------
-  (def s #:asset{:id #uuid"70201091-29ab-3765-bbb0-4de8cebc4cb8",
-                 :name "SULA11 - SUL AMERICA S.A.",
-                 :ticket :SULA11,
-                 :category [:ti],
-                 :type :stockBR,
-                 :tax-number "29.978.814/0001-87"})
-  (-> db-node
-      xt/db
-      (xt/q '{:find  [(pull ?e [*])]
-              :in    [?t]
-              :where [[?e :xt/id ?t]]}
-            #uuid"3a371322-08d6-34cb-9ca8-1aa16ef5eb66")
-      ->internal
-      first)
-  (def su (upsert! s))
-  (get-by-ticket :SULA11)
-  (string->uuid "CNBS")
-  (upsert-bulk! su)
-  (get-by-ticket :CNBS)
-
+  (get-by-ticket :LINK)
+  (aux.xtdb/delete! db-node #uuid"04fbbfbd-005c-3db7-9772-7e80df538e31")
 
   )

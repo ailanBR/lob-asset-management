@@ -302,6 +302,8 @@
           :alpha-vantage-allowed? true}
  :CAKE   {:category [:crypto]
           :alpha-vantage-allowed? true}
+ :LINK   {:category [:crypto]
+          :alpha-vantage-allowed? true}
  :FANTOM {:category [:crypto]
           :alpha-vantage-allowed? false}
  :AMAT {:category [:ti]

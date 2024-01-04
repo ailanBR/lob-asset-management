@@ -30,7 +30,8 @@
       :BUSD :binance-usd
       :MATIC :matic-network
       :STX :blockstack
-      :USDT :tether)))
+      :USDT :tether
+      :LINK :chainlink)))
 
 (s/defn ticket->asset-type :- s/Keyword
   [ticket :- s/Keyword]
@@ -93,7 +94,7 @@
                                   (contains? #{:fii :stockBR} asset-type)) (aux.u/format-br-tax tax-number))}))
 
 (defn remove-already-exist-asset
-  [assets-keep asset-filtered]
+  [asset-filtered assets-keep]
   (remove #(l.a/already-exist? (:asset/ticket %) asset-filtered) assets-keep))
 
 (defn update-assets
@@ -115,7 +116,7 @@
                          (map #(-> % val first)))
          new-assets (->> mov-assets
                          (remove-already-exist-asset db-data)
-                         (concat (or db-data []))
+                         (concat (or db-data []))           ;TODO: Maybe can be removed (Considering only new assets)
                          (sort-by :asset/name))]
      (log/info "[ASSET] Concluded adapter... "
                "read assets [" (count mov-assets) "] "

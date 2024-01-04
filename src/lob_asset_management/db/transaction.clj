@@ -15,7 +15,7 @@
   (try
     (io.f-in/get-file-by-entity :transaction)
     (catch Exception e
-      (throw (ex-info "Error when getting portfolio information" {:cause e})))))
+      (throw (ex-info "Error when getting transaction information" {:cause e})))))
 
 (defmethod get-all :prod
   []
