@@ -30,7 +30,8 @@
       :BUSD :binance-usd
       :MATIC :matic-network
       :STX :blockstack
-      :USDT :tether)))
+      :USDT :tether
+      :LINK :chainlink)))
 
 (s/defn ticket->asset-type :- s/Keyword
   [ticket :- s/Keyword]
@@ -93,7 +94,7 @@
                                   (contains? #{:fii :stockBR} asset-type)) (aux.u/format-br-tax tax-number))}))
 
 (defn remove-already-exist-asset
-  [assets-keep asset-filtered]
+  [asset-filtered assets-keep]
   (remove #(l.a/already-exist? (:asset/ticket %) asset-filtered) assets-keep))
 
 (defn update-assets
@@ -115,7 +116,7 @@
                          (map #(-> % val first)))
          new-assets (->> mov-assets
                          (remove-already-exist-asset db-data)
-                         (concat (or db-data []))
+                         (concat (or db-data []))           ;TODO: Maybe can be removed (Considering only new assets)
                          (sort-by :asset/name))]
      (log/info "[ASSET] Concluded adapter... "
                "read assets [" (count mov-assets) "] "
@@ -124,6 +125,7 @@
 
 (defn remove-disabled-ticket
   [assets]
+  (println "remove-disabled-ticket>" (count assets))
   (remove (fn [{:asset/keys [ticket]}]
             (contains? #{:INHF12 :USDT :SULA3 :SULA11} ticket)) assets))
 
@@ -140,6 +142,7 @@
 
 (defn filter-allowed-ticket
   [assets]
+  (println "filter-allowed-ticket>" (count assets))
   (filter #(allowed-ticket-get-market-info? (:asset/ticket %)) assets))
 
 (defn filter-less-updated-than-target?                      ;TODO: Receive milliseconds instead target-hours
@@ -172,6 +175,7 @@
      :day-of-week -> On weekends get only crypto prices [default => 1 (Monday)]"
   [assets & args]
   {:pre [(boolean assets)]}
+  (println "get-less-market-price-updated>" (count assets))
   (let [{:keys [quantity min-updated-hours
                 type day-of-week ignore-timer]} (get-less-updated-config (first args))
         type' (if (> day-of-week 5) #{:crypto} type)

@@ -117,6 +117,14 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
 :portfolio.profit-loss/percentage 
 :portfolio.profit-loss/value
 ```
+### How to Add new Asset
+
+#### Crypto
+
+1. Add the ticket in the `lob-asset-management.models.asset/crypto-list` 
+2. Include the asset in the `resources/asset_fixed_info.edn`
+3. Include the corresponding asset id for get price into `lob-asset-management.adapter.asset/in-ticket->out-crypto-id`
+
 --------------
 ### Portfolio Balance [TODO]
 

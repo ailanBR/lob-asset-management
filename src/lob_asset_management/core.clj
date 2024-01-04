@@ -14,6 +14,7 @@
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.forex :as db.f]
             [lob-asset-management.db.portfolio :as db.p]
+            [lob-asset-management.db.transaction :as db.t]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.relevant :refer [config config-prod]]
             [mount.core :as mount]))
@@ -147,6 +148,7 @@
                               #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
                   (db.a/snapshot)
                   (db.p/snapshot)
+                  (db.t/snapshot)
                   (println "Press enter to stop...")
                   (read-line)
                   (future-cancel (stop-loop))

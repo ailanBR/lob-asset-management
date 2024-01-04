@@ -279,9 +279,7 @@
        (get-market-price)
        )
 
-  (db.a/get-by-ticket :INBR31)
-
-
+  (db.a/get-by-ticket :LINK)
 
   (-> (db.a/get-all)
       (a.a/sort-by-updated-at)
@@ -289,11 +287,9 @@
       #_(get-market-price)
       )
 
+  (->> :LINK (db.a/get-by-ticket) list (update-crypto-market-price))
 
-  ;LIST ASSET NOT UPDATED TODAY
-  (let [assets (db.a/get-all)]
-    ()
-    )
+
 
   (get-market-price)
   (update-asset-market-price)
