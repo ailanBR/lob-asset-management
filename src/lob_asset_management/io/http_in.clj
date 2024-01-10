@@ -5,6 +5,7 @@
             [net.cgrand.enlive-html :as html]
             [lob-asset-management.relevant :refer [alpha-key]]
             [lob-asset-management.adapter.alpha-vantage-api :as a.ava]
+            [lob-asset-management.adapter.crypto-asset :as a.ca]
             [lob-asset-management.adapter.web-data-extraction :as a.wde]
             [lob-asset-management.controller.metric :as c.metric]
             [schema.core :as s]))
@@ -78,6 +79,10 @@
    (get-crypto-price crypto-ticket alpha-key))
   ([crypto-ticket  :- s/Keyword
     api-key  :- s/Str]
+   (println {:query-params {:function "DIGITAL_CURRENCY_DAILY"
+                            :symbol   (name crypto-ticket)
+                            :market   "BRL"
+                            :apikey   api-key}})
    (let [{:keys [status body]} (http-get "https://www.alphavantage.co/query"
                                          {:query-params {:function "DIGITAL_CURRENCY_DAILY"
                                                          :symbol   (name crypto-ticket)
@@ -97,9 +102,29 @@
         {:keys [status body]} (http-get "https://api.coingecko.com/api/v3/simple/price"
                                         {:query-params {:ids crypto-id :vs_currencies "BRL"}})]
     (if (= status 200)
-      (a.ava/response->internal body)
+      (a.ca/real-time->internal body)
       (throw (ex-info "Failed to get real time crypto price"
                       {:status (:status status)})))))
+
+
+(defn get-crypto-price-historic
+  "Coingecko API
+
+  Limit of 10-30 calls/minute"
+  [crypto-ticket]
+  (let [crypto-id (name crypto-ticket)
+        {:keys [status body]} (http-get (str "https://api.coingecko.com/api/v3/coins/" crypto-id "/market_chart")
+                                        {:query-params {:vs_currency "BRL" :days "max" :interval "daily"}})]
+    (if (= status 200)
+      (a.ca/historic->internal body)
+      (throw (ex-info "Failed to get real time crypto price"
+                      {:status (:status status)}))))
+  )
+
+(comment
+  (def t (get-crypto-price-historic :chainlink))
+
+  )
 
 (defn advfn-data-extraction
   "e.g NASDAQ/AAPL or bovespa/ABEV3"
@@ -119,7 +144,7 @@
     (throw (ex-info "Failed to get stock price using ADVFN information"
                     {:status 999}))))
 
-(defn advfn-data-historic-extraction-br
+(defn advfn-data-historic-extraction-br                     ;TODO: deep https://br.advfn.com/bolsa-de-valores/coin/LINKBRL/historico/mais-dados-historicos?current=0&Date1=06/10/21&Date2=04/01/24
   [asset]
   (if-let [response (-> asset
                         a.wde/in-ticket->out-ticket
