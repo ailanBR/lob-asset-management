@@ -1,5 +1,7 @@
 (ns lob-asset-management.aux.time
-  (:require [java-time.api :as jt]))
+  (:require [java-time.api :as jt]
+            [java-time.format :as jf]
+            ))
 
 (def br-date-time-format "dd/MM/yyyy' 'HH:mm")
 (def timestamp-format "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS")
@@ -144,7 +146,7 @@
   [str-date]
   (clj-date->date-keyword (str-br-date->str-timestamp str-date)))
 
-(defn date-keyword->miliseconds
+(defn date-keyword->milliseconds
   "e.g. :2023-09-01"
   [dt-keyword]
   (let [splited (-> dt-keyword name (clojure.string/split #"-"))
@@ -154,6 +156,15 @@
     (-> (clojure.string/join " " [month day year])
         str-date->str-timestamp
         get-millis)))
+
+(defn milliseconds->date-keyword
+  [milliseconds]
+  (-> milliseconds
+      jt/instant
+      str
+      (clojure.string/split #"T")
+      first
+      keyword))
 
 (defmacro timed [expr]                                      ;TODO: USE THIS
   (let [sym (= (type expr) clojure.lang.Symbol)]

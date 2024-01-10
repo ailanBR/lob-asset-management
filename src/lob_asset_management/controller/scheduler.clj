@@ -74,7 +74,7 @@
 
 (def get-stock-hist
   {:name :get-stock-hist
-   :cron-exp {:minute [:* 2] :hour [:+ 10 18]}
+   :cron-exp {:minute [:* 2] :hour [:+ 10 18 19]}
    :cron     (new-cron {:minute [:* 2] :hour [:+ 10 18] :day-of-week [:+ :mon :tue :wed :thu :fri :sat]})
    :fn       #(do
                 (c.m/update-asset-market-price-historic)
@@ -82,8 +82,8 @@
 
 (def get-crypto-price
   {:name :get-crypto-price
-   :cron-exp {:minute [:* 2]}
-   :cron     (new-cron {:minute [:* 2]})
+   :cron-exp {:minute [:* 2] :hour [:+ 0 1 2 3 4 5 6 7 8 9 11 12 13 14 15 16 17 19 20 21 22 23]}
+   :cron     (new-cron {:minute [:* 2] :hour [:+ 0 1 2 3 4 5 6 7 8 9 11 12 13 14 15 16 17 19 20 21 22 23]})
    :fn       #(do
                 (c.m/update-crypto-market-price)
                 (c.p/update-portfolio-representation))})

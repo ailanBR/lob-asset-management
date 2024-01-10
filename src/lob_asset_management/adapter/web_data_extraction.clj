@@ -72,9 +72,15 @@
         {:keys [exchange]} (db.a/get-fixed-info-by-ticket ticket)]
     (if exchange
       (str (name exchange) "/" (string/upper-case asset-name))
-      (if (or (= type :stockBR) (= type :fii))
+      (case type
+        (or :stockBR :fii)
         (str "bovespa/" (string/upper-case asset-name))
-        (str "NASDAQ/" (string/upper-case asset-name))))))
+
+        :stockEUA
+        (str "NASDAQ/" (string/upper-case asset-name))
+
+        :crypto
+        (str "coin/" (string/upper-case asset-name) "BRL")))))
 
 (defn advfn-url
   [ticket]

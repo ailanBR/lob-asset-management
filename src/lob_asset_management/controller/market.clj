@@ -44,9 +44,10 @@
 
 (defn get-crypto-market-price
   [asset get-historic?]
-  (if-let [{:keys [updated-at] :as market-info} (if true
+  (if-let [{:keys [updated-at] :as market-info} (if get-historic?
+                                                  #_(-> asset a.a/in-ticket->out-ticket io.http/get-crypto-price) ;FIXME: {:Error_Message Invalid API call. Please retry or visit the documentation (https://www.alphavantage.co/documentation/) for DIGITAL_CURRENCY_DAILY.}
+                                                  (-> asset a.a/in-ticket->out-crypto-id io.http/get-crypto-price-historic)
                                                   (-> asset a.a/in-ticket->out-crypto-id io.http/get-crypto-price-real-time)
-                                                  (-> asset a.a/in-ticket->out-ticket io.http/get-crypto-price) ;FIXME: {:Error_Message Invalid API call. Please retry or visit the documentation (https://www.alphavantage.co/documentation/) for DIGITAL_CURRENCY_DAILY.}
                                                   )]
     market-info
     (throw (ex-info :message "[get-crypto-market-price] Something was wrong in get market data"))))
@@ -82,8 +83,8 @@
     true
     (and (not (= current-price price))
          (> price 0M)
-         (<= (aux.t/date-keyword->miliseconds current-date)
-             (aux.t/date-keyword->miliseconds date)))))
+         (<= (aux.t/date-keyword->milliseconds current-date)
+             (aux.t/date-keyword->milliseconds date)))))
 
 (defn price-change-percentage
   [current-price
@@ -240,13 +241,13 @@
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
 
 (defn update-asset-market-price-historic
-  ;FIXME: Allow the crypto asset to get historic
-  []
-  (if-let [assets (db.a/get-all)]
-    (-> #(contains? #{:stockBR :fii :stockEUA} (:asset/type %))
-        (filter assets)
-        (update-asset-market-price 1 {:with-historic true :ignore-timer true}))
-    (log/error "[GET STOCK HISTORIC] update-asset-market-price-historic - can't get assets")))
+  ([]
+   (if-let [assets (db.a/get-all)]
+     (update-asset-market-price-historic assets)
+     (log/error "[GET STOCK HISTORIC] update-asset-market-price-historic - can't get assets")))
+  ([assets]
+   (update-asset-market-price assets 1 {:with-historic true :ignore-timer true})
+   ))
 
 (defn update-crypto-market-price
   ([]
@@ -287,9 +288,7 @@
       #_(get-market-price)
       )
 
-  (->> :LINK (db.a/get-by-ticket) list (update-crypto-market-price))
-
-
+  (-> :LINK (db.a/get-by-ticket) list (update-asset-market-price-historic))
 
   (get-market-price)
   (update-asset-market-price)
