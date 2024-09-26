@@ -1,11 +1,8 @@
 (ns lob-asset-management.db.metric
-  (:require [clojure.tools.logging :as log]
-            [lob-asset-management.adapter.asset :as a.a]
-            [lob-asset-management.aux.xtdb :refer [db-node] :as aux.xtdb]
+  (:require [lob-asset-management.aux.xtdb :refer [db-node] :as aux.xtdb]
             [lob-asset-management.aux.util :refer [string->uuid]]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.io.file-out :as io.f-out]
-            [lob-asset-management.logic.asset :as l.a]
             [lob-asset-management.relevant :refer [config]]
             [xtdb.api :as xt]))
 

@@ -10,7 +10,7 @@
     (db.m/upsert! #:metric{:endpoint endpoint
                            :when     (aux.t/current-datetime->str)})
     (catch Exception e
-      (log/error "[METRICS] Error when writing metric information"))))
+      (log/error "[METRICS] Error when writing metric information " e))))
 
 (defn total-api-calls
   ([]

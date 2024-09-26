@@ -1,11 +1,11 @@
 (ns lob-asset-management.adapter.telegram
   (:require [clojure.string :as str]
             [lob-asset-management.aux.time :as aux.t]
-            [lob-asset-management.aux.util :refer [abs]]
+            [lob-asset-management.aux.util :refer [string->uuid]]
             [lob-asset-management.aux.money :refer [safe-number->bigdec]]
             [lob-asset-management.logic.portfolio :as l.p]
             [lob-asset-management.aux.time :as t]
-            [lob-asset-management.db.telegram :as db.t]
+            [lob-asset-management.models.telegram :as m.t]
             [schema.core :as s])
   (:import (java.util UUID)))
 
@@ -189,14 +189,22 @@
 
 (s/defn msg->category :- s/Keyword [msg] :uncategorized) ;TODO
 
-(s/defn msg-out->msg-in :- db.t/TelegramMessage
+(s/defn message->id
+  ([{:telegram/keys [command msg created-at category]}]
+   (message->id command msg created-at category))
+  ([command msg created-at category]
+   (string->uuid (str command msg created-at category))))
+
+(s/defn msg-out->msg-in :- m.t/TelegramMessage
   [msg]
   (let [command (-> msg (str/split #" ") first (str/replace "/" "") keyword)
-        msg' (-> msg (str/split #" ") rest)]
-    {:telegram/id         (UUID/randomUUID)
-     :telegram/message    (str/join " " msg')
-     :telegram/created-at (str (t/current-date-time))
-     :telegram/category   (msg->category msg)
+        msg' (-> msg (str/split #" ") rest (->> (str/join " ")))
+        created-at (str (t/current-date-time))
+        category (msg->category msg)]
+    {:telegram/id         (message->id command msg created-at category)
+     :telegram/message    msg'
+     :telegram/created-at created-at
+     :telegram/category   category
      :telegram/active     true
      :telegram/command    command}))
 

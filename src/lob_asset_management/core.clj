@@ -1,10 +1,7 @@
 (ns lob-asset-management.core
-  (:require [clojure.tools.cli :as t.cli]
-            [clojure.tools.logging :as log]
-            [java-time.api :as t]
-            [lob-asset-management.aux.time :as aux.t]
+  (:require [lob-asset-management.aux.time :as aux.t]
             [lob-asset-management.aux.xtdb :refer [db-node]]
-            [lob-asset-management.controller.forex :as c.f]
+            [lob-asset-management.cli :as cli]
             [lob-asset-management.controller.market :as c.m]
             [lob-asset-management.controller.process-file :as c.p-f]
             [lob-asset-management.controller.portfolio :as c.p]
@@ -27,6 +24,7 @@
                #'lob-asset-management.relevant/alpha-key
                #'lob-asset-management.relevant/telegram-key
                #'lob-asset-management.relevant/telegram-personal-chat
+               ;#'lob-asset-management.relevant/google-oauth
                #'lob-asset-management.controller.telegram-bot/bot)
   (when (= :prod env)
     (mount/start #'lob-asset-management.aux.xtdb/db-node)
@@ -43,100 +41,19 @@
 ;(start :dev)                                                     ;for develop purpose
 ;(stop)
 
-(def cli-options
-  [["-y" "--year Year" "Year of the release"
-    :default 2022
-    :parse-fn #(Integer/parseInt %)
-    :validate [#(< 2021 % 2024) "Must be a number between 2021 and 2023"]]
-   ["-d" "--[no-]daemon" "Daemonize the process" :default true]
-   ["-h" "--help"]])
-
-(defn usage [options-summary]
-  (->> ["This is my program. There are many like it, but this one is mine."
-        ""
-        "Usage: program-name [options] action"
-        ""
-        "Options:"
-        options-summary
-        ""
-        "Actions:"
-        "  start    Start the get market price and update portfolio"
-        "  read     Read the movements files"
-        "  release  [send the year as -y parameter] Generate a new release"
-        "  telegram [send the message as -m parameter] Send a message to telegram"
-        ""
-        "Please refer to the manual page for more information."]
-       (clojure.string/join \newline)))
-
-(defn error-msg [errors]
-  (str "The following errors occurred while parsing your command:\n\n"
-       (clojure.string/join \newline errors)))
-
-(defn validate-args
-  "Validate command line arguments. Either return a map indicating the program
-  should exit (with an error message, and optional ok status), or a map
-  indicating the action the program should take and the options provided."
-  [args]
-  (let [{:keys [options arguments errors summary]} (t.cli/parse-opts args cli-options)]
-    (cond
-      (:help options) ; help => exit OK with usage summary
-      {:exit-message (usage summary) :ok? true}
-      errors ; errors => exit with description of errors
-      {:exit-message (error-msg errors)}
-      ;; custom validation on arguments
-      (and (= 1 (count arguments))
-           (#{"start" "read" "release" "telegram"} (first arguments)))
-      {:action (first arguments) :options options}
-      :else ; failed custom validation => exit with usage summary
-      {:exit-message (usage summary)})))
-
 (defn exit [status msg]
   (println msg)
   (System/exit status))
 
-(defn get-market-info
-  [forex-usd stock-window current-time]
-  (let [assets (db.a/get-all)
-        portfolio (db.p/get-all)
-        current-hour (.getHour current-time)
-        day-of-week (aux.t/day-of-week current-time)]
-    (c.m/reset-retry-attempts assets)
-    (if (contains? stock-window current-hour)
-      (when (c.m/update-asset-market-price assets day-of-week)
-        (c.p/update-portfolio-representation portfolio forex-usd))
-      (when (c.m/update-crypto-market-price assets)
-        (c.p/update-portfolio-representation portfolio forex-usd)))))
-
-(defn start-processing
-  [stock-window interval]
-  (let [forex-usd (db.f/get-all)
-        update-target-hour 3
-        current-time (t/local-date-time)]
-    (t.bot/check-telegram-messages interval current-time)
-    (c.p-f/backup-cleanup :asset)                           ;FIXME: Didn't work in the shell execution
-    (if (c.f/less-updated-than-target forex-usd update-target-hour)
-      (c.f/update-usd-price forex-usd update-target-hour)
-      (get-market-info forex-usd stock-window current-time))))
-
-(defn poller [f-name f interval window]
-  (let [run-forest-run (atom true)]
-    (future
-      (try
-        (while @run-forest-run
-          ;(log/info "[Poller running" (str (t/local-date-time)) "]")
-          (if (contains? window (.getHour (t/local-date-time)))
-            (f)
-            (log/info "[Poller " (str f-name "-" (t/local-date-time)) "] Out of the configured window hour " window))
-          (log/info "[Poller next " (str f-name "-" (t/plus (t/local-date-time)
-                                                            (t/millis interval))) "]")
-          (Thread/sleep interval))
-        (catch Exception e
-          (println "Error in " f-name " poller: " e))))
-    (fn [] (reset! run-forest-run false))))
+(defn snapshot []
+  (db.a/snapshot)
+  (db.p/snapshot)
+  (db.t/snapshot)
+  (db.f/snapshot))
 
 (defn -main [& args]
   (start :prod)
-  (let [{:keys [action options exit-message ok?]} (validate-args args)]
+  (let [{:keys [action options exit-message ok?]} (cli/validate-args args)]
     (if exit-message
       (exit (if ok? 0 1) exit-message)
       (case action
@@ -146,9 +63,7 @@
                               #(start-processing #{11 12 13 14 15 16 17 18 19 20 21 22 23} interval)
                               13000
                               #{7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 00 01})]
-                  (db.a/snapshot)
-                  (db.p/snapshot)
-                  (db.t/snapshot)
+                  (snapshot)
                   (println "Press enter to stop...")
                   (read-line)
                   (future-cancel (stop-loop))
@@ -166,7 +81,10 @@
   (clojure.pprint/print-table
     [:portfolio/ticket :portfolio/quantity]
     (->> (db.p/get-all)
-         ;(filter #(contains? #{:nu :inter} (first (:portfolio/exchanges %))))
+         #_(filter #(or (= :SQIA3 (:portfolio/ticket %))
+                        (= :EVTC31 (:portfolio/ticket %))
+                        (= :E9TC11 (:portfolio/ticket %))))
+         (filter #(contains? #{:nu :inter} (first (:portfolio/exchanges %))))
          ;(filter #(contains? #{:sproutfy} (first (:portfolio/exchanges %))))
          ;(filter #(= :crypto (:portfolio/category %)))
          ;(filter #(or (contains? (:portfolio/exchanges %) :nu)
@@ -176,17 +94,18 @@
   (filter #(= :SMTO3 (:portfolio/ticket %)) (db.p/get-all))
 
   (clojure.pprint/print-table
-    [:transaction/id :transaction/created-at :transaction/operation-type :transaction/quantity :transaction/average-price :transaction/operation-total]
+    [:transaction/id :transaction.asset/ticket :transaction/created-at :transaction/operation-type :transaction/quantity :transaction/average-price :transaction/operation-total]
     (->> (lob-asset-management.db.transaction/get-all)
          ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
-         (filter #(or (= :SULA3 (:transaction.asset/ticket %))))
+         ;(filter #(clojure.string/includes? (name (:transaction.asset/ticket %)) "ALZR"))
+         (filter #(or (= :BBAS3 (:transaction.asset/ticket %))))
          ;(remove #(contains?
          ;           #{:sell :JCP :income :dividend :bonificaçãoemativos
          ;             :fraçãoemativos :transferência :waste :incorporation}
          ;           (:transaction/operation-type %)))
-         ;(filter #(or (= :SQIA3 (:transaction.asset/ticket %))
-         ;             (= :EVTC31 (:transaction.asset/ticket %))
-         ;             (= :E9TC11 (:transaction.asset/ticket %))))
+         #_(filter #(or (= :ALZR12 (:transaction.asset/ticket %))
+                      (= :ALZR13 (:transaction.asset/ticket %))
+                      (= :ALZR11 (:transaction.asset/ticket %))))
          ;(filter #(contains? #{:sproutfy} (:transaction/exchange %)))
          ;(sort-by :transaction/exchange)
          ;(sort-by :transaction.asset/ticket)

@@ -5,10 +5,17 @@
             [lob-asset-management.db.asset :as db.a]
             [net.cgrand.enlive-html :as html]))
 
+(defn remove-empty
+  [list]
+  (filter map? list))
+
 (defn ->price
   [data]
   (-> data
-      (html/select [:span.cur-price])
+      (html/select [:div.price-block])
+      first
+      :content
+      remove-empty
       first
       :content
       first
@@ -102,21 +109,12 @@
 
 (defn asset-news
   [data]
-  (->> [:table#id_news]
-       (html/select data)
-       f-content
-       (remove #(string/includes? % "\n"))
-       (map #(let [cnt (:content %)
-                   dt (-> cnt f-content first)
-                   hr (-> cnt s-content first)
-                   from (-> cnt rest rest f-content f-content first)
-                   txt (-> cnt l-content f-content first)
-                   href (string/join ["https:" (-> cnt l-content first :attrs :href)])]
-               {:txt  txt
-                :datetime (string/join " " [dt hr])
-                :from from
-                :href href}))
-       rest))
+  (->> (html/select data [:div.news-item])
+       (map (fn [news]
+              {:txt      (-> (html/select news [:div.news-content]) f-content f-content f-content first)
+               :from     (-> (html/select news [:div.news-time-content]) f-content first)
+               :href     (-> (html/select news [:div.news-content]) f-content f-content first :attrs :href)
+               :datetime (-> (html/select news [:div.news-date-content]) f-content first)}))))
 
 (defn br-date->date-keyword
   [data]
@@ -133,7 +131,7 @@
 
 (defn br-response->internal
   [response]
-  (if (not-empty (html/select response [:span.cur-price]))
+  (if (not-empty (html/select response [:div.price-block]))
     (let [news (asset-news response)
           price (->price response)
           date-keyword (br-date->date-keyword response)
@@ -172,10 +170,15 @@
     {:error "response->internal error extracting data historic"}))
 
 (comment
-  (def r (lob-asset-management.io.http_in/advfn-data-extraction-br {:asset/ticket :abev3
+  (def r (lob-asset-management.io.http_in/advfn-data-extraction-br {:asset/ticket :tots3
                                                                     :asset/type :stockBR}))
 
-  (html/select r [:span.cur-price])
+  (html/select r #{[:div.price-block]})
+
   (br-response->internal r)
+
+  (->price r)                                               ;DONE
+  (asset-news r)
+  (br-date->date-keyword r)
 
   )

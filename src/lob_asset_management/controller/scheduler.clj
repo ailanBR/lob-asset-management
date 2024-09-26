@@ -74,7 +74,7 @@
 
 (def get-stock-hist
   {:name :get-stock-hist
-   :cron-exp {:minute [:* 2] :hour [:+ 10 18 19]}
+   :cron-exp {:minute [:* 2] :hour [:+ 10 18 19 21 22]}
    :cron     (new-cron {:minute [:* 2] :hour [:+ 10 18] :day-of-week [:+ :mon :tue :wed :thu :fri :sat]})
    :fn       #(do
                 (c.m/update-asset-market-price-historic)
@@ -90,8 +90,8 @@
 
 (def notify-price-highlight
   {:name     :notify-price-highlight
-   :cron-exp {:minute [:+ 20] :hour [:+ 10 16 20] :day-of-week [:+ :mon :tue :wed :thu :fri]}
-   :cron     (new-cron {:minute [:+ 20] :hour [:+ 10 16 20] :day-of-week [:+ :mon :tue :wed :thu :fri]})
+   :cron-exp {:minute [:+ 20] :hour [:+ 16 20] :day-of-week [:+ :mon :tue :wed :thu :fri]}
+   :cron     (new-cron {:minute [:+ 20] :hour [:+ 16 20] :day-of-week [:+ :mon :tue :wed :thu :fri]})
    :fn       #(t.bot/send-command bot nil :daily)})
 
 (def notify-portfolio-total

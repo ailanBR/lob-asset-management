@@ -4,10 +4,11 @@
              [clojure.string :as str]
              [environ.core :refer [env]]
              [cheshire.core :as json]
-             [lob-asset-management.relevant :as relevant]
+             [lob-asset-management.relevant :refer [config]]
+             [mount.core :refer [defstate]]
              [clojure.java.io :as io]
-             [clj-http.client :as http]
-             )
+             [clj-http.client :as http])
+
   (:import
     (com.google.api.client.auth.oauth2 Credential)
     (com.google.api.client.googleapis.auth.oauth2 GoogleAuthorizationCodeFlow
@@ -50,10 +51,7 @@
 ;https://github.com/SparkFund/google-apps-clj/blob/develop/src/google_apps_clj/google_sheets_v4.clj <- Maybe use that library
 
 (comment
-  (def google-ctx (-> relevant/secrets :google-key))
-  (def google-aut (-> relevant/secrets :google-key))
-  (def google-ctx-json (-> relevant/secrets :google-key json/generate-string))
-  (def google-aut (with-open [in (io/reader "./resources/oauth.json")]
+  (def google-aut (with-open [in (io/reader (:oauth-path config))]
                        (slurp in)))
   ;----------------------------------------------------------
   (defn sign [claims' priv-key]
@@ -131,11 +129,6 @@
   (.isMtls http-transport)
 
   (def flow (->
-             (GoogleAuthorizationCodeFlow$Builder. http-transport JSON-FACTORY (:client_id google-ctx) (:private_key google-ctx) scope)
-             (.setAccessType "offline")
-             (.build)))
-
-  (def flow (->
               (GoogleAuthorizationCodeFlow$Builder. http-transport JSON-FACTORY client-secrets scope)
               (.setAccessType "offline")
               (.build)))
@@ -151,8 +144,6 @@
                        (.authorize "user")))
 
 
-  ;final String spreadsheetId = "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms";
-  (def spread-sheet-id "1_u2Qt64H4K8mPlxCnwORcWuQ90uy7OHtB61oyqHYAto")
   ;final String range = "Class Data!A2:E";
   ;(def range "Home_NEW!D7") ;=> Total invested
   (def range "EXPORT_Stock!A2:C5")
@@ -169,51 +160,80 @@
   ;ValueRange response = service.spreadsheets().values()
   ;.get(spreadsheetId, range)
   ;.execute();
-  (def response (-> service (.spreadsheets) (.values) (.get spread-sheet-id range) (.execute)))
-
+  (def response (-> service (.spreadsheets) (.values) (.get (:spread-sheet-id config) range) (.execute)))
   )
 
+(def ^:dynamic JSON-FACTORY (Utils/getDefaultJsonFactory))
 
+(defn credential-from-json-stream
+  "Consumes an input stream containing JSON describing a Google API credential
+  `stream` can be anything that can be handled by `clojure.java.io/reader`"
+  [stream]
+  (with-open [input-stream (io/reader stream)]
+    (GoogleClientSecrets/load JSON-FACTORY input-stream)))
 
+;(defstate client-secrets :start (credential-from-json-stream google-oauth))
 
+(def google-aut (with-open [in (io/reader (:oauth-path config))]
+                  (slurp in)))
 
+(defn credential-from-json
+  "Builds a GoogleCredential from a raw JSON string describing a Google API credential"
+  [cred-json]
+  (let [charset (Charset/forName "UTF-8")
+        byte-array (.getBytes cred-json charset)
+        input-stream (new ByteArrayInputStream byte-array)]
+    (credential-from-json-stream input-stream)))
 
+(def ^:dynamic ^GoogleClientSecrets client-secrets (credential-from-json google-aut))
+(defn get-flow
+  []
+  (let [http-transport (GoogleNetHttpTransport/newTrustedTransport)
+        json-factory (Utils/getDefaultJsonFactory)
+        scope [SheetsScopes/SPREADSHEETS_READONLY]]
+    (-> (GoogleAuthorizationCodeFlow$Builder. http-transport json-factory client-secrets scope)
+        (.setAccessType "offline")
+        (.build))))
 
+(defn get-receiver
+  ([]
+   (get-receiver 8888))
+  ([port]
+   (-> (LocalServerReceiver$Builder.)
+       (.setPort port)
+       (.build))))
 
+(defn get-authorization
+  []
+  (let [flow (get-flow)
+        receiver (get-receiver)]
+    (-> (AuthorizationCodeInstalledApp. flow receiver)
+        (.authorize "user"))))
 
+(defn get-service
+  []
+  (let [http-transport (GoogleNetHttpTransport/newTrustedTransport)
+        json-factory (Utils/getDefaultJsonFactory)
+        authorization (get-authorization)
+        application "Lob Asset Management OAuth"]
+    (->
+      (Sheets$Builder. http-transport json-factory authorization)
+      (.setApplicationName application)
+      (.build))))
 
-
-
-
-
-
-
-
+;TODO: Implement MONAD
 
 (comment
 
-  (def sg (-> relevant/secrets :google-key))
-  (def jg (-> relevant/secrets :google-key json/generate-string))
+  (let [spread-sheet-id (:spread-sheet-id config)
+        range "EXPORT_Stock!A2:C5"                          ;=> "Home_NEW!D7" = Total Invested
+        service (get-service)]
+    (-> service
+        (.spreadsheets)
+        (.values)
+        (.get spread-sheet-id range)
+        (.execute)))
 
-  (json/generate-string sg)
 
-  ;-----------------------------------------------------------
-  (def auth (auth/create-token "GOOGLE_APPLICATION_CREDENTIALS"))
-
-  (println (System/getenv "GOOGLE_APPLICATION_CREDENTIALS"))
-  (def t (System/getenv "GG_J"))
-
-  (defn clean-env-var [env-var]
-    (-> env-var
-        (name)
-        (str)
-        (str/lower-case)
-        (str/replace "_" "-")
-        (str/replace "." "-")
-        (keyword)))
-
-  (defn decode [json-string]
-    (json/decode json-string true))
-
-  (-> "GG_J" clean-env-var env)
   )
+

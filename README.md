@@ -182,34 +182,19 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    2. [ ] v2 Consider extra budget
    3. [ ] v3 Consider recent asset performance
    4. [ ] vX Simulator
-2. Store data `Medium`
-   1. [ ] AWS
-      1. ~~Thinking about the item 4. maybe we can use S3 only for the in-data files~~
-   2. [ ] Firebase (Doing)
-      1. [x] Find firebase library (alekcz/fire)
-      2. [x] Create firebase project 
-      3. [ ] Fix connection only works in terminal (lein run)
-      4. [ ] Create write/read documents
-   3. [ ] Do nothing
-      1. Solution works for read/write entities in terminal
-      2. ~~The problem is only **maybe** in the in-data files~~
-   4. XTDB 
-3. [Http_in] Find another option for Alpha API / Web Scraping `Medium`
+2. [Http_in] Find another option for Alpha API / Web Scraping `Medium`
    1. [X] Coingecko for crypto 
-   2. [ ] Web Scraping for Stock information
-4. Consider subscription events `Low`
-5. Get asset information `Very low`
-6. Decision between stock APIs
+   2. [X] Web Scraping for Stock information (1)
+3. Get asset information `Very low`
+4. Decision between stock APIs
    1. [ ] Validate if the historic price is updated
    2. [ ] Get more often with real time prices API
    3. [ ] When error in one get using another
       1. Create a new ident for error (E.g :asset/recent-alpha-api-error? true)
       2. If true => Use another
-8. Fix the telegram scheduled messages [CRON]
-9. Make the poling async and different by proposal (Get price / Get news / TelegramBot)
-
 
 ## FIXME
+
 1. Consider ALZR subscription
 
 --------------
