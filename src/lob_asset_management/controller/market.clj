@@ -162,6 +162,10 @@
   [assets day-of-week & args]
   (-> assets (a.a/get-less-market-price-updated (merge {:day-of-week day-of-week} (when args (first args)))) first))
 
+(defn less-updated-asset-v2
+  [assets & args]
+  (-> assets (a.a/get-less-market-price-updated (first args)) first))
+
 (defn reset-retry-attempts
   ([]
    (if-let [assets (db.a/get-with-retry)]
@@ -240,14 +244,43 @@
                  (log/info (str "Retry limit archived")))))))
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
 
+
+(defn update-asset-market-price-v2
+  ([]
+   (if-let [assets (db.a/get-all)]
+     (update-asset-market-price assets)
+     (log/error "[MARKET-UPDATING] update-asset-market-price - can't get assets")))
+  ([assets & args]
+   (if-let [{:asset/keys [ticket] :as less-updated-asset
+             :asset.market-price/keys [retry-attempts]} (less-updated-asset-v2 assets (first args))]
+     (try
+       (log/info "[MARKET-UPDATING] Starting get asset price for " (:asset/ticket less-updated-asset))
+       (let [market-last-price (get-market-price less-updated-asset (first args))
+             updated-assets (update-assets assets less-updated-asset market-last-price)]
+         (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
+         (db.a/upsert-bulk! updated-assets))
+       (catch Exception e
+         #_(t.b/send-error-command bot e)
+         #_(log/error e)
+         (if (contains? (-> e ex-data :causes) :alpha-api-limit)
+           (handle-alpha-api-limit-error assets less-updated-asset)
+           (do (log/error (str (:fail log-colors)
+                               (:asset/ticket less-updated-asset) " error in update-asset-market-price " e
+                               (:end log-colors)))
+               (if (< (or retry-attempts 0) 3)
+                 (-> less-updated-asset
+                     (handle-retry-attempt assets)
+                     (update-asset-market-price (first args)))
+                 (log/info (str "Retry limit archived")))))))
+     (log/warn "[MARKET-UPDATING] No asset to be updated"))))
+
 (defn update-asset-market-price-historic
   ([]
    (if-let [assets (db.a/get-all)]
      (update-asset-market-price-historic assets)
      (log/error "[GET STOCK HISTORIC] update-asset-market-price-historic - can't get assets")))
   ([assets]
-   (update-asset-market-price assets 1 {:with-historic true :ignore-timer true})
-   ))
+   (update-asset-market-price-v2 assets {:with-historic true :ignore-timer true})))
 
 (defn update-crypto-market-price
   ([]
@@ -257,7 +290,7 @@
   ([assets]
    (-> #(= :crypto (:asset/type %))
         (filter assets)
-        (update-asset-market-price 1 {:ignore-timer true}))))
+        (update-asset-market-price-v2 {:ignore-timer true}))))
 
 (defn update-stock-market-price
   ([]
@@ -267,7 +300,7 @@
   ([assets]
    (-> #(= :crypto (:asset/type %))
         (remove assets)
-        (update-asset-market-price 1 {:ignore-timer true}))))
+        (update-asset-market-price-v2 {:ignore-timer true}))))
 
 (comment
 
@@ -304,4 +337,13 @@
 
   (->> (db.a/get-all)
        (filter #(= :STX (:asset/ticket %)))
-       update-asset-market-price))
+       update-asset-market-price)
+
+  ;--------------------
+  (->> (less-updated-asset-v2 as nil)
+       list
+       (update-stock-market-price))
+
+  (db.a/get-by-ticket :tots3)
+
+  )

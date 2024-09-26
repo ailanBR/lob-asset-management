@@ -12,7 +12,7 @@
   [quantity asset-name average-price type]
   (let [br-asset-desc (str (str quantity) " ações de " asset-name " adquirida ao preço médio de R$ " (format "%.2f" average-price))
         eua-asset-dec (str (str quantity) " ações de " asset-name " adquirida ao preço médio de USD " (format "%.2f" average-price))
-        crypto-asset-dec (str (str quantity) asset-name " na plataforma Binance")
+        crypto-asset-dec (str (str quantity) asset-name " na plataforma Binance ao preço médio de R$ " (format "%.2f" average-price))
         fixed-income-dec (str "APLICACAO DE RENDA FIXA " asset-name)]
     (condp = type
       :fixed-income fixed-income-dec
@@ -114,8 +114,9 @@
                                 (sort-by :year-total-invested)
                                 (sort-by :code)
                                 (sort-by :group))]
-    (io.f-out/income-tax-file income-tax-release year)
-    income-tax-release))
+    filtered-transactions
+    #_(io.f-out/income-tax-file income-tax-release year)
+    #_income-tax-release))
 
 (defn past-price-date
   [price-date historic to-subtract]
@@ -168,9 +169,12 @@
   (->> (db.t/get-all)
       (sort-by :transaction/created-at))
 
-  (irpf-release 2022)
+  (irpf-release 2023)
+  (def ir (irpf-release 2023))
 
-
+  (->> ir
+       (filter #(= (:transaction.asset/ticket %) :ETH))
+       (clojure.pprint/print-table))
   (defn past-price-date
     [price-date historic to-subtract]
     (let [subtracted-date (aux.t/subtract-days price-date to-subtract)]

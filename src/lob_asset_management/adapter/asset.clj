@@ -126,7 +126,7 @@
 (defn remove-disabled-ticket
   [assets]
   (remove (fn [{:asset/keys [ticket]}]
-            (contains? #{:INHF12 :USDT :SULA3 :SULA11} ticket)) assets))
+            (contains? #{:INHF12 :USDT :SULA3 :SULA11 :SQIA3 :EVTC31 :STOC31} ticket)) assets))
 
 (defn filter-allowed-type
   ([assets]
@@ -159,25 +159,22 @@
   [args]
   (assoc-if {:quantity          1
              :min-updated-hours 1
-             :type              #{:stockBR :fii :stockEUA :crypto}
-             :day-of-week       1}
+             :type              #{:stockBR :fii :stockEUA :crypto}}
             args))
 
-(defn get-less-market-price-updated
+(defn get-less-market-price-updated                         ;TODO: Move to logic
   "Return the less updated asset
 
    Receive an option map with filter parameters
      :quantity -> How many assets will be returned  [default => 1]
      :min-updated-hours -> The less updated asset than [default => 1]
      :type -> Only asset types from this list [default => #{:stockBR :fii :stockEUA :crypto}]
-     :day-of-week -> On weekends get only crypto prices [default => 1 (Monday)]"
+     *DEPRECATED* :day-of-week -> On weekends get only crypto prices [default => 1 (Monday)]  "
   [assets & args]
   {:pre [(boolean assets)]}
-  (let [{:keys [quantity min-updated-hours
-                type day-of-week ignore-timer]} (get-less-updated-config (first args))
-        type' (if (> day-of-week 5) #{:crypto} type)
+  (let [{:keys [quantity min-updated-hours type ignore-timer]} (get-less-updated-config (first args))
         filter-assets (->> assets
-                           (filter-allowed-type type')
+                           (filter-allowed-type type)
                            filter-allowed-ticket
                            remove-disabled-ticket
                            remove-limit-attempts

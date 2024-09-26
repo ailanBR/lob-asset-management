@@ -18,3 +18,4 @@ pom.xml.asc
 /metric/metric.edn
 /resources/credentials.json
 /resources/oauth.json
+/resources/config.edn
