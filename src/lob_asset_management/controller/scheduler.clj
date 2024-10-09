@@ -75,7 +75,7 @@
 (def get-stock-hist
   {:name :get-stock-hist
    :cron-exp {:minute [:* 2] :hour [:+ 10 18 19 21 22]}
-   :cron     (new-cron {:minute [:* 2] :hour [:+ 10 18] :day-of-week [:+ :mon :tue :wed :thu :fri :sat]})
+   :cron     (new-cron {:minute [:* 2] :hour [:+ 10 15 16 17 18] :day-of-week [:+ :mon :tue :wed :thu :fri :sat]})
    :fn       #(do
                 (c.m/update-asset-market-price-historic)
                 (c.p/update-portfolio-representation))})

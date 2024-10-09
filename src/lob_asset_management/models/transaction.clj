@@ -19,19 +19,20 @@
                        :direitosdesubscrição-excercído
                        :direitosdesubscrição-nãoexercido
                        :recibodesubscrição
-                       :desdobro
+                       :split
                        :sell
                        :bonificaçãoemativo
                        :compraporliquides
                        :vencimento
-                       :bonificaçãoemativos
+                       :bonus
                        :fraçãoemativos
-                       :resgate
+                       :redemption
                        :incorporação
                        :waste
                        :atualização
-                       :grupamento
-                       :compra})
+                       :reverse-split
+                       :compra
+                       :subscription})
 
 (s/defschema OperationType (apply s/enum operation-types))
 

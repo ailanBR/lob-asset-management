@@ -27,6 +27,12 @@
     (= movement-type "Rendimento") :income
     (= movement-type "Dividendo") :dividend
     (= movement-type "Leilão de Fração") :waste
+    (= movement-type "Direitos de Subscrição - Exercido") :subscription
+    (= movement-type "Bonificação em Ativos") :bonus
+    (= movement-type "Resgate") :redemption
+    (= movement-type "Grupamento") :reverse-split
+    (= movement-type "Desdobro") :split
+    (= movement-type "Atualização") :update
     :else (-> (:movement-type mov)
               (string/replace " " "")
               string/lower-case

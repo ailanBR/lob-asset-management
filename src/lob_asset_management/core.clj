@@ -13,6 +13,7 @@
             [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.db.transaction :as db.t]
             [lob-asset-management.io.file-in :as io.f-in]
+            [lob-asset-management.io.storage :as io.storage]
             [lob-asset-management.relevant :refer [config config-prod]]
             [mount.core :as mount]))
 
@@ -24,8 +25,12 @@
                #'lob-asset-management.relevant/alpha-key
                #'lob-asset-management.relevant/telegram-key
                #'lob-asset-management.relevant/telegram-personal-chat
+               #'lob-asset-management.relevant/spread-sheet-config
                ;#'lob-asset-management.relevant/google-oauth
-               #'lob-asset-management.controller.telegram-bot/bot)
+               #'lob-asset-management.controller.telegram-bot/bot
+               #'lob-asset-management.io.storage/spread-sheet-service
+               )
+
   (when (= :prod env)
     (mount/start #'lob-asset-management.aux.xtdb/db-node)
     (mount/start-with {#'lob-asset-management.relevant/config config-prod})))
@@ -36,6 +41,7 @@
               #'lob-asset-management.relevant/telegram-key
               #'lob-asset-management.relevant/telegram-personal-chat
               #'lob-asset-management.controller.telegram-bot/bot
+              #'lob-asset-management.relevant/spread-sheet-config
               #'lob-asset-management.aux.xtdb/db-node))
 
 ;(start :dev)                                                     ;for develop purpose
@@ -76,6 +82,8 @@
 
   (c.p-f/delete-all-files)
   (c.p-f/process-folders)
+  (lob-asset-management.db.transaction/get-by-id #uuid "ecc07451-4280-3f44-b278-ca6c8df07848")
+
   ;=========================================
 
   (clojure.pprint/print-table
@@ -89,7 +97,13 @@
          ;(filter #(= :crypto (:portfolio/category %)))
          ;(filter #(or (contains? (:portfolio/exchanges %) :nu)
          ;             (contains? (:portfolio/exchanges %) :inter)))
+         (remove #(= 0.0 (:portfolio/quantity %)))
          (sort-by :portfolio/ticket)))
+
+  ;;      B3    HERE
+  ;;ALZR  39    36
+  ;;EQTL  92    91
+
 
   (filter #(= :SMTO3 (:portfolio/ticket %)) (db.p/get-all))
 
@@ -97,10 +111,12 @@
     [:transaction/id :transaction.asset/ticket :transaction/created-at :transaction/operation-type :transaction/quantity :transaction/average-price :transaction/operation-total]
     (->> (lob-asset-management.db.transaction/get-all)
          ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
-         ;(filter #(clojure.string/includes? (name (:transaction.asset/ticket %)) "ALZR"))
-         (filter #(or (= :BBAS3 (:transaction.asset/ticket %))))
+         ;;(filter #(clojure.string/includes? (name (:transaction.asset/ticket %)) "ALZR"))
+         (filter #(clojure.string/includes? (name (:transaction.asset/ticket %)) "EQTL"))
+         ;;(filter #(clojure.string/includes? (name (:transaction.asset/ticket %)) "FLRY"))
+         ;;(filter #(or (= :ALZR13 (:transaction.asset/ticket %))))
          ;(remove #(contains?
-         ;           #{:sell :JCP :income :dividend :bonificaçãoemativos
+         ;           #{:sell :JCP :income :dividend :bonus
          ;             :fraçãoemativos :transferência :waste :incorporation}
          ;           (:transaction/operation-type %)))
          #_(filter #(or (= :ALZR12 (:transaction.asset/ticket %))
@@ -112,11 +128,23 @@
          (sort-by :transaction/created-at)
          ))
 
+  ;:ALZR11 |                33.0 |36 |35
+  ;Subc1
+  ;| 77c7c482-fae9-3be4-a555-994e9cf4031b |:ALZR12 |20230522 |:direitosdesubscrição-excercído |2.0 | 0 | 0 |
+  ;| edd81b9a-1d05-3558-9e90-05d9f8ac1c7f |:ALZR13 |20230523 |:recibodesubscrição |2.0 | 0 | 0 |
+  ;Subs2
+  ;| 908c2cb8-a248-3c58-92e8-978ba07bed5f |:ALZR12 |20240529 |:direitosdesubscrição-exercido |1.0 |107.43 |107.43 |
+  ;| 8002960b-5090-3b8f-8500-d0bd0d8c308a |:ALZR13 |20240531 |:recibodesubscrição | 1.0 | 0 | 0 |
+
+  ;;EQTL
+  ;| 2706f489-3b91-3186-9707-3b63cd4a4968 | :EQTL1 | 20240607 | :direitosdesubscrição-exercido |1.0 | 29.5 |29.5 |
+  ;| c0b4d620-3b59-3cc1-9b4a-b5a129b86bc5 | :EQTL9 | 20240610 |:recibodesubscrição | 1.0 | 0 | 0 |
+
   (->> (lob-asset-management.db.transaction/get-all)
        ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
        ;(filter #(or (= :SULA11 (:transaction.asset/ticket %))))
        ;(remove #(contains?
-       ;           #{:sell :JCP :income :dividend :bonificaçãoemativos
+       ;           #{:sell :JCP :income :dividend :bonus
        ;             :fraçãoemativos :transferência :waste :incorporation}
        ;           (:transaction/operation-type %)))
        (filter #(or (= :SQIA3 (:transaction.asset/ticket %))

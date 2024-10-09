@@ -5,14 +5,15 @@
             [lob-asset-management.logic.portfolio :as l.p]
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.portfolio :as db.p]
-            [lob-asset-management.db.transaction :as db.t]))
+            [lob-asset-management.db.transaction :as db.t]
+            [lob-asset-management.relevant :refer [config]]))
 
 ;Portfolio processing transactions====================================================
 
 (defn allowed-transactions
   [transactions]
-  (let [allowed-operations #{:buy :sell :JCP :income :dividend :waste :grupamento
-                             :desdobro :bonificaçãoemativos :incorporation :resgate}]
+  (let [allowed-operations #{:buy :sell :JCP :income :dividend :waste :reverse-split
+                             :split :bonus :incorporation :redemption :subscription}]
     (->> transactions
          (l.p/filter-operation allowed-operations)
          (l.p/remove-fixed-income)
@@ -129,10 +130,22 @@
         portfolio' (concat portfolio-without-dup dup-treatment)]
     portfolio'))
 
+(defn adjust-subscription-tickets
+  [transactions]
+  (map (fn [{ticket :transaction.asset/ticket
+             operation :transaction/operation-type :as transaction}]
+         (cond-> transaction
+                 (contains? (:ticket-rename config) ticket)
+                 (assoc :transaction.asset/ticket (-> config :ticket-rename ticket))
+
+                 (= operation :subscription)
+                 (assoc :transaction/operation-type :buy)) transactions)))
+
 (defn transactions->portfolio
   [transactions assets forex-usd]
   (log/info "[PORTFOLIO] Processing adapter...")
     (->> transactions
+         (adjust-subscription-tickets)
          allowed-transactions
          (group-by :transaction.asset/ticket)
          (map consolidate-grouped-transactions)
@@ -203,7 +216,7 @@
        (set-category-representation)))
 
 ;Portfolio balance====================================================
-(def config {:ti        20M
+(def balance-config {:ti        20M
              :transport 7M
              :cannabis  1M
              :industry  5M
@@ -217,8 +230,8 @@
              :telecom   0M})
 
 (defn portfolio-category->allocation-needs
-  [config {:category/keys [name percentage]}]
-  (let [config-val (get config name)]
+  [balance-config {:category/keys [name percentage]}]
+  (let [config-val (get balance-config name)]
     {:category           name
      :configured         config-val
      :current-percentage percentage
@@ -230,7 +243,7 @@
 (defn allocation-needs-percent
   [portfolio-categories]
   (reduce #(->> %2
-               (portfolio-category->allocation-needs config)
+               (portfolio-category->allocation-needs balance-config)
                list
                (concat %1)) [] portfolio-categories))
 
@@ -243,7 +256,7 @@
   [to-invest-budget]
   {:pre [(number? to-invest-budget)]}
   (map (fn [c]
-         {(key c) (* to-invest-budget (/ (val c) 100))}) config))
+         {(key c) (* to-invest-budget (/ (val c) 100))}) balance-config))
 
 (defn allocation-budget
   ;TODO: Maybe consider budget instead of amount needs OR a combination of both
@@ -333,7 +346,17 @@
 
 (comment
   ;Lets test
-  (def transactions (db.t/get-all))
+  (def transactions (concat (db.t/get-by-ticket :ALZR12) (db.t/get-by-ticket :ALZR13)))
+
+  (clojure.pprint/print-table transactions)
+
+  (-> transactions
+      (adjust-subscription-tickets)
+      clojure.pprint/print-table
+      )
+
+
+
   (process-transaction transactions {:db-update false :ticket :GNDI3}) ;OK
   (process-transaction transactions {:db-update false :ticket :BIDI11}) ;OK
   (process-transaction transactions {:db-update false})

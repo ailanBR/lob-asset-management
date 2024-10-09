@@ -36,3 +36,12 @@
 (defn upsert!
   [api-call]
   (-> api-call list upsert-bulk!))
+
+(comment
+
+  (aux.xtdb/get! db-node '{:find  [(pull ?e [*])]
+                           :where [[?e :metric/when _]]})
+
+
+
+  )

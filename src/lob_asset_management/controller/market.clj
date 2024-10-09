@@ -313,7 +313,8 @@
        (get-market-price)
        )
 
-  (db.a/get-by-ticket :LINK)
+  (-> (db.a/get-by-ticket :ABEV3)
+      (get-stock-market-price true))
 
   (-> (db.a/get-all)
       (a.a/sort-by-updated-at)
