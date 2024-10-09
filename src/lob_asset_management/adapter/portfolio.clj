@@ -45,11 +45,12 @@
     portfolio-sell-profit :portfolio/sell-profit
     portfolio-average-price :portfolio/average-price :as portfolio}
    {:transaction/keys [quantity average-price] :as transaction}]
+  ;;(log/info "=> :buy " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
   (let [updated-quantity (+ (safe-dob portfolio-quantity) (abs quantity))
         updated-cost (l.p/buy-total-cost portfolio-quantity portfolio-average-price average-price quantity)
         consolidated (consolidate portfolio transaction updated-quantity updated-cost)]
     (assoc consolidated
-      :portfolio/average-price (/ updated-cost updated-quantity)
+      :portfolio/average-price (with-precision 5 (/ updated-cost updated-quantity))
       :portfolio/sell-profit (safe-big portfolio-sell-profit))))
 
 (defmethod transaction->portfolio :sell
@@ -57,6 +58,7 @@
     portfolio-average-price :portfolio/average-price
     portfolio-sell-profit :portfolio/sell-profit :as portfolio}
    {:transaction/keys [quantity average-price] :as transaction}]
+  ;;(log/info "=> ::sell " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
   (let [updated-quantity (- (safe-dob portfolio-quantity) (abs quantity))
         updated-cost (l.p/sell-total-cost portfolio-quantity portfolio-average-price average-price quantity)
         consolidated (consolidate portfolio transaction updated-quantity updated-cost)
@@ -65,11 +67,12 @@
       :portfolio/average-price (or portfolio-average-price average-price)
       :portfolio/sell-profit   (+ (safe-big portfolio-sell-profit) sell-profit))))
 
-(defmethod transaction->portfolio :resgate
+(defmethod transaction->portfolio :redemption
   [{:portfolio/keys [transaction-ids exchanges dividend sell-profit status]
     portfolio-average-price :portfolio/average-price}
    {:transaction/keys [quantity id exchange average-price]
-    ticket :transaction.asset/ticket}]
+    ticket :transaction.asset/ticket :as transaction}]
+  ;;(log/info "=> ::redemption " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
   (let [sell-profit (-> average-price
                         (- (safe-big portfolio-average-price))
                         (* quantity)
@@ -106,14 +109,17 @@
 
 (defmethod transaction->portfolio :JCP
   [consolidated transaction]
+  ;;(log/info "=> :::JCP " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
   (add-dividend-profit consolidated transaction))
 
 (defmethod transaction->portfolio :income
   [consolidated transaction]
+  ;;(log/info "=> :::income " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
   (add-dividend-profit consolidated transaction))
 
 (defmethod transaction->portfolio :dividend
   [consolidated transaction]
+  ;;(log/info "=> :::dividend " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
   (add-dividend-profit consolidated transaction))
 
 (defn get-value-fraction
@@ -130,6 +136,7 @@
     portfolio-cost :portfolio/total-cost
     portfolio-sell-profit :portfolio/sell-profit :as portfolio}
    {:transaction/keys [average-price operation-total id exchange] ticket :transaction.asset/ticket  :as transaction}]
+  ;;(log/info "=> :::waste " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
   (if portfolio-quantity
     (let [quantity' (get-value-fraction portfolio-quantity)
           updated-quantity (- (safe-dob portfolio-quantity) quantity')]
@@ -146,13 +153,14 @@
     (do (log/info (str "[TRANSACTION->PORTFOLIO] Invalid quantity for WASTE operation ticket" ticket))
         (add-dividend-profit portfolio transaction))))
 
-(defmethod transaction->portfolio :grupamento
+(defmethod transaction->portfolio :reverse-split
   [{:portfolio/keys [ticket average-price transaction-ids exchanges dividend sell-profit status]
-    portfolio-quantity :portfolio/quantity}
-   {:transaction/keys [quantity id exchange]}]
-  (let [factor (/ portfolio-quantity quantity)
+    portfolio-quantity :portfolio/quantity :as portfolio}
+   {:transaction/keys [quantity id exchange] :as transaction}]
+  (let [factor (with-precision 5 (/ portfolio-quantity quantity))
         average-price' (* factor average-price)
         total-cost' (* quantity average-price')]
+    ;;(log/info "=> :::reverse-split " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
     (assoc-if {:portfolio/ticket          ticket
                :portfolio/average-price   (safe-big average-price')
                :portfolio/quantity        (safe-dob quantity)
@@ -166,10 +174,10 @@
 
 (defn add-transaction-quantity
   [{:portfolio/keys [ticket total-cost transaction-ids exchanges dividend sell-profit status]
-    portfolio-quantity :portfolio/quantity}
-   {:transaction/keys [quantity id exchange]}]
+    portfolio-quantity :portfolio/quantity :as portifolio}
+   {:transaction/keys [quantity id exchange] :as transaction}]
   (let [quantity' (+ portfolio-quantity quantity)
-        average-price' (/ total-cost quantity')]
+        average-price' (with-precision 5 (/ total-cost quantity'))]
     (assoc-if {:portfolio/ticket          ticket
                :portfolio/average-price   (safe-big average-price')
                :portfolio/quantity        (safe-dob quantity')
@@ -181,24 +189,27 @@
                :portfolio/sell-profit     (safe-big sell-profit)}
               :portfolio/status status)))
 
-(defmethod transaction->portfolio :desdobro
+(defmethod transaction->portfolio :split
   [portfolio transaction]
+  ;;(log/info "=> ::::split " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
   (add-transaction-quantity portfolio transaction))
 
-(defmethod transaction->portfolio :bonificaçãoemativos
+(defmethod transaction->portfolio :bonus
   [portfolio transaction]
+  ;;(log/info "=> ::::bonus " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
   (add-transaction-quantity portfolio transaction))
 
 (defmethod transaction->portfolio :incorporation
   [{:portfolio/keys [ticket total-cost transaction-ids exchanges dividend sell-profit]
     portfolio-quantity :portfolio/quantity :as portfolio}
-   {:transaction/keys [id exchange incorporated-by factor] :as t}]
+   {:transaction/keys [id exchange incorporated-by factor] :as transaction}]
+  ;;(log/info "=> ::::incorporation " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
   (if incorporated-by
     (let [quantity' (condp = (:operator factor)
-                      "/" (/ portfolio-quantity (safe-big (:denominator factor)))
+                      "/" (with-precision 5 (/ portfolio-quantity (safe-big (:denominator factor))))
                       "*" (* portfolio-quantity (safe-big (:denominator factor)))
                       "+" (+ portfolio-quantity (safe-big (:denominator factor))))
-          average-price' (/ total-cost quantity')]
+          average-price' (with-precision 5 (/ total-cost quantity'))]
       {:portfolio/ticket          incorporated-by
        :portfolio/average-price   average-price'
        :portfolio/quantity        quantity'
@@ -209,7 +220,24 @@
        :portfolio/dividend        (safe-big dividend)
        :portfolio/sell-profit     (safe-big sell-profit)
        :portfolio/status          :incorporated})
-    portfolio))
+    (do (log/info "=> :incorporation DENIED invalid value INCORPORATED BY [" ticket " - " (:transaction/id transaction) "]")
+        portfolio)))
+
+#_(defmethod transaction->portfolio :subscription
+  [{portfolio-quantity :portfolio/quantity
+    portfolio-sell-profit :portfolio/sell-profit
+    portfolio-average-price :portfolio/average-price :as portfolio}
+   {:transaction/keys [quantity average-price] :as transaction}]
+  ;;(log/info "=> :buy " (:transaction.asset/ticket transaction) "[" (:transaction/id transaction) "] " (:transaction/created-at transaction))
+  (if (and (> quantity 0) (> average-price 0))
+    (let [updated-quantity (+ (safe-dob portfolio-quantity) (abs quantity))
+          updated-cost (l.p/buy-total-cost portfolio-quantity portfolio-average-price average-price quantity)
+          consolidated (consolidate portfolio transaction updated-quantity updated-cost)]
+      (assoc consolidated
+        :portfolio/average-price (with-precision 5 (/ updated-cost updated-quantity))
+        :portfolio/sell-profit (safe-big portfolio-sell-profit)))
+    (do (log/info "=> :subscription DENIED invalid value QUANTITY= " quantity " - AVG= " average-price)
+        portfolio)))
 
 (defn portfolio->category-representation
   [{cat-total-cost :category/total-cost

@@ -161,7 +161,7 @@
   [response]
   (if (not-empty (html/select response [:span.cur-price]))
     (let [historic (historic-response->internal response)
-          price (->price response)
+          price (-> (html/select response [:span.cur-price]) f-content first aux.m/safe-number->bigdec)
           date-keyword (br-date->date-keyword response)]
       {:price      price
        :date       date-keyword

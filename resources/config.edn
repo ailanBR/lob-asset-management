@@ -32,6 +32,11 @@
                                 :release-folder "./in-data/crypto"}}]
  :out-data-path  "./out-data/"
  :env :dev
+ :oauth-path "./resources/oauth.json"
+ :spread-sheet-id "1_u2Qt64H4K8mPlxCnwORcWuQ90uy7OHtB61oyqHYAto"
+ :ticket-rename {:ALZR12 :ALZR11
+                 :ALZR13 :ALZR11
+                 :EQTL1 :EQTL3}
  ;
  ;:asset-parse    {:product {:type :string :eql :ticket}}
  ;:transaction-parse {:transaction-date {:type :dd-mm-yyyy :eql :created-at}

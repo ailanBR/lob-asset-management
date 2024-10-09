@@ -124,6 +124,8 @@
        (io.f-out/upsert)))
 
 (comment
-  (get-by-ticket :CNBS)
+  (get-by-ticket :EQTL1)
+
+  (aux.xtdb/delete! db-node #uuid"49fe835c-7f79-3e55-bb61-edd8bd80ee5c")
   )
 

@@ -80,7 +80,45 @@
             (-> ticket name clojure.string/upper-case keyword))
       (->> (map first))))
 
+
 ;-----------------------------------
+(defmulti get-by-id (fn [_] (or (:env config) :dev)))
+
+(defmethod get-by-id :dev
+  [id]
+  (->> (get-all)
+       (filter #(= id (:transaction/id %)))))
+
+(defmethod get-by-id :prod
+  [id]
+  (-> db-node
+      xt/db
+      (xt/q '{:find  [(pull ?e [*])]
+              :in    [?id]
+              :where [[?e :transaction/id ?id]]}
+            id)
+      (->> (map first))))
+
+;-----------------------------------
+(defn get-by-type
+  [type]
+  (-> db-node
+      xt/db
+      (xt/q '{:find  [(pull ?e [*])]
+              :in    [?t]
+              :where [[?e :transaction/operation-type ?t]]}
+            type)
+      (->> (map first))))
+
+
+(defn update-asset-type
+  [old-type new-type]
+  (let [old-records (get-by-type old-type)
+        new-records (map #(assoc % :transaction/operation-type new-type) old-records)]
+    (doseq [records old-records]
+      (aux.xtdb/delete! db-node (:xt/id records)))
+    (upsert-bulk! new-records)))
+
 (defn snapshot
   []
   (->> (get-all)
@@ -88,5 +126,38 @@
        (io.f-out/upsert)))
 
 (comment
+  (defn get-by-type
+    [type]
+    (-> db-node
+        xt/db
+        (xt/q '{:find  [(pull ?e [*])]
+                :in    [?t]
+                :where [[?e :transaction/operation-type ?t]]}
+              type)
+        (->> (map first))))
+
+
+  (def old #{:grupamento :desdobro :bonificaçãoemativos :resgate})
+  (map #(get-by-type %) #{:grupamento :desdobro :bonificaçãoemativos :resgate})
+  (clojure.pprint/print-table (map #(get-by-type %) #{:grupamento :desdobro :bonificaçãoemativos :resgate}))
+
+  (clojure.pprint/print-table (get-by-type :direitosdesubscrição-excercído))
+
+  (def updated (update-asset-type :atualização :update))
+
+  (def old-name (get-by-type :desdobro))
+
+  (def new-ones (map #(assoc % :transaction/operation-type :reverse-split) old-name))
+
+  (upsert-bulk! new-ones)
+
+  (map #(aux.xtdb/delete! db-node (:xt/id %)) old-name)
+
+
+  (aux.xtdb/delete! db-node #uuid "77c7c482-fae9-3be4-a555-994e9cf4031b")
+
+  (get-by-type :update)
+
+
 
   )
