@@ -13,6 +13,7 @@
             [lob-asset-management.db.portfolio :as db.p]
             [lob-asset-management.db.transaction :as db.t]
             [lob-asset-management.io.file-in :as io.f-in]
+            [lob-asset-management.io.storage :as io.storage]
             [lob-asset-management.relevant :refer [config config-prod]]
             [mount.core :as mount]))
 
@@ -24,8 +25,12 @@
                #'lob-asset-management.relevant/alpha-key
                #'lob-asset-management.relevant/telegram-key
                #'lob-asset-management.relevant/telegram-personal-chat
+               #'lob-asset-management.relevant/spread-sheet-config
                ;#'lob-asset-management.relevant/google-oauth
-               #'lob-asset-management.controller.telegram-bot/bot)
+               #'lob-asset-management.controller.telegram-bot/bot
+               #'lob-asset-management.io.storage/spread-sheet-service
+               )
+
   (when (= :prod env)
     (mount/start #'lob-asset-management.aux.xtdb/db-node)
     (mount/start-with {#'lob-asset-management.relevant/config config-prod})))
@@ -36,6 +41,7 @@
               #'lob-asset-management.relevant/telegram-key
               #'lob-asset-management.relevant/telegram-personal-chat
               #'lob-asset-management.controller.telegram-bot/bot
+              #'lob-asset-management.relevant/spread-sheet-config
               #'lob-asset-management.aux.xtdb/db-node))
 
 ;(start :dev)                                                     ;for develop purpose

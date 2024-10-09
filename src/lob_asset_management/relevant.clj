@@ -33,6 +33,8 @@
 (defstate alpha-key :start (System/getenv "ALPHA_KEY"))     ;(:alpha-vantage-key (get-secrets)))
 (defstate telegram-key :start (System/getenv "TELEGRAM_BOT_KEY")) ; (:telegram-bot-key (get-secrets)))
 (defstate telegram-personal-chat :start (:personal-chat (get-secrets)))
+
+(defstate spread-sheet-config :start (:spread-sheet-config (get-secrets)))
 ;(defstate google-oauth (file->byte-array "./resources/oauth.json"))   ;TODO: Move to ENV
 
 
