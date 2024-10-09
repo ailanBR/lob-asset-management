@@ -139,7 +139,7 @@
                  (assoc :transaction.asset/ticket (-> config :ticket-rename ticket))
 
                  (= operation :subscription)
-                 (assoc :transaction/operation-type :buy)) transactions)))
+                 (assoc :transaction/operation-type :buy))) transactions))
 
 (defn transactions->portfolio
   [transactions assets forex-usd]

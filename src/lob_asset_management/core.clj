@@ -97,13 +97,34 @@
          ;(filter #(= :crypto (:portfolio/category %)))
          ;(filter #(or (contains? (:portfolio/exchanges %) :nu)
          ;             (contains? (:portfolio/exchanges %) :inter)))
-         (remove #(= 0.0 (:portfolio/quantity %)))
+         ;;(remove #(= 0.0 (:portfolio/quantity %)))
          (sort-by :portfolio/ticket)))
 
-  ;;      B3    HERE
-  ;;ALZR  39    36
-  ;;EQTL  92    91
-
+  (letfn [(maybe-update-price
+            [{:asset/keys              [type]
+              :asset.market-price/keys [price]}
+             {usd-price :forex-usd/price}]
+            (if (= type :stockEUA) (* price usd-price) price))
+          (get-asset [assets forex ticket]
+            (-> (filter (fn [{asset-ticket :asset/ticket}] (= asset-ticket ticket)) assets)
+                first
+                (maybe-update-price forex)))]
+    (let [assets (db.a/get-all)
+          forex (db.f/get-all)]
+      (->> (db.p/get-all)
+           (map #(dissoc % :portfolio/transaction-ids))
+           (remove #(= 0.0 (:portfolio/quantity %)))
+           #_(filter #(or (= :ABEV3 (:portfolio/ticket %))
+                          (= :GOOGL (:portfolio/ticket %))))
+           (map (fn [{:portfolio/keys [ticket] :as portfolio}]
+                  (let [last-price (get-asset assets forex ticket)]
+                    (assoc portfolio :last-price last-price))))
+           (sort-by :portfolio.profit-loss/percentage)
+           (clojure.pprint/print-table [:portfolio/ticket
+                                        :portfolio/quantity
+                                        :portfolio/average-price
+                                        :last-price
+                                        :portfolio.profit-loss/percentage]))))
 
   (filter #(= :SMTO3 (:portfolio/ticket %)) (db.p/get-all))
 
@@ -112,8 +133,9 @@
     (->> (lob-asset-management.db.transaction/get-all)
          ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
          ;;(filter #(clojure.string/includes? (name (:transaction.asset/ticket %)) "ALZR"))
-         (filter #(clojure.string/includes? (name (:transaction.asset/ticket %)) "EQTL"))
+         ;;(filter #(clojure.string/includes? (name (:transaction.asset/ticket %)) "EQTL"))
          ;;(filter #(clojure.string/includes? (name (:transaction.asset/ticket %)) "FLRY"))
+         (filter #(clojure.string/includes? (name (:transaction.asset/ticket %)) "OIBR"))
          ;;(filter #(or (= :ALZR13 (:transaction.asset/ticket %))))
          ;(remove #(contains?
          ;           #{:sell :JCP :income :dividend :bonus

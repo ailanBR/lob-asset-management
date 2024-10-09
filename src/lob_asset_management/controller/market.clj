@@ -288,9 +288,8 @@
      (update-crypto-market-price assets)
      (log/error "[GET CRYPTO PRICE] update-crypto-market-price - can't get assets")))
   ([assets]
-   (-> #(= :crypto (:asset/type %))
-        (filter assets)
-        (update-asset-market-price-v2 {:ignore-timer true}))))
+   (-> (filter #(= :crypto (:asset/type %)) assets)
+       (update-asset-market-price-v2 {:ignore-timer true}))))
 
 (defn update-stock-market-price
   ([]
@@ -298,9 +297,8 @@
      (update-stock-market-price assets)
      (log/error "[GET STOCK PRICE] update-stock-market-price - can't get assets")))
   ([assets]
-   (-> #(= :crypto (:asset/type %))
-        (remove assets)
-        (update-asset-market-price-v2 {:ignore-timer true}))))
+   (-> (remove #(= :crypto (:asset/type %)) assets)
+       (update-asset-market-price-v2 {:ignore-timer true}))))
 
 (comment
 

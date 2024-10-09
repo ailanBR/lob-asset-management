@@ -139,7 +139,7 @@
  :DEFI11 {:name     "HASHDEX DEFI INDEX FUNDO DE ÍNDICE"
           :tax-number     "30.056.796/0001-65"
           :category [:crypto]
-          :alpha-vantage-allowed? false
+          :alpha-vantage-allowed? true
           :exchange :bovespa}
  :OIBR3  {:name     "OI S.A."
           :tax-number     "76.535.764/0001-43"
@@ -193,132 +193,136 @@
          :category [:health]
          :alpha-vantage-allowed? false
          :exchange :bovespa}
- :CDB    {:category [:private-bond]
+ :EGIE3  {:tax-number             "02474103000119"
+          :category               [:energy]
+          :alpha-vantage-allowed? true
+          :exchange               :bovespa}
+ :CDB    {:category               [:private-bond]
           :alpha-vantage-allowed? false}
- :TESOURO-IPCA+-2029  {:category [:government-bond]
-                       :alpha-vantage-allowed? false}
- :TESOURO-PREFIXADO-2026  {:category [:government-bond]
-                       :alpha-vantage-allowed? false}
- :TESOURO-SELIC-2025  {:category [:government-bond]
-                       :alpha-vantage-allowed? false}
- :TESOURO-SELIC-2026  {:category [:government-bond]
-                       :alpha-vantage-allowed? false}
- :AAPL   {:category [:ti]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :ABT    {:category [:health]
-          :alpha-vantage-allowed? true
-          :exchange :nyse}
- :AMZN   {:category [:ti]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :BLK    {:category [:finance]
-          :alpha-vantage-allowed? true
-          :exchange :nyse}
- :BLOK   {:category [:crypto]
-          :alpha-vantage-allowed? true
-          :exchange :amex}
- :BRK.B  {:category [:finance]
-          :alpha-vantage-allowed? true
-          :exchange :nyse}
- :CAN    {:category [:crypto]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :CNBS   {:category [:cannabis]
-          :alpha-vantage-allowed? true
-          :exchange :amex}
- :COIN   {:category [:crypto]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :GILD   {:category [:health]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :GOOGL  {:category [:ti]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :IIPR   {:category [:cannabis]
-          :alpha-vantage-allowed? true
-          :exchange :nyse}
- :INDA   {:category [:world]
-          :alpha-vantage-allowed? true
-          :exchange :amex}
- :ISRG   {:category [:health]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :ITW    {:category [:industry]
-          :alpha-vantage-allowed? true
-          :trading-economy-allowed? true
-          :exchange :nyse}
- :JPM    {:category [:finance]
-          :alpha-vantage-allowed? true
-          :exchange :nyse}
- :MCHI   {:category [:world]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :EZA    {:category [:world]
-          :alpha-vantage-allowed? true
-          :exchange :amex}
- :MDT    {:category [:health]
-          :alpha-vantage-allowed? true
-          :exchange :nyse}
- :MSFT   {:category [:ti]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :SE     {:category [:ti]
-          :alpha-vantage-allowed? true
-          :exchange :nyse}
- :SKYY   {:category [:ti]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :TSLA   {:category [:transport]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :ARE    {:category [:fii :tijolo]
-          :alpha-vantage-allowed? true
-          :exchange :nyse}
- :EQIX   {:category [:fii :tijolo :ti]
-          :alpha-vantage-allowed? true
-          :exchange :nasdaq}
- :GWH    {:category [:energy]
-          :alpha-vantage-allowed? true
-          :exchange :nyse}
- :BTC    {:category [:crypto]
-          :alpha-vantage-allowed? true}
- :STX    {:category [:crypto]
-          :alpha-vantage-allowed? true}
- :BUSD   {:category [:crypto]
-          :alpha-vantage-allowed? true}
- :MATIC  {:category [:crypto]
-          :alpha-vantage-allowed? true}
- :USDT   {:category [:crypto]
-          :alpha-vantage-allowed? true}
- :ETH    {:category [:crypto]
-          :alpha-vantage-allowed? true}
- :BNB    {:category [:crypto]
-          :alpha-vantage-allowed? true}
- :ALGO   {:category [:crypto]
-          :alpha-vantage-allowed? true}
- :LUNA   {:category [:crypto]
-          :alpha-vantage-allowed? true}
- :CAKE   {:category [:crypto]
-          :alpha-vantage-allowed? true}
- :LINK   {:category [:crypto]
-          :alpha-vantage-allowed? true}
- :FANTOM {:category [:crypto]
+ :TESOURO-IPCA+-2029 {:category               [:government-bond]
+                      :alpha-vantage-allowed? false}
+ :TESOURO-PREFIXADO-2026 {:category               [:government-bond]
+                          :alpha-vantage-allowed? false}
+ :TESOURO-SELIC-2025 {:category               [:government-bond]
+                      :alpha-vantage-allowed? false}
+ :TESOURO-SELIC-2026 {:category               [:government-bond]
+                      :alpha-vantage-allowed? false}
+ :AAPL {:category               [:ti]
+        :alpha-vantage-allowed? true
+        :exchange               :nasdaq}
+ :ABT {:category               [:health]
+       :alpha-vantage-allowed? true
+       :exchange               :nyse}
+ :AMZN {:category               [:ti]
+        :alpha-vantage-allowed? true
+        :exchange               :nasdaq}
+ :BLK {:category               [:finance]
+       :alpha-vantage-allowed? true
+       :exchange               :nyse}
+ :BLOK {:category               [:crypto]
+        :alpha-vantage-allowed? true
+        :exchange               :amex}
+ :BRK.B {:category               [:finance]
+         :alpha-vantage-allowed? true
+         :exchange               :nyse}
+ :CAN {:category               [:crypto]
+       :alpha-vantage-allowed? true
+       :exchange               :nasdaq}
+ :CNBS {:category               [:cannabis]
+        :alpha-vantage-allowed? true
+        :exchange               :amex}
+ :COIN {:category               [:crypto]
+        :alpha-vantage-allowed? true
+        :exchange               :nasdaq}
+ :GILD {:category               [:health]
+        :alpha-vantage-allowed? true
+        :exchange               :nasdaq}
+ :GOOGL {:category               [:ti]
+         :alpha-vantage-allowed? true
+         :exchange               :nasdaq}
+ :IIPR {:category               [:cannabis]
+        :alpha-vantage-allowed? true
+        :exchange               :nyse}
+ :INDA {:category               [:world]
+        :alpha-vantage-allowed? true
+        :exchange               :amex}
+ :ISRG {:category               [:health]
+        :alpha-vantage-allowed? true
+        :exchange               :nasdaq}
+ :ITW {:category                 [:industry]
+       :alpha-vantage-allowed?   true
+       :trading-economy-allowed? true
+       :exchange                 :nyse}
+ :JPM {:category               [:finance]
+       :alpha-vantage-allowed? true
+       :exchange               :nyse}
+ :MCHI {:category               [:world]
+        :alpha-vantage-allowed? true
+        :exchange               :nasdaq}
+ :EZA {:category               [:world]
+       :alpha-vantage-allowed? true
+       :exchange               :amex}
+ :MDT {:category               [:health]
+       :alpha-vantage-allowed? true
+       :exchange               :nyse}
+ :MSFT {:category               [:ti]
+        :alpha-vantage-allowed? true
+        :exchange               :nasdaq}
+ :SE {:category               [:ti]
+      :alpha-vantage-allowed? true
+      :exchange               :nyse}
+ :SKYY {:category               [:ti]
+        :alpha-vantage-allowed? true
+        :exchange               :nasdaq}
+ :TSLA {:category               [:transport]
+        :alpha-vantage-allowed? true
+        :exchange               :nasdaq}
+ :ARE {:category               [:fii :tijolo]
+       :alpha-vantage-allowed? true
+       :exchange               :nyse}
+ :EQIX {:category               [:fii :tijolo :ti]
+        :alpha-vantage-allowed? true
+        :exchange               :nasdaq}
+ :GWH {:category               [:energy]
+       :alpha-vantage-allowed? true
+       :exchange               :nyse}
+ :BTC {:category               [:crypto]
+       :alpha-vantage-allowed? true}
+ :STX {:category               [:crypto]
+       :alpha-vantage-allowed? true}
+ :BUSD {:category               [:crypto]
+        :alpha-vantage-allowed? true}
+ :MATIC {:category               [:crypto]
+         :alpha-vantage-allowed? true}
+ :USDT {:category               [:crypto]
+        :alpha-vantage-allowed? true}
+ :ETH {:category               [:crypto]
+       :alpha-vantage-allowed? true}
+ :BNB {:category               [:crypto]
+       :alpha-vantage-allowed? true}
+ :ALGO {:category               [:crypto]
+        :alpha-vantage-allowed? true}
+ :LUNA {:category               [:crypto]
+        :alpha-vantage-allowed? true}
+ :CAKE {:category               [:crypto]
+        :alpha-vantage-allowed? true}
+ :LINK {:category               [:crypto]
+        :alpha-vantage-allowed? true}
+ :FANTOM {:category               [:crypto]
           :alpha-vantage-allowed? false}
- :AMAT {:category [:ti]
+ :AMAT {:category               [:ti]
         :alpha-vantage-allowed? true
-        :exchange :nasdaq}
- :LRCX {:category [:ti]
+        :exchange               :nasdaq}
+ :LRCX {:category               [:ti]
         :alpha-vantage-allowed? true
-        :exchange :nasdaq}
- :ASML {:category [:ti]
+        :exchange               :nasdaq}
+ :ASML {:category               [:ti]
         :alpha-vantage-allowed? true
-        :exchange :nasdaq}
- :KLAC {:category [:ti]
+        :exchange               :nasdaq}
+ :KLAC {:category               [:ti]
         :alpha-vantage-allowed? true
-        :exchange :nasdaq}
- :EVTC31 {:name "Evertec Inc"
-          :category [:ti]
+        :exchange               :nasdaq}
+ :EVTC31 {:name                   "Evertec Inc"
+          :category               [:ti]
           :alpha-vantage-allowed? true
-          :exchange :bovespa}}
+          :exchange               :bovespa}}
