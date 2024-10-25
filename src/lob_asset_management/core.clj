@@ -150,18 +150,6 @@
          (sort-by :transaction/created-at)
          ))
 
-  ;:ALZR11 |                33.0 |36 |35
-  ;Subc1
-  ;| 77c7c482-fae9-3be4-a555-994e9cf4031b |:ALZR12 |20230522 |:direitosdesubscrição-excercído |2.0 | 0 | 0 |
-  ;| edd81b9a-1d05-3558-9e90-05d9f8ac1c7f |:ALZR13 |20230523 |:recibodesubscrição |2.0 | 0 | 0 |
-  ;Subs2
-  ;| 908c2cb8-a248-3c58-92e8-978ba07bed5f |:ALZR12 |20240529 |:direitosdesubscrição-exercido |1.0 |107.43 |107.43 |
-  ;| 8002960b-5090-3b8f-8500-d0bd0d8c308a |:ALZR13 |20240531 |:recibodesubscrição | 1.0 | 0 | 0 |
-
-  ;;EQTL
-  ;| 2706f489-3b91-3186-9707-3b63cd4a4968 | :EQTL1 | 20240607 | :direitosdesubscrição-exercido |1.0 | 29.5 |29.5 |
-  ;| c0b4d620-3b59-3cc1-9b4a-b5a129b86bc5 | :EQTL9 | 20240610 |:recibodesubscrição | 1.0 | 0 | 0 |
-
   (->> (lob-asset-management.db.transaction/get-all)
        ;(filter #(= :fraçãoemativos (:transaction/operation-type %)))
        ;(filter #(or (= :SULA11 (:transaction.asset/ticket %))))
@@ -195,4 +183,15 @@
           {:x (str "[" @c "]" f " - " (or s ""))}) tm)
 
   (c.m/update-crypto-market-price)
-  (c.p/update-portfolio-representation (db.p/get-all) (db.f/get-all)))
+  (c.p/update-portfolio-representation (db.p/get-all) (db.f/get-all))
+
+  (clojure.pprint/print-table
+    [:asset/ticket :asset.market-price/price-date ]
+    (->> (db.a/get-all)
+         (filter #(or (= (:asset/type %) :stockBR)
+                    (= (:asset/type %) :stockEUA)))
+         (sort-by :asset.market-price/price-date)
+         #_(take 30)))
+
+
+  )

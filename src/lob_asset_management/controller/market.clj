@@ -158,10 +158,6 @@
                             assets)]
     updated-assets))
 
-(defn less-updated-asset
-  [assets day-of-week & args]
-  (-> assets (a.a/get-less-market-price-updated (merge {:day-of-week day-of-week} (when args (first args)))) first))
-
 (defn less-updated-asset-v2
   [assets & args]
   (-> assets (a.a/get-less-market-price-updated (first args)) first))
@@ -213,42 +209,10 @@
     (Thread/sleep 5000)
     updated-assets))
 
-(defn update-asset-market-price
-  ([]
-   (if-let [assets (db.a/get-all)]
-     (update-asset-market-price assets 1)
-     (log/error "[MARKET-UPDATING] update-asset-market-price - can't get assets")))
-  ([assets]
-   (update-asset-market-price assets 1))
-  ([assets day-of-week & args]
-   (if-let [{:asset/keys [ticket] :as less-updated-asset
-             :asset.market-price/keys [retry-attempts]} (less-updated-asset assets day-of-week (when args (first args)))]
-     (try
-       (log/info "[MARKET-UPDATING] Starting get asset price for " (:asset/ticket less-updated-asset))
-       (let [market-last-price (get-market-price less-updated-asset (when args (first args)))
-             updated-assets (update-assets assets less-updated-asset market-last-price)]
-         (log/info "[MARKET-UPDATING] Success [" ticket "] " (:price market-last-price) " - " (:date market-last-price))
-         (db.a/upsert-bulk! updated-assets))
-       (catch Exception e
-         #_(t.b/send-error-command bot e)
-         #_(log/error e)
-         (if (contains? (-> e ex-data :causes) :alpha-api-limit)
-           (handle-alpha-api-limit-error assets less-updated-asset)
-           (do (log/error (str (:fail log-colors)
-                               (:asset/ticket less-updated-asset) " error in update-asset-market-price " e
-                               (:end log-colors)))
-               (if (< (or retry-attempts 0) 3)
-                 (-> less-updated-asset
-                     (handle-retry-attempt assets)
-                     (update-asset-market-price day-of-week (when args (first args))))
-                 (log/info (str "Retry limit archived")))))))
-     (log/warn "[MARKET-UPDATING] No asset to be updated"))))
-
-
 (defn update-asset-market-price-v2
   ([]
    (if-let [assets (db.a/get-all)]
-     (update-asset-market-price assets)
+     (update-asset-market-price-v2 assets)
      (log/error "[MARKET-UPDATING] update-asset-market-price - can't get assets")))
   ([assets & args]
    (if-let [{:asset/keys [ticket] :as less-updated-asset
@@ -270,7 +234,7 @@
                (if (< (or retry-attempts 0) 3)
                  (-> less-updated-asset
                      (handle-retry-attempt assets)
-                     (update-asset-market-price (first args)))
+                     (update-asset-market-price-v2 (first args)))
                  (log/info (str "Retry limit archived")))))))
      (log/warn "[MARKET-UPDATING] No asset to be updated"))))
 
@@ -311,7 +275,9 @@
        (get-market-price)
        )
 
-  (-> (db.a/get-by-ticket :ABEV3)
+  (db.a/get-by-ticket :TSLA)
+
+  (-> (db.a/get-by-ticket :AAPL)
       (get-stock-market-price true))
 
   (-> (db.a/get-all)
@@ -323,12 +289,10 @@
   (-> :LINK (db.a/get-by-ticket) list (update-asset-market-price-historic))
 
   (get-market-price)
-  (update-asset-market-price)
   (def company-overview (io.http/get-company-overview "ABEV3.SA"))
 
   (clojure.pprint/pprint market-formated)
 
-  (update-asset-market-price)
 
   (def as (db.a/get-all))
 
@@ -336,7 +300,7 @@
 
   (->> (db.a/get-all)
        (filter #(= :STX (:asset/ticket %)))
-       update-asset-market-price)
+       update-asset-market-price-v2)
 
   ;--------------------
   (->> (less-updated-asset-v2 as nil)

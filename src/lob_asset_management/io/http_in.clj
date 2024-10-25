@@ -144,15 +144,18 @@
     (throw (ex-info "Failed to get stock price using ADVFN information"
                     {:status 999}))))
 
-(defn advfn-data-historic-extraction-br                     ;TODO: deep https://br.advfn.com/bolsa-de-valores/coin/LINKBRL/historico/mais-dados-historicos?current=0&Date1=06/10/21&Date2=04/01/24
-  [asset]
-  (if-let [response (-> asset
-                        a.wde/in-ticket->out-ticket
-                        a.wde/br-historic-advfn-url
-                        html-resource)]
-    (a.wde/br-historic-response->internal response)
-    (throw (ex-info "Failed to get stock historic price using ADVFN information"
-                    {:status 999}))))
+(defn advfn-data-historic-extraction-br
+  ([asset]
+   (advfn-data-historic-extraction-br asset nil nil))
+  ([asset data-ini data-end]
+   (if-let [response (-> asset
+                         a.wde/in-ticket->out-ticket
+                         (a.wde/br-historic-advfn-url data-ini data-end)
+                         html-resource)]
+     (a.wde/br-historic-response->internal response)
+     (throw (ex-info "Failed to get stock historic price using ADVFN information"
+                     {:status 999})))))
+
 
 (comment
   (require '[clj-http.client :as client])
@@ -190,8 +193,15 @@
   ;Web Scraping =>  https://practical.li/blog/posts/web-scraping-with-clojure-hacking-hacker-news/
   ;----------- Other option https://www.marketscreener.com/quote/stock/AMBEV-S-A-15458762/
 
-  (def resp (advfn-data-historic-extraction-br {:asset/ticket :ABEV3
-                                                :asset/type   :stockBR}))
+  (def resp (advfn-data-historic-extraction-br {:asset/ticket :AAPL
+                                                :asset/type   :stockEUA}
+                                               "17/10/24"
+                                               "17/10/24"))
+
+  (advfn-data-historic-extraction-br {:asset/ticket :AAPL
+                                      :asset/type   :stockEUA}
+                                     "11/10/24"
+                                     "17/10/24")
 
   (advfn-data-extraction-br {:asset/ticket :ABEV3
                                       :asset/type   :stockBR})
@@ -229,6 +239,16 @@
        ;rest
        ;first
        )
-  ;---------------------------- Historic using ADVFN
-  ;https://br.advfn.com/bolsa-de-valores/amex/CNBS/historico
+
+  ;Target
+  (-> "https://markets.businessinsider.com/stocks/tsla-stock"
+      java.net.URL.
+      html/html-resource)                                   ;Only EUA market
+
+
+
+
+
+
+
   )

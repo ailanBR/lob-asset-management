@@ -104,8 +104,13 @@
   (str "https://br.advfn.com/bolsa-de-valores/" ticket "/cotacao"))
 
 (defn br-historic-advfn-url
-  [ticket]
-  (str "https://br.advfn.com/bolsa-de-valores/" ticket "/historico/mais-dados-historicos"))
+  ([ticket]
+   (str "https://br.advfn.com/bolsa-de-valores/" ticket "/historico/mais-dados-historicos"))
+  ([ticket date-ini date-end]
+   (if (and date-ini date-end)
+     (str (br-historic-advfn-url ticket) "?Date1=" date-ini "&Date2=" date-end)
+     (br-historic-advfn-url ticket))))
+
 
 (defn asset-news
   [data]

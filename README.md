@@ -16,35 +16,9 @@ Read a XLSX document and turn in EDN entities:
 
 Register all unique `:asset/ticket` from movements and use `resources/asset_fixed_info.edn` to complement information
 
-```Clojure 
-:asset/ticket 
-:asset/tax-number
-:asset/id
-:asset.market-price/price
-:asset.market-price/price-date
-:asset/category
-:asset.market-price/updated-at
-:asset.market-price/historic 
-:asset/name
-:asset/type
-```
-
 #### Transactions
 
 Financial movements, convert all movements from XLSX documents to EDN
-
-```Clojure 
-:transaction/operation-type
-:transaction/operation-total
-:transaction/currency
-:transaction/average-price
-:transaction.asset/ticket
-:transaction/id
-:transaction/processed-at
-:transaction/quantity
-:transaction/exchange
-:transaction/created-at
-```
 
 ##### Operation Types
 ```Clojure
@@ -102,21 +76,6 @@ Incorporation events needs to be registered in the file `resources/incorporation
 
 The consolidation of transactions grouped by `:transaction.asset/ticket`
 
-```Clojure 
-:portfolio/transaction-ids
-:portfolio/quantity
-:portfolio/percentage
-:portfolio/sell-profit
-:portfolio/total-cost
-:portfolio/dividend
-:portfolio/total-last-value
-:portfolio/category
-:portfolio/exchanges
-:portfolio/average-price
-:portfolio/ticket
-:portfolio.profit-loss/percentage 
-:portfolio.profit-loss/value
-```
 ### How to Add new Asset
 
 #### Crypto
@@ -182,9 +141,6 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    2. [ ] v2 Consider extra budget
    3. [ ] v3 Consider recent asset performance
    4. [ ] vX Simulator
-2. [Http_in] Find another option for Alpha API / Web Scraping `Medium`
-   1. [X] Coingecko for crypto 
-   2. [X] Web Scraping for Stock information (1)
 3. Get asset information `Very low`
 4. Decision between stock APIs
    1. [ ] Validate if the historic price is updated
@@ -192,10 +148,6 @@ The consolidation of transactions grouped by `:transaction.asset/ticket`
    3. [ ] When error in one get using another
       1. Create a new ident for error (E.g :asset/recent-alpha-api-error? true)
       2. If true => Use another
-
-## FIXME
-
-1. Consider ALZR subscription
 
 --------------
 ## License
