@@ -21,7 +21,6 @@
   [node]
   (.close node))
 
-;FIXME : WHY that don't work !!!
 (defstate db-node
           :start (start-xtdb!)
           :stop (.close db-node))
