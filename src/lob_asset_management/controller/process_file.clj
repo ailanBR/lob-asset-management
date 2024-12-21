@@ -7,6 +7,7 @@
             [lob-asset-management.db.asset :as db.a]
             [lob-asset-management.db.forex :as db.f]
             [lob-asset-management.db.transaction :as db.t]
+            [lob-asset-management.io.google_api :as io.google-api]
             [lob-asset-management.io.file-out :as io.f-out]
             [lob-asset-management.io.file-in :as io.f-in]
             [lob-asset-management.models.file :as m.f]
@@ -54,33 +55,6 @@
                             (apply concat))]
     (process-movement movements)))
 
-#_(defn process-b3-folder
-  []
-  (when-let [folder-files (io.f-in/get-folder-files)]
-    (let [b3-movements (->> folder-files
-                            (map io.f-in/read-xlsx-by-file-path )
-                            (apply concat))]
-      (process-movement b3-movements))))
-
-#_(defn process-b3-folder-only-new ;DEPRECATED
-  ;Use process-b3-folder the processing is idempotent
-  []
-  (let [already-read (or (-> :read-release (io.f-in/get-file-by-entity) :read-release) [])
-        folder-files (io.f-in/get-folder-files)
-        new-files (->> folder-files
-                       (filter #(not (contains? (set already-read) %))))]
-    (when (not (empty? new-files))
-      (let [new-movements (->> new-files
-                               (map io.f-in/read-xlsx-by-file-path)
-                               (apply concat))
-            process-movements (process-movement new-movements)]
-        (println process-movements)
-
-        (io.f-out/upsert {:read-release (->> new-files
-                                             (conj already-read)
-                                             (apply concat)
-                                             (to-array))})))))
-
 (defn backup-cleanup
   [file-keyword]
   (let [file-name (name file-keyword)
@@ -109,6 +83,17 @@
   (log/info "DELETING..." )
   (map io.f-in/delete-file m.f/list-file-name))
 
+(def spreadsheet-ranges
+  {:stock "EXPORT_Stock!A2:I10"
+   :crypto "EXPORT_crypto!A2:I10"})
+
+(defn get-from-spreadsheet
+  [range]
+  (let [movements (io.google-api/get-range range)]
+    (process-movement movements)
+    )
+  )
+
 (comment
 
   (delete-all-files)
@@ -119,7 +104,6 @@
 
   (let [t (->> (db.t/get-all)
                ;(filter #(= :BBAS3 (:transaction.asset/ticket %)))
-
                )
         p (lob-asset-management.controller.portfolio/process-transaction (db.t/get-all))
         ;(process-portfolio t)

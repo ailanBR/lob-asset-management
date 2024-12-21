@@ -106,7 +106,6 @@
       (throw (ex-info "Failed to get real time crypto price"
                       {:status (:status status)})))))
 
-
 (defn get-crypto-price-historic
   "Coingecko API
 
@@ -118,8 +117,7 @@
     (if (= status 200)
       (a.ca/historic->internal body)
       (throw (ex-info "Failed to get real time crypto price"
-                      {:status (:status status)}))))
-  )
+                      {:status (:status status)})))))
 
 (comment
   (def t (get-crypto-price-historic :chainlink))
@@ -156,7 +154,6 @@
      (throw (ex-info "Failed to get stock historic price using ADVFN information"
                      {:status 999})))))
 
-
 (comment
   (require '[clj-http.client :as client])
 
@@ -167,8 +164,6 @@
    :cookie-policy :standard
    :cookies       {"ring-session" {:discard true, :path "/", :value "", :version 0}}
    :user-agent    "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2"}
-
-
 
   (def u (java.net.URL. "https://br.investing.com/"))
   (def hc (.openConnection u))
@@ -204,12 +199,13 @@
                                      "17/10/24")
 
   (advfn-data-extraction-br {:asset/ticket :ABEV3
-                                      :asset/type   :stockBR})
+                             :asset/type   :stockBR})
   #_(a.wde/asset-news resp)
   #_(def t (-> "https://br.advfn.com/bolsa-de-valores/nasdaq/AAPL/cotacao"
              java.net.URL.
              html/html-resource))
   ;(html/select resp [:table.histo-results])
+
   (->> [:table.histo-results]
        (html/select resp)
        first
@@ -243,12 +239,6 @@
   ;Target
   (-> "https://markets.businessinsider.com/stocks/tsla-stock"
       java.net.URL.
-      html/html-resource)                                   ;Only EUA market
-
-
-
-
-
-
+      html/html-resource)                                 ;Only EUA market
 
   )
