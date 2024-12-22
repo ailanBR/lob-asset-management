@@ -5,6 +5,7 @@
                               :inter
                               :sprotify
                               :binance
+                              :vest
                               :other))
 
 (def operation-types #{:buy
@@ -36,13 +37,22 @@
 
 (s/defschema OperationType (apply s/enum operation-types))
 
+(s/defschema Currency (apply s/enum #{:BRL :UST}))
+
+(s/defschema Factor {:operator    (apply s/enum #{"/" "*" "+"})
+                     :denominator BigDecimal})
+
 (s/defschema Transaction
-  {:transaction/id                s/Str
-   :transaction/created-at        s/Str
-   :transaction.asset/ticket      s/Keyword
-   :transaction/average-price     BigDecimal
-   :transaction/quantity          BigDecimal
-   :transaction/exchange          Exchange
-   :transaction/operation-type    s/Keyword
-   :transaction/processed-at      s/Str})
+  {:transaction/id                               s/Uuid
+   :transaction/created-at                       s/Int
+   :transaction.asset/ticket                     s/Keyword
+   :transaction/average-price                    BigDecimal
+   :transaction/quantity                         BigDecimal
+   :transaction/exchange                         Exchange
+   :transaction/operation-type                   s/Keyword
+   :transaction/processed-at                     s/Str
+   :transaction/currency                         Currency
+   :transaction/operation-total                  BigDecimal
+   (s/optional-key :transaction/incorporated-by) s/Keyword
+   (s/optional-key :transaction/factor)          Factor})
 
