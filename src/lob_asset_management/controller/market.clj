@@ -10,7 +10,7 @@
             [lob-asset-management.controller.telegram-bot :refer [bot] :as t.b]))
 
 (defn- asset-news-new-one
-  [received-news]
+  [received-news]=
   (let [received-ids (map :asset-news/id received-news)
         stored-news (db.an/get-by-ids received-ids)]
     (if (empty? stored-news)
@@ -268,12 +268,13 @@
 
   (update-crypto-market-price)
 
+  (update-stock-market-price)
+
   (->> #_(db.a/get-all)
        #_(filter #(= (:asset/ticket %) :AMAT))
        #_first
        (db.a/get-by-ticket :COIN)
-       (get-market-price)
-       )
+       (get-market-price))
 
   (db.a/get-by-ticket :TSLA)
 
@@ -283,8 +284,7 @@
   (-> (db.a/get-all)
       (a.a/sort-by-updated-at)
       (clojure.pprint/print-table)
-      #_(get-market-price)
-      )
+      #_(get-market-price))
 
   (-> :LINK (db.a/get-by-ticket) list (update-asset-market-price-historic))
 
@@ -292,7 +292,6 @@
   (def company-overview (io.http/get-company-overview "ABEV3.SA"))
 
   (clojure.pprint/pprint market-formated)
-
 
   (def as (db.a/get-all))
 

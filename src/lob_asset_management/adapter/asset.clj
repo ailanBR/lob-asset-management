@@ -205,7 +205,7 @@
           :asset-news/txt      txt
           :asset-news/datetime datetime
           :asset-news/href     href
-          :asset-new/from      from}) news))
+          :asset-news/from      from}) news))
 
 (comment
   (def assets-file (lob-asset-management.db.transaction/get-file-by-entity :asset))

@@ -7,10 +7,10 @@
 (def bdr-list #{:NUBR33 :INBR31})
 
 (s/defschema Asset
-  ;:asset/id            s/Uuid
-  {:asset/name          s/Str
-   :asset/ticket        s/Keyword
-   :asset/category      [s/Keyword]
-   :asset/last-price    BigDecimal
-   :asset/type          s/Keyword
-   :asset/tax-number    s/Str})
+  {:asset/id         s/Uuid
+   :asset/name       s/Str
+   :asset/ticket     s/Keyword
+   :asset/category   [s/Keyword]
+   (s/optional-key :asset/last-price) BigDecimal
+   :asset/type s/Keyword
+   (s/optional-key :asset/tax-number) s/Str})

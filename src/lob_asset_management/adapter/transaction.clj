@@ -19,7 +19,8 @@
     "Sproutfy"                                                  :sproutfy
     (-> ex string/lower-case keyword)))
 
-(defn movement-type->transaction-type [{:keys [movement-type] :as mov}]
+(s/defn movement-type->transaction-type
+  [{:keys [movement-type] :as mov}]
   (cond
     (l.t/sell? mov) :sell
     (l.t/buy? mov) :buy
@@ -38,13 +39,13 @@
               string/lower-case
               keyword)))
 
-(defn mov-date->transaction-created-at
-  [date]
+(s/defn mov-date->transaction-created-at :- s/Int
+  [date :- s/Str]
   (let [split (string/split date #"/")]
     (Integer/parseInt (str (last split) (second split) (first split)))))
 
-(defn mov-date->keyword-date
-  [date]
+(s/defn mov-date->keyword-date :- s/Keyword
+  [date :- s/Str]
   (let [split (string/split date #"/")]
     (keyword (str (last split) "-" (second split) "-" (first split)))))
 
@@ -56,6 +57,26 @@
         :when usd-price]
     usd-price))
 
+(comment
+  (let [brl->ust {:2024-12-10 1.15610M
+                  :2024-12-11 2.21970M
+                  :2024-12-12 3.33100M
+                  :2024-12-13 4.25320M
+                  :2024-12-21 5.21970M
+                  :2024-12-22 6.33100M
+                  :2024-12-23 7.25320M}
+        target :2024-12-24
+        target-milliseconds (aux.t/date-keyword->milliseconds target)
+        day-diff-milliseconds 86400000]
+    (->> (map (fn [[k v]] {(aux.t/date-keyword->milliseconds k) v}) brl->ust)
+         (reduce merge)
+         (filter (fn [[k v]] (<= k target-milliseconds)))
+         last
+         ((fn [[k v]]
+            (let [diff-target-last-price (- target-milliseconds k)
+                  limit (* 3 day-diff-milliseconds)]
+              (when (< diff-target-last-price limit) v)))))))
+
 (defn brl-price
   [price transaction-date brl->usd-historic]
   (let [price-date (mov-date->keyword-date transaction-date)
@@ -64,35 +85,37 @@
       (* usd-price price)
       (log/error (str "[TRANSACTION] Don't find USD price for date " price-date)))))
 
-(defn movement-factor->transaction-factor
+(s/defn movement-factor->transaction-factor :- (s/maybe m.t/Factor)
   "Ex : '/-2'"
-  [factor]
+  [factor :- (s/maybe s/Str)]
   (when factor
     (let [factor' (clojure.string/split factor #"-")]
       {:operator    (first factor')
        :denominator (-> factor' second bigdec)})))
 
-(s/defn gen-transaction-id
-  [{:keys [transaction-date unit-price quantity product exchange] :as movement}]
-  (let [operation-type (movement-type->transaction-type movement)
-        ticket (a.a/movement-ticket->asset-ticket product)
-        exchange' (movement-exchange->transaction-exchange exchange)]
-    (-> (str ticket "-" transaction-date "-" unit-price "-" quantity "-" operation-type "-" exchange')
-        (string/replace "/" "")
-        (string/replace ":" ""))))
-
 (s/defn transaction->id :- s/Uuid
-  ([{:transaction/keys [ticket created-at average-price quantity operation-type exchange]}]
+  ([{:transaction/keys [ticket created-at average-price quantity operation-type exchange]} :- m.t/Transaction]
    (-> (str ticket "-" created-at "-" average-price "-" quantity "-" operation-type "-" exchange)
        aux.u/string->uuid))
-  ([ticket
-    created-at
-    average-price
-    quantity
-    exchange
-    operation-type]
+  ([ticket :- s/Keyword
+    created-at :- s/Int
+    average-price :- BigDecimal
+    quantity :- BigDecimal
+    exchange :- m.t/Exchange
+    operation-type :- s/Keyword]
    (-> (str ticket "-" created-at "-" average-price "-" quantity "-" operation-type "-" exchange)
        aux.u/string->uuid)))
+
+(defn foreign-price->brl
+  [currency unit-price operation-total transaction-date brl->usd-historic]
+  (let [unit-price-bigdec (safe-number->bigdec unit-price)
+        operation-total-bigdec (safe-number->bigdec operation-total)
+        ust->brl #(brl-price % transaction-date brl->usd-historic)]
+    (if (= currency :UST)
+      {:brl-unit-price      (ust->brl unit-price-bigdec)
+       :brl-operation-total (ust->brl operation-total-bigdec)}
+       {:brl-unit-price      unit-price-bigdec
+        :brl-operation-total operation-total-bigdec})))
 
 (s/defn movements->transaction :- m.t/Transaction
   [{:keys [transaction-date unit-price quantity exchange product operation-total currency
@@ -101,16 +124,9 @@
   (let [operation-type (movement-type->transaction-type movement)
         ticket (a.a/movement-ticket->asset-ticket product)
         currency' (if currency (keyword currency) :BRL)
-        unit-price-bigdec (safe-number->bigdec unit-price)
-        unit-price' (if (= currency' :UST)
-                      (brl-price unit-price-bigdec transaction-date brl->usd-historic)
-                      unit-price-bigdec)
-        operation-total-bigdec (safe-number->bigdec operation-total)
-        operation-total' (if (= currency' :UST)
-                           (brl-price operation-total-bigdec transaction-date brl->usd-historic)
-                           operation-total-bigdec)
+        {:keys [brl-unit-price brl-operation-total]} (foreign-price->brl currency' unit-price operation-total transaction-date brl->usd-historic)
         created-at (mov-date->transaction-created-at (str transaction-date))
-        average-price (safe-number->bigdec unit-price')
+        average-price (safe-number->bigdec brl-unit-price)
         quantity' (safe-number->bigdec quantity)
         exchange' (movement-exchange->transaction-exchange exchange)]
     ;(println "[TRANSACTION] Row => " movement)
@@ -123,7 +139,7 @@
        :transaction/exchange        exchange'
        :transaction/operation-type  operation-type
        :transaction/processed-at    (-> (t/local-date-time) str)
-       :transaction/operation-total (safe-number->bigdec operation-total')
+       :transaction/operation-total (safe-number->bigdec brl-operation-total)
        :transaction/currency        currency'}
       :transaction/incorporated-by (a.a/movement-ticket->asset-ticket incorporated-by)
       :transaction/factor          (movement-factor->transaction-factor factor))))

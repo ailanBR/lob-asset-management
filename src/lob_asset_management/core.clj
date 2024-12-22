@@ -32,6 +32,7 @@
                )
 
   (when (= :prod env)
+    (schema.core/set-fn-validation! true)
     (mount/start #'lob-asset-management.aux.xtdb/db-node)
     (mount/start-with {#'lob-asset-management.relevant/config config-prod})))
 

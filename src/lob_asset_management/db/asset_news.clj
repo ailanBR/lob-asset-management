@@ -99,14 +99,14 @@
         first)))
 
 (s/defmethod get-by-ids :prod :- (s/maybe [m.an/AssetNews])
-  [ids :- [s/Str]]
+  [ids :- [s/Uuid]]
   (-> db-node
-     xt/db
-     (xt/q '{:find  [(pull ?e [*])]
-             :in    [[?ids ...]]
-             :where [[?e :asset-news/id ?ids]]}
-           ids)
-     ->internal))
+      xt/db
+      (xt/q '{:find  [(pull ?e [*])]
+              :in    [[?ids ...]]
+              :where [[?e :asset-news/id ?ids]]}
+            ids)
+      ->internal))
 
 (comment
 
@@ -130,9 +130,8 @@
   (-> db-node
       xt/db
       (xt/q '{:find  [(pull ?e [*])]
-              :in    [?t]
-              :where [[?e :asset-news/ticket ?t]]}
-            :COIN))
+              :in    []
+              :where [[?e :asset-new/from _]]}))
 
   (aux.xtdb/delete! db-node #uuid"0fbaa4df-b563-3502-a364-297a7c367995")
 
@@ -143,4 +142,37 @@
                          :datetime "21/12/2023 15:37",
                          :href "https://br.advfn.com/noticias/INBR32/2023/artigo/1"})
 ;(-> a :asset-news/id name string->uuid)
+
+
+  (-> db-node
+      xt/db
+      (xt/q '{:find  [(pull ?e [*])]
+              :in    [?t]
+              :where [[?e :asset-news/ticket ?t]]}
+            :BLK))
+
+  ;MIGRATE asset.new/from -> asset.news/from
+  (let [from
+        (-> db-node
+            xt/db
+            (xt/q '{:find  [(pull ?e [*])]
+                    :in    []
+                    :where [[?e :asset-new/from ?f]]})
+            ->internal)
+        changed (map (fn [{:asset-new/keys [from]
+                           :asset-news/keys [txt]
+                           from-ok :asset-news/from :as a}]
+                       (cond-> (assoc a :asset-news/from (or from-ok from))
+                               (not (instance? String txt)) (assoc :asset-news/txt "")
+                               :else (dissoc :asset-new/from)))
+                     from)]
+    #_changed
+    (upsert-bulk! changed))
+
+  (-> db-node
+      xt/db
+      (xt/q '{:find  [(pull ?e [*])]
+              :in    []
+              :where [[?e :asset-new/from ?f]]})
+      ->internal)
   )

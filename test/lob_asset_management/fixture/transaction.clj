@@ -1,8 +1,9 @@
 (ns lob-asset-management.fixture.transaction
-  (:require [clojure.test :refer :all]))
+  (:require [clojure.test :refer :all]
+            [lob-asset-management.adapter.transaction :as a.transaction]))
 
 (def transaction
-  {:transaction/id             "BBAS3-30062022-0.25-26.0-JCP-nu"
+  {:transaction/id             (a.transaction/transaction->id :BBAS3 20220630 0.25M 26.0M :nu :JCP)
    :transaction/created-at     20220630
    :transaction.asset/ticket   :BBAS3
    :transaction/average-price  0.25M
